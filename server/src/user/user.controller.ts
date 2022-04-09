@@ -1,4 +1,6 @@
-import { Body, Param, Controller, Get, Post } from '@nestjs/common';
+import { Body, Param, Controller, Get, Post, Put, Delete } from '@nestjs/common';
+import { DeleteResult, UpdateResult } from 'typeorm';
+import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import { User } from './user.entity';
 import { UserService } from './user.service';
 
@@ -7,18 +9,37 @@ export class UserController {
 	constructor(private readonly userService: UserService) {}
 
 	@Get()
-	findAll(): Promise<User[]> {
-		return this.userService.findAll();
+	findAllUser(): Promise<User[]> {
+		return this.userService.findAllUser();
 	}
 
 	@Get(':id')
 	// findOne(@Param() param: { id: number } ) Return the param as an object
-	findOne(@Param('id') id: number): Promise<User> {
-		return this.userService.findOne(id);
+	findOneUser(
+		@Param('id') id: number
+	) {
+		return this.userService.findOneUser(id);
 	}
 
 	@Post()
-	createUser(@Body() user: User): Promise<User> {
+	createUser(
+		@Body() user: CreateUserDto
+	) {
 		return this.userService.createUser(user);
+	}
+
+	@Put(':id')
+	updateUser(
+		@Param('id') id: number,
+		@Body() user: UpdateUserDto
+	) {
+		return this.userService.updateUser(id, user);
+	}
+
+	@Delete(':id')
+	deteleUser(
+		@Param('id') id: number
+	) {
+		return this.userService.deleteUser(id);
 	}
 }

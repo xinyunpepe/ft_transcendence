@@ -8,9 +8,9 @@ export class User {
 	@Column()
 	login: string
 
-	@Column()
+	@Column({ default: '', unique: true })
 	username: string
 
-	@Column()
+	@Column({ default: 'default'})
 	avatar: string
 }
