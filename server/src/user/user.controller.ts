@@ -12,8 +12,9 @@ export class UserController {
 	}
 
 	@Get(':id')
-	findOne(@Param('id') id: number): string {
-		return `This action returns a #${id} cat`;
+	// findOne(@Param() param: { id: number } ) Return the param as an object
+	findOne(@Param('id') id: number): Promise<User> {
+		return this.userService.findOne(id);
 	}
 
 	@Post()

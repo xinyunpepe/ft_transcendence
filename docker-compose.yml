@@ -13,7 +13,9 @@ services:
     restart: always
     ports:
       - "8080:3000"
-    # command: npm run start:dev
+    volumes:
+      - ./server:/usr/src/app
+    command: npm run start:dev
 
   postgres:
     image: postgres:latest
@@ -25,13 +27,13 @@ services:
       POSTGRES_DB: db
     restart: always
 
-  pgadmin:
-    image: dpage/pgadmin4
-    depends_on:
-      - postgres
-    ports:
-      - "5050:80"
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: password
-    restart: always
+  # pgadmin:
+  #   image: dpage/pgadmin4
+  #   depends_on:
+  #     - postgres
+  #   ports:
+  #     - "5050:80"
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: admin@admin.com
+  #     PGADMIN_DEFAULT_PASSWORD: password
+  #   restart: always
