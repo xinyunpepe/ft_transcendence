@@ -11,12 +11,12 @@ export class UserController {
 		return this.userService.findAllUser();
 	}
 
-	@Get(':id')
+	@Get(':login')
 	// findOne(@Param() param: { id: number } ) Return the param as an object
 	findOneUser(
-		@Param('id') id: number
+		@Param('login') login: string
 	) {
-		return this.userService.findOneUser(id);
+		return this.userService.findOneUser(login);
 	}
 
 	@Post()

@@ -5,12 +5,13 @@ import { Profile } from 'passport-42';
 @Injectable()
 export class SessionSerializer extends PassportSerializer {
 
-	// Save user info(eg. login) to the session
+	// Serialize user(eg. login) before saving to the session
 	// what is done?
 	serializeUser(user: Profile,  done: (err: Error, user: Profile) => void) {
 		done(null, user);
 	}
 
+	// Deserialize user before coming out from the session
 	deserializeUser(payload: Profile, done: (err: Error, user: Profile) => void) {
 		return done(null, payload);
 	}

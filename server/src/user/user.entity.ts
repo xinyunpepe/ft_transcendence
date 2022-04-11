@@ -13,4 +13,10 @@ export class User {
 
 	@Column({ default: 'default'})
 	avatar: string
+
+	@Column({ default: false })
+	isTwoFactorAuthEnabled: boolean
+
+	@Column({ default: 'offline'})
+	status: string
 }
