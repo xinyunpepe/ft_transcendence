@@ -68,14 +68,14 @@ export class AuthController {
 		@Body() { twoFactorAuthCode }: TwoFactorAuthDto
 	){
 		console.log('Authenticating 2FA');
-		const user = req.user;
-		const isValid = this.authService.isTwoFactorAuthCodeValid(twoFactorAuthCode, user);
+		const currentUser = await this.userService.findOneUser(req.user.login);
+		const isValid = this.authService.isTwoFactorAuthCodeValid(twoFactorAuthCode, currentUser);
 		if (!isValid) {
 			throw new UnauthorizedException('Wrong authentication code');
 		}
-		const token = await this.authService.loginWithTwoFactorAuth(user, true);
+		const token = await this.authService.loginWithTwoFactorAuth(currentUser, true);
 		res.cookie('accessToken', token.access_token);
-		return user;
+		return currentUser;
 	}
 
 	/*
@@ -104,12 +104,14 @@ export class AuthController {
 		@Body() { twoFactorAuthCode }: TwoFactorAuthDto
 	){
 		console.log('Turning on 2FA');
-		const user = req.user;
-		const isVallid = this.authService.isTwoFactorAuthCodeValid(twoFactorAuthCode, user);
+		const currentUser = await this.userService.findOneUser(req.user.login);
+		console.log(currentUser);
+		const isVallid = this.authService.isTwoFactorAuthCodeValid(twoFactorAuthCode, currentUser);
+		console.log(isVallid)
 		if (!isVallid) {
 			throw new UnauthorizedException('Wrong authentication code');
 		}
-		await this.userService.turnOnTwoFactorAuth(user.login);
+		await this.userService.turnOnTwoFactorAuth(currentUser.login);
 	}
 
 	/*
@@ -137,8 +139,7 @@ export class AuthController {
 		@Res() res
 	) {
 		console.log('Start logging out');
-		const user = req.user;
-		await this.userService.updateUserStatus(user.login, 'offline');
+		await this.userService.updateUserStatus(req.user.login, 'offline');
 		res.cookie('accessToken', '');
 		res.redirect('http://localhost:3030');
 	}

@@ -64,6 +64,8 @@ export class AuthService {
 	// Verify user's code against the secret saved in the database
 	isTwoFactorAuthCodeValid(twoFactorAuthCode: string, user: User) {
 		console.log('Checking if 2fa code is valid');
+		console.log(twoFactorAuthCode);
+		console.log(user.twoFactorAuthSecret);
 		return authenticator.verify({
 			token: twoFactorAuthCode,
 			secret: user.twoFactorAuthSecret

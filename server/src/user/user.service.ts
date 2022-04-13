@@ -16,10 +16,11 @@ export class UserService {
 	}
 
 	async findOneUser(login: string) {
-		const user = await this.userRepository.findOne({ login: login });
-		if (user)
-			return user;
-		throw new NotFoundException('User does not exist');
+		// const user = await this.userRepository.findOne({ login: login });
+		// if (user)
+		// 	return user;
+		// throw new NotFoundException('User does not exist');
+		return await this.userRepository.findOne({ login: login });
 	}
 
 	async createUser(userDto: CreateUserDto) {
