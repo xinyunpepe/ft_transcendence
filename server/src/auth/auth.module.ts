@@ -7,6 +7,7 @@ import { AuthService } from './auth.service';
 import { UserService } from 'src/user/user.service';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { TwoFactorStrategy } from './strategies/2fa.strategy';
 
 @Module({
 	imports: [
@@ -22,7 +23,8 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 		UserService,
 		FtAuthStrategy,
 		SessionSerializer,
-		JwtStrategy
+		JwtStrategy,
+		TwoFactorStrategy
 	],
 	controllers: [AuthController]
 })

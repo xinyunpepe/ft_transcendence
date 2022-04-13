@@ -12,46 +12,50 @@ export class UserService {
 	) {}
 
 	async findAllUser() {
-		// const users = await this.userRepository.find();
-		// if (!users)
-		// 	throw new NotFoundException("Users do not exist");
-		// return users;
 		return await this.userRepository.find();
 	}
 
 	async findOneUser(login: string) {
-		// const user = await this.userRepository.findOne({ login: login });
-		// if (!user)
-		// 	throw new NotFoundException("User does not exist");
-		// return user;
-		return await this.userRepository.findOne({ login: login });
+		const user = await this.userRepository.findOne({ login: login });
+		if (user)
+			return user;
+		throw new NotFoundException('User does not exist');
 	}
 
 	async createUser(userDto: CreateUserDto) {
-		// Verify users existant again or not?
 		console.log('Start creating user');
-		const userExist = await this.userRepository.findOne({ login: userDto.login });
-		if (userExist)
-			return { message: "User exist already"};
 		const newUser = this.userRepository.create(userDto);
-		return this.userRepository.save(newUser);
+		await this.userRepository.save(newUser);
+		return newUser;
 	}
 
 	async updateUserStatus(login: string, status: string) {
 		return this.userRepository.update({ login }, { status: status });
 	}
 
+	async setTwoFactorAuthSecret(secret: string, login: string) {
+		return this.userRepository.update({ login }, { twoFactorAuthSecret: secret });
+	}
+
+	async turnOnTwoFactorAuth(login: string) {
+		return this.userRepository.update({ login }, { isTwoFactorAuthEnabled: true });
+	}
+
+	async turnOffTwoFactorAuth(login: string) {
+		return this.userRepository.update({ login }, { isTwoFactorAuthEnabled: false });
+	}
+
 	async updateUser(id: number, userDto: UpdateUserDto) {
 		const user = await this.userRepository.findOne({ id: id });
-		if (!user)
-			throw new NotFoundException("User does not exist");
-		return this.userRepository.update(id, userDto);
+		if (user)
+			return this.userRepository.update(id, userDto);
+		throw new NotFoundException("User does not exist");
 	}
 
 	async deleteUser(id: number) {
 		const user = await this.userRepository.findOne({ id: id });
-		if (!user)
-			throw new NotFoundException("User does not exist");
-		return this.userRepository.delete(id);
+		if (user)
+			return this.userRepository.delete(id);
+		throw new NotFoundException("User does not exist");
 	}
 }

@@ -5,7 +5,7 @@ export class User {
 	@PrimaryGeneratedColumn()
 	id: number
 
-	@Column()
+	@Column({ unique: true })
 	login: string
 
 	@Column({ default: '', unique: true })
@@ -16,6 +16,9 @@ export class User {
 
 	@Column({ default: false })
 	isTwoFactorAuthEnabled: boolean
+
+	@Column({ nullable: true })
+	twoFactorAuthSecret?: string
 
 	@Column({ default: 'offline'})
 	status: string
