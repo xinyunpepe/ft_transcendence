@@ -14,7 +14,7 @@ services:
     ports:
       - "8080:3000"
     volumes:
-      - ./server:/usr/src/app
+      - ./server/:/usr/src/app
     command: npm run start:dev
 
   postgres:

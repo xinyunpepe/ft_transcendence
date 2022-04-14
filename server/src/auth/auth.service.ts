@@ -19,7 +19,7 @@ export class AuthService {
 		const { login } = userDto;
 		const user = await this.userService.findOneUser(login);
 		if (user) {
-			console.log(`${ login } login succesfully`);
+			console.log('User exists in the database');
 			// await this.userService.updateUserStatus(user.login, 'online');
 			// console.log(`${ user.login } is ${ user.status } now`);
 			return user;
@@ -40,7 +40,7 @@ export class AuthService {
 	}
 
 	loginWithTwoFactorAuth(user: User, isSecondFactorAuthenticated = false) {
-		console.log('Start creating token');
+		console.log('Start creating 2FA token');
 		const payload = { login: user.login, isSecondFactorAuthenticated };
 		return {
 			access_token: this.jwtService.sign(payload)
@@ -64,8 +64,6 @@ export class AuthService {
 	// Verify user's code against the secret saved in the database
 	isTwoFactorAuthCodeValid(twoFactorAuthCode: string, user: User) {
 		console.log('Checking if 2fa code is valid');
-		console.log(twoFactorAuthCode);
-		console.log(user.twoFactorAuthSecret);
 		return authenticator.verify({
 			token: twoFactorAuthCode,
 			secret: user.twoFactorAuthSecret
