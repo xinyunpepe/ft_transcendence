@@ -7,11 +7,11 @@ import { FtAuthGuard } from './guards/42auth.guard';
 import { JwtAuthGuard } from './guards/jwt.guard';
 
 /*
-**	the user logs in using 42 auth, and we respond with a JWT token,
-**		- if the 2FA is turned off, we give full access to the user,
-**		- if the 2FA is turned on, we provide the access just to the /2fa/authenticate endpoint,
-**		the user looks up Google Authenticator code and sends it to the /2fa/authenticate endpoint,
-**		we respond with a new JWT token with full access.
+** the user logs in using 42 auth, and we respond with a JWT token,
+** 	- if the 2FA is turned off, we give full access to the user,
+** 	- if the 2FA is turned on, we provide the access just to the /2fa/authenticate endpoint,
+** 	the user looks up Google Authenticator code and sends it to the /2fa/authenticate endpoint,
+** 	we respond with a new JWT token with full access.
 */
 
 @Controller('auth')
@@ -73,9 +73,8 @@ export class AuthController {
 		console.log('Authenticating 2FA');
 		const currentUser = await this.userService.findOneUser(req.user.login);
 		const isValid = this.authService.isTwoFactorAuthCodeValid(twoFactorAuthCode, currentUser);
-		if (!isValid) {
+		if (!isValid)
 			throw new UnauthorizedException('Wrong authentication code');
-		}
 		const token = await this.authService.loginWithTwoFactorAuth(currentUser, true);
 		res.clearCookie('accessToken');
 		res.cookie('accessToken', token.access_token);
@@ -113,9 +112,8 @@ export class AuthController {
 		console.log(currentUser);
 		const isValid = this.authService.isTwoFactorAuthCodeValid(twoFactorAuthCode, currentUser);
 		console.log(isValid)
-		if (!isValid) {
+		if (!isValid)
 			throw new UnauthorizedException('Wrong authentication code');
-		}
 		await this.userService.turnOnTwoFactorAuth(currentUser.login);
 	}
 

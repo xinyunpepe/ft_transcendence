@@ -4,7 +4,7 @@ import { toFileStream } from 'qrcode';
 import { Response } from "express";
 import { authenticator } from "otplib";
 import { CreateUserDto } from "src/user/dto/user.dto";
-import { User } from "src/user/user.entity";
+import { UserEntity } from "src/user/entities/user.entity";
 import { UserService } from "src/user/user.service";
 
 @Injectable()
@@ -31,7 +31,7 @@ export class AuthService {
 		return newUser;
 	}
 
-	login(user: User) {
+	login(user: UserEntity) {
 		console.log('Start creating token');
 		const payload = { login: user.login };
 		return {
@@ -39,7 +39,7 @@ export class AuthService {
 		};
 	}
 
-	loginWithTwoFactorAuth(user: User, isSecondFactorAuthenticated = false) {
+	loginWithTwoFactorAuth(user: UserEntity, isSecondFactorAuthenticated = false) {
 		console.log('Start creating 2FA token');
 		const payload = { login: user.login, isSecondFactorAuthenticated };
 		return {
@@ -48,7 +48,7 @@ export class AuthService {
 	}
 
 	// Generate 2FA secret and save to database
-	async generateTwoFactorAuthSecret(user: User) {
+	async generateTwoFactorAuthSecret(user: UserEntity) {
 		const secret = authenticator.generateSecret();
 		const otpauthUrl = authenticator.keyuri(user.login, process.env.TWO_FACTOR_AUTHENTICATION_APP_NAME, secret);
 		await this.userService.setTwoFactorAuthSecret(secret, user.login);
@@ -62,7 +62,7 @@ export class AuthService {
 	}
 
 	// Verify user's code against the secret saved in the database
-	isTwoFactorAuthCodeValid(twoFactorAuthCode: string, user: User) {
+	isTwoFactorAuthCodeValid(twoFactorAuthCode: string, user: UserEntity) {
 		console.log('Checking if 2fa code is valid');
 		return authenticator.verify({
 			token: twoFactorAuthCode,
