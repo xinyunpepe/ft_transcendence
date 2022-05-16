@@ -1,10 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { FriendRequestDto, FriendRequest_Status } from './dto/friend-request.dto';
+import { FriendRequest_Status } from './interfaces/friend-request.interface';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import { FriendRequestEntity } from './entities/friend-request.entity';
 import { UserEntity } from './entities/user.entity';
+import { User_Status } from './interfaces/status.interface';
+import { MatchHistoryEntity } from './entities/match-history.entity';
 
 @Injectable()
 export class UserService {
@@ -12,7 +14,9 @@ export class UserService {
 		@InjectRepository(UserEntity)
 		private userRepository: Repository<UserEntity>,
 		@InjectRepository(FriendRequestEntity)
-		private friendRequestRepository: Repository<FriendRequestEntity>
+		private friendRequestRepository: Repository<FriendRequestEntity>,
+		@InjectRepository(MatchHistoryEntity)
+		private matchHistoryRepository: Repository<MatchHistoryEntity>
 	) {}
 
 	/*
@@ -68,6 +72,24 @@ export class UserService {
 
 	async updateUserStatus(login: string, status: string) {
 		return this.userRepository.update({ login }, { status: status });
+	}
+
+	async getUserStatus(login: string) {
+		const user = await this.userRepository.findOne({ login: login });
+		if (user)
+			return user.status as User_Status;
+	}
+
+	//where AND or OR?
+	async getMatchHistory(login: string) {
+		const currentUser = await this.findOneUser(login);
+		return await this.matchHistoryRepository.find({
+			where: [
+				{ winner: currentUser },
+				{ loser: currentUser }
+			],
+			relations: ['winner', 'loser']
+		});
 	}
 
 	/*

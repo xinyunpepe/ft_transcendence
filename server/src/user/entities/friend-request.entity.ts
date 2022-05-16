@@ -6,6 +6,7 @@ export class FriendRequestEntity {
 	@PrimaryGeneratedColumn()
 	id: number
 
+	// one user can have many friend-request
 	@ManyToOne(() => UserEntity, (userEntity) => userEntity.sentFriendRequest)
 	creator: UserEntity
 

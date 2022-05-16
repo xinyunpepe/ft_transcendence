@@ -1,3 +1,5 @@
+import { EntitySchema } from "typeorm";
+
 export class CreateUserDto {
 	login: string;
 	username: string;

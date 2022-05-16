@@ -1,5 +1,6 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { FriendRequestEntity } from "./friend-request.entity";
+import { MatchHistoryEntity } from "./match-history.entity";
 
 @Entity('user')
 export class UserEntity {
@@ -38,4 +39,10 @@ export class UserEntity {
 
 	@OneToMany(() => FriendRequestEntity, (friendRequestEntity) => friendRequestEntity.receiver)
 	receivedFriendRequest: FriendRequestEntity[];
+
+	@OneToMany(() => MatchHistoryEntity, (matchHistoryEntity) => matchHistoryEntity.winner)
+	wonHistory: MatchHistoryEntity[];
+
+	@OneToMany(() => MatchHistoryEntity, (matchHistoryEntity) => matchHistoryEntity.loser)
+	lostHistory: MatchHistoryEntity[];
 }

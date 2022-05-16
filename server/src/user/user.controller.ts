@@ -1,5 +1,5 @@
 import { Body, Param, Controller, Get, Post, Put, Delete, Req } from '@nestjs/common';
-import { FriendRequestStatus, FriendRequest_Status } from './dto/friend-request.dto';
+import { FriendRequestStatus } from './interfaces/friend-request.interface';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import { UserService } from './user.service';
 
@@ -60,6 +60,13 @@ export class UserController {
 		@Param('id') id: number
 	) {
 		return this.userService.deleteUser(id);
+	}
+
+	@Get('status/:login')
+	getUserStatus(
+		@Param('login') login: string,
+	) {
+		return this.userService.getUserStatus(login);
 	}
 
 	/*
