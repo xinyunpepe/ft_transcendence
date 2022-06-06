@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { UserModule } from '../user/user.module';
+import { UserModule } from 'src/user/user.module';
 import { FtAuthStrategy } from './strategies/42auth.strategy';
 import { SessionSerializer } from './utils/session.serializer';
 import { AuthController } from './auth.controller';
@@ -26,7 +26,7 @@ import { TwoFactorStrategy } from './strategies/2fa.strategy';
 		JwtStrategy,
 		TwoFactorStrategy
 	],
-	controllers: [AuthController]
+	controllers: [AuthController],
+	exports: [AuthService]
 })
-
 export class AuthModule {}

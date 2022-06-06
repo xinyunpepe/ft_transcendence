@@ -1,4 +1,6 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { ChannelEntity } from "src/chat/entities/channel.entity";
+import { MessageEntity } from "src/chat/entities/message.entity";
+import { Column, Entity, ManyToMany, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { FriendRequestEntity } from "./friend-request.entity";
 import { MatchHistoryEntity } from "./match-history.entity";
 
@@ -45,4 +47,13 @@ export class UserEntity {
 
 	@OneToMany(() => MatchHistoryEntity, (matchHistoryEntity) => matchHistoryEntity.loser)
 	lostHistory: MatchHistoryEntity[];
+
+	@OneToMany(() => ChannelEntity, (channelEntity) => channelEntity.owner)
+	ownedChannels: ChannelEntity;
+
+	@ManyToMany(() => ChannelEntity, (channelEntity) => channelEntity.users)
+	channels: ChannelEntity[];
+
+	@OneToMany(() => MessageEntity, (messageEntity) => messageEntity.user)
+	messages: MessageEntity[];
 }

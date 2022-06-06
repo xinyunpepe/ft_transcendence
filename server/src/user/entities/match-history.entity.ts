@@ -4,20 +4,20 @@ import { UserEntity } from "./user.entity";
 @Entity('match-history')
 export class MatchHistoryEntity {
 	@PrimaryGeneratedColumn()
-	id: number
+	id: number;
 
 	@Column({ type: 'timestamp', default: () => "CURRENT_TIMESTAMP" })
-	time: string
+	time: string;
 
 	@ManyToOne(() => UserEntity, (userEntity) => userEntity.wonHistory)
-	winner: UserEntity
+	winner: UserEntity;
 
 	@ManyToOne(() => UserEntity, (userEntity) => userEntity.lostHistory)
-	loser: UserEntity
+	loser: UserEntity;
 
 	@Column()
-	winnerScore: number
+	winnerScore: number;
 
 	@Column()
-	loserScore: number
+	loserScore: number;
 }

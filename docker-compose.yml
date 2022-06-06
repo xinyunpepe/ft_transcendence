@@ -1,21 +1,35 @@
 version: "3.8"
 
 services:
-  api:
+  server:
     build:
       context: ./server/
     depends_on:
       - postgres
     environment:
       DATABASE_URL: postgres://user:password@postgres:5432/db
-      NODE_ENV: delelopment
+      NODE_ENV: development
       PORT: 3000
     restart: always
     ports:
       - "8080:3000"
     volumes:
       - ./server/:/usr/src/app
+      - /usr/src/app/node_modules
     command: npm run start:dev
+
+  client:
+    build:
+      context: ./client/
+    restart: always
+    ports:
+      - 4200:4200
+    volumes:
+      - ./client/:/usr/client/src/app
+      - /usr/client/src/app/node_modules
+    command: npm run start
+    links:
+      - server
 
   postgres:
     image: postgres:latest

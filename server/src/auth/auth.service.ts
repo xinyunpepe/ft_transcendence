@@ -69,4 +69,9 @@ export class AuthService {
 			secret: user.twoFactorAuthSecret
 		});
 	}
+
+	// Verify if jwt is valid before connection, need to verify is user exists???
+	verifyJwt(jwt: string) {
+		return this.jwtService.verifyAsync(jwt);
+	}
 }

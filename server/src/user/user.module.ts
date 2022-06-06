@@ -7,17 +7,17 @@ import { FriendRequestEntity } from './entities/friend-request.entity';
 import { MatchHistoryEntity } from './entities/match-history.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([
-      UserEntity,
-      FriendRequestEntity,
-      MatchHistoryEntity
-    ])
-  ],
-  providers: [UserService],
-  controllers: [UserController],
+	imports: [
+		TypeOrmModule.forFeature([
+			UserEntity,
+			FriendRequestEntity,
+			MatchHistoryEntity
+		])
+	],
+	providers: [UserService],
+	controllers: [UserController],
 
-  // To use outside of module which imported TypeOrmModule.forFeature
-  exports: [TypeOrmModule]
+	// To use outside of module which imported TypeOrmModule.forFeature
+	exports: [UserService, TypeOrmModule]
 })
 export class UserModule {}

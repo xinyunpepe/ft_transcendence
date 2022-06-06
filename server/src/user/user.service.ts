@@ -12,11 +12,11 @@ import { MatchHistoryEntity } from './entities/match-history.entity';
 export class UserService {
 	constructor(
 		@InjectRepository(UserEntity)
-		private userRepository: Repository<UserEntity>,
+		private readonly userRepository: Repository<UserEntity>,
 		@InjectRepository(FriendRequestEntity)
-		private friendRequestRepository: Repository<FriendRequestEntity>,
+		private readonly friendRequestRepository: Repository<FriendRequestEntity>,
 		@InjectRepository(MatchHistoryEntity)
-		private matchHistoryRepository: Repository<MatchHistoryEntity>
+		private readonly matchHistoryRepository: Repository<MatchHistoryEntity>
 	) {}
 
 	/*
