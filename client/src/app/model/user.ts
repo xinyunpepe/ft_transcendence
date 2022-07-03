@@ -5,7 +5,8 @@ export interface UserI {
 	login?: string;
 	username?: string;
 	avatar?: string;
-	status?: STATUS,
+	isTwoFactorAuthEnabled: boolean;
+	twoFactorAuthSecret: string;
 	totalWins?: number,
 	totalLoses?: number,
 	ladderLevel?: number

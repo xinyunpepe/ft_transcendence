@@ -39,7 +39,6 @@ export class AuthController {
 	*/
 	@UseGuards(FtAuthGuard)
 	@Get('redirect')
-	// @Redirect('http://localhost:3030/dashboard')
 	async redirect(
 		@Req() req,
 		@Res() res
@@ -52,11 +51,11 @@ export class AuthController {
 		}
 		const currentUser = await this.userService.findOneUser(user.login);
 		if (currentUser.isTwoFactorAuthEnabled === true) {
-			res.redirect('http://localhost:3030/2fa/authenticate');
+			res.redirect('http://localhost:4200/2fa/authenticate');
 			return ;
 		}
 		await this.userService.updateUserStatus(user.login, 'online');
-		res.redirect('http://localhost:3030/dashboard');
+		res.redirect(`http://localhost:4200/private/profile/${this.login}`);
 	}
 
 	/*
@@ -79,7 +78,7 @@ export class AuthController {
 		res.clearCookie('accessToken');
 		res.cookie('accessToken', token.access_token);
 		await this.userService.updateUserStatus(currentUser.login, 'online');
-		res.redirect('http://localhost:3030/dashboard');
+		res.redirect(`http://localhost:4200/private/profile/${this.login}`);
 	}
 
 	/*
@@ -144,6 +143,6 @@ export class AuthController {
 		console.log('Start logging out');
 		await this.userService.updateUserStatus(req.user.login, 'offline');
 		res.clearCookie('accessToken');
-		res.redirect('http://localhost:3030');
+		res.redirect('http://localhost:4200');
 	}
 }

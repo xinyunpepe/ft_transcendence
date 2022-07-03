@@ -1,8 +1,17 @@
 <div class="card">
-	<img src="" alt="avatar" style="width:100%">
-	<h1>{{ userData?.username }}</h1>
-	<p>{{ userData?.status }}</p>
-	<p>{{ userData?.totalWins }}</p>
-	<p>{{ userData?.totalLoses }}</p>
-	<p>{{ userData?.ladderLevel }}</p>
+	<img src="{{ user.avatar }}" alt="avatar" style="width:100%">
+	<h1>42 login: {{ user.login }}</h1>
+	<p>username: {{ user.username }}</p>
+	<p>status: {{ user.status }}</p>
+	<p>total wins: {{ user.totalwins }}</p>
+	<p>total loses: {{ user.totalloses }}</p>
+	<p>laddel level: {{ user.laddlelevel }}</p>
+
+	<div *ngIf="!twoFactorAuthActive">
+		<button (click)="turnOn2FA()">Turn on 2Fa</button>
+	</div>
+
+	<div *ngIf="twoFactorAuthActive">
+		<button (click)="turnOff2FA()">Turn off 2Fa</button>
+	</div>
 </div>
