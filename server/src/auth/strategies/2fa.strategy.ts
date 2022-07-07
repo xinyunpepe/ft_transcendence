@@ -20,7 +20,7 @@ export class TwoFactorStrategy extends PassportStrategy(Strategy, 'two-factor') 
 	}
 
 	async validate(payload: any) {
-		const user = await this.userService.findOneUser(payload.login);
+		const user = await this.userService.findUserByLogin(payload.login);
 		if (!user.isTwoFactorAuthEnabled) {
 			return user;
 		}

@@ -3,9 +3,10 @@ import { JwtService } from "@nestjs/jwt";
 import { toFileStream } from 'qrcode';
 import { Response } from "express";
 import { authenticator } from "otplib";
-import { CreateUserDto } from "src/user/dto/user.dto";
-import { UserEntity } from "src/user/entities/user.entity";
+import { CreateUserDto } from "src/user/model/dto/user.dto";
+import { UserEntity } from "src/user/model/entities/user.entity";
 import { UserService } from "src/user/user.service";
+import { UserI } from "src/user/model/interface/user.interface";
 
 @Injectable()
 export class AuthService {
@@ -14,10 +15,10 @@ export class AuthService {
 		private readonly jwtService: JwtService
 	) {}
 
-	async validateUser(userDto: CreateUserDto) {
+	async validateUser(userI: UserI) {
 		console.log('Start of validate user');
-		const { login } = userDto;
-		const user = await this.userService.findOneUser(login);
+		const { login } = userI;
+		const user = await this.userService.findUserByLogin(login);
 		if (user) {
 			console.log('User exists in the database');
 			// await this.userService.updateUserStatus(user.login, 'online');
@@ -25,7 +26,7 @@ export class AuthService {
 			return user;
 		}
 		console.log('New user');
-		const newUser = await this.userService.createUser(userDto);
+		const newUser = await this.userService.createUser(userI);
 		// await this.userService.updateUserStatus(newUser.login, 'online');
 		// console.log(`${ newUser.login } is ${ newUser.status } now`);
 		return newUser;
@@ -74,4 +75,9 @@ export class AuthService {
 	verifyJwt(jwt: string) {
 		return this.jwtService.verifyAsync(jwt);
 	}
+
+	// logout(user: UserEntity) {
+	// 	console.log('Start logging out');
+	// 	this.userService.updateUserStatus(user.login, 'offline');
+	// }
 }

@@ -2,10 +2,10 @@ import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { ChannelController } from "./controllers/channel.controller";
 import { ChannelService } from "./services/channel.service";
-import { ChannelEntity } from "./entities/channel.entity";
+import { ChannelEntity } from "./model/entities/channel.entity";
 import { AuthModule } from "src/auth/auth.module";
 import { UserModule } from "src/user/user.module";
-import { MessageEntity } from "./entities/message.entity";
+import { MessageEntity } from "./model/entities/message.entity";
 import { ChatGateway } from "./gateway/chat.gateway";
 import { MessageService } from "./services/message.service";
 

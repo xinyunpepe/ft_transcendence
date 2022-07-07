@@ -1,5 +1,5 @@
-import { MessageEntity } from "src/chat/entities/message.entity";
-import { UserEntity } from "src/user/entities/user.entity";
+import { MessageEntity } from "src/chat/model/entities/message.entity";
+import { UserEntity } from "src/user/model/entities/user.entity";
 import { Column, CreateDateColumn, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 @Entity('channel')
@@ -8,9 +8,9 @@ export class ChannelEntity {
 	id: number;
 
 	@Column()
-	type: 'public' | 'private';
+	type: 'public' | 'private' | 'protected';
 
-	@Column({ unique: true })
+	@Column()
 	name: string;
 
 	@Column()

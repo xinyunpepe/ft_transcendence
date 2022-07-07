@@ -1,9 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-import { map, Observable, Subscription } from 'rxjs';
-import { UserI } from 'src/app/model/user';
-import { AuthService } from 'src/app/services/auth/auth.service';
+import { Subscription } from 'rxjs';
+import { AuthService } from 'src/app/public/services/auth/auth.service';
 import { environment } from 'src/environments/environment';
 
 @Component({
@@ -25,17 +23,14 @@ export class ProfileComponent implements OnInit {
 
 	constructor(
 		private http: HttpClient,
-		// get the current route from the browser
-		private activatedRoute: ActivatedRoute,
-		private authService: AuthService
+		private authService: AuthService,
 	) {}
 
-	// retrieve login from url, replace 'xli' in getUserData() later?
-	userLogin = this.activatedRoute.params;
-
-	getUserData() {
-		// from the server
-		this.http.get(`${environment.baseUrl}/users/xli`).subscribe({
+	ngOnInit(): void {
+		console.log('profile');
+		localStorage.setItem('access_token', this.authService.getAccessToken());
+		const login = this.authService.getLoggedInUser(); //subscribe???
+		this.http.get(`${ environment.baseUrl }/users/${ login }`).subscribe({
 			next: data => {
 				if (!data) {
 					return;
@@ -48,11 +43,6 @@ export class ProfileComponent implements OnInit {
 				console.log(error);
 			}
 		});
-	}
-
-	ngOnInit(): void {
-		console.log('profile');
-		this.getUserData();
 	}
 
 	ngOnDestroy(): void {
@@ -74,4 +64,6 @@ export class ProfileComponent implements OnInit {
 
 	turnOff2FA() {
 	}
+
+
 }

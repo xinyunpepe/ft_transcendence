@@ -12,7 +12,7 @@ services:
       PORT: 3000
     restart: always
     ports:
-      - "8080:3000"
+      - "3000:3000"
     volumes:
       - ./server/:/usr/src/app
       - /usr/src/app/node_modules

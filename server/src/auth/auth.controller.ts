@@ -49,13 +49,13 @@ export class AuthController {
 			const token = await this.authService.login(user);
 			res.cookie('accessToken', token.access_token);
 		}
-		const currentUser = await this.userService.findOneUser(user.login);
+		const currentUser = await this.userService.findUserByLogin(user.login);
 		if (currentUser.isTwoFactorAuthEnabled === true) {
 			res.redirect('http://localhost:4200/2fa/authenticate');
 			return ;
 		}
 		await this.userService.updateUserStatus(user.login, 'online');
-		res.redirect(`http://localhost:4200/private/profile/${this.login}`);
+		res.redirect(`http://localhost:4200/private/profile`);
 	}
 
 	/*
@@ -70,7 +70,7 @@ export class AuthController {
 		@Body() { twoFactorAuthCode }: TwoFactorAuthDto
 	){
 		console.log('Authenticating 2FA');
-		const currentUser = await this.userService.findOneUser(req.user.login);
+		const currentUser = await this.userService.findUserByLogin(req.user.login);
 		const isValid = this.authService.isTwoFactorAuthCodeValid(twoFactorAuthCode, currentUser);
 		if (!isValid)
 			throw new UnauthorizedException('Wrong authentication code');
@@ -78,7 +78,7 @@ export class AuthController {
 		res.clearCookie('accessToken');
 		res.cookie('accessToken', token.access_token);
 		await this.userService.updateUserStatus(currentUser.login, 'online');
-		res.redirect(`http://localhost:4200/private/profile/${this.login}`);
+		res.redirect(`http://localhost:4200/private/profile`);
 	}
 
 	/*
@@ -107,7 +107,7 @@ export class AuthController {
 		@Body() { twoFactorAuthCode }: TwoFactorAuthDto
 	){
 		console.log('Turning on 2FA');
-		const currentUser = await this.userService.findOneUser(req.user.login);
+		const currentUser = await this.userService.findUserByLogin(req.user.login);
 		console.log(currentUser);
 		const isValid = this.authService.isTwoFactorAuthCodeValid(twoFactorAuthCode, currentUser);
 		console.log(isValid)
@@ -143,6 +143,6 @@ export class AuthController {
 		console.log('Start logging out');
 		await this.userService.updateUserStatus(req.user.login, 'offline');
 		res.clearCookie('accessToken');
-		res.redirect('http://localhost:4200');
+		res.redirect('http://localhost:4200/public/login');
 	}
 }

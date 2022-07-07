@@ -22,7 +22,7 @@ export class FtAuthStrategy extends PassportStrategy(Strategy) {
 			login: username,
 			username: username,
 			avatar: photos[0].value,
-			status: 'offline'
+			// status: 'offline'
 		}
 		await this.authService.validateUser(user);
 		return user;

@@ -1,12 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { FriendRequest_Status } from './interfaces/friend-request.interface';
-import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
-import { FriendRequestEntity } from './entities/friend-request.entity';
-import { UserEntity } from './entities/user.entity';
+import { UpdateUserDto } from './model/dto/user.dto';
+import { FriendRequestEntity } from './model/entities/friend-request.entity';
+import { UserEntity } from './model/entities/user.entity';
 import { User_Status } from './interfaces/status.interface';
-import { MatchHistoryEntity } from './entities/match-history.entity';
+import { MatchHistoryEntity } from './model/entities/match-history.entity';
+import { STATUS, UserI } from './model/interface/user.interface';
 
 @Injectable()
 export class UserService {
@@ -27,62 +28,74 @@ export class UserService {
 		return await this.userRepository.find();
 	}
 
-	async findOneUser(login: string) {
+	async findUserByLogin(login: string) {
 		// const user = await this.userRepository.findOne({ login: login });
 		// if (user)
 		// 	return user;
 		// throw new NotFoundException('User does not exist');
-		return await this.userRepository.findOne({ login: login });
+		return await this.userRepository.findOne({ where: { login: login }});
 	}
 
-	async createUser(userDto: CreateUserDto) {
+	async findAllByUsername(username: string) {
+		return await this.userRepository.find({
+			where: [
+				{ username: Like(`%${username.toLowerCase()}%`) }
+			]
+		})
+	}
+
+	public getOne(login: string): Promise<UserI> {
+		return this.userRepository.findOneOrFail({ where: { login }});
+	}
+
+	async createUser(user: UserI) {
 		console.log('Start creating user');
-		const newUser = this.userRepository.create(userDto);
+		const newUser = this.userRepository.create(user);
 		await this.userRepository.save(newUser);
 		return newUser;
 	}
 
 	async updateUser(id: number, userDto: UpdateUserDto) {
-		const user = await this.userRepository.findOne({ id: id });
+		const user = await this.userRepository.findOne({ where: { id: id }});
 		if (user)
 			return this.userRepository.update(id, userDto);
 		throw new NotFoundException("User does not exist");
 	}
 
 	async deleteUser(id: number) {
-		const user = await this.userRepository.findOne({ id: id });
+		const user = await this.userRepository.findOne({ where: { id: id }});
 		if (user)
 			return this.userRepository.delete(id);
 		throw new NotFoundException("User does not exist");
 	}
 
 	async updateUserName(login: string, username: string) {
-		const user = await this.userRepository.findOne({ login: login });
+		const user = await this.userRepository.findOne({ where: { login: login }});
 		if (user)
 			return this.userRepository.update({ login }, { username: username });
 		throw new NotFoundException("User does not exist");
 	}
 
 	async updateUserAvatar(login: string, avatar: string) {
-		const user = await this.userRepository.findOne({ login: login });
+		const user = await this.userRepository.findOne({ where: { login: login }});
 		if (user)
 			return this.userRepository.update({ login }, { avatar: avatar });
 		throw new NotFoundException("User does not exist");
 	}
 
-	async updateUserStatus(login: string, status: string) {
+	async updateUserStatus(login: string, status: STATUS) {
 		return this.userRepository.update({ login }, { status: status });
 	}
 
 	async getUserStatus(login: string) {
-		const user = await this.userRepository.findOne({ login: login });
+		const user = await this.userRepository.findOne({ where: { login: login }});
 		if (user)
 			return user.status as User_Status;
 	}
 
 	//where AND or OR?
 	async getMatchHistory(login: string) {
-		const currentUser = await this.findOneUser(login);
+		const currentUser = await this.findUserByLogin(login);
 		return await this.matchHistoryRepository.find({
 			where: [
 				{ winner: currentUser },
@@ -119,7 +132,7 @@ export class UserService {
 	}
 
 	async findRequestByReceiver(receiverLogin: string) {
-		const receiver = await this.findOneUser(receiverLogin);
+		const receiver = await this.findUserByLogin(receiverLogin);
 		return await this.friendRequestRepository.findOne({
 			where: [{ receiver: receiver }],
 			relations: ['creator', 'receiver']
@@ -127,7 +140,7 @@ export class UserService {
 	}
 
 	async findRequestByCreator(creatorLogin: string) {
-		const creator = await this.findOneUser(creatorLogin);
+		const creator = await this.findUserByLogin(creatorLogin);
 		return await this.friendRequestRepository.findOne({
 			where: [{ creator: creator }],
 			relations: ['creator', 'receiver']
@@ -145,19 +158,19 @@ export class UserService {
 	async sendFriendRequest(creatorLogin: string, receiverLogin: string) {
 		if (receiverLogin === creatorLogin)
 			throw new Error("You cannot send a friend request to yourself");
-		const receiver = await this.findOneUser(receiverLogin);
-		const creator = await this.findOneUser(creatorLogin);
+		const receiver = await this.findUserByLogin(receiverLogin);
+		const creator = await this.findUserByLogin(creatorLogin);
 		if (!receiver)
 			throw new NotFoundException("User does not exist");
 		if (this.existFriendRequest(receiver, creator)) {
-			const receivedRequest = await this.friendRequestRepository.findOne({ creator: receiver, receiver: creator });
+			const receivedRequest = await this.friendRequestRepository.findOne({ where: { creator: receiver, receiver: creator }});
 			if (receivedRequest) {
 				if (receivedRequest.status === 'pending')
 					throw new Error(`A friend request has been send from ${ receiverLogin }`);
 				else if (receivedRequest.status === 'accepted')
 					throw new Error(`You and ${ receiverLogin } are already friends`);
 			}
-			const sentRequest = await this.friendRequestRepository.findOne({ creator: creator, receiver: receiver });
+			const sentRequest = await this.friendRequestRepository.findOne({ where: { creator: creator, receiver: receiver }});
 			if (sentRequest) {
 				if (sentRequest.status === 'pending')
 					throw new Error(`A friend request has been sent to ${ receiverLogin }`);
@@ -193,7 +206,7 @@ export class UserService {
 	}
 
 	async findFriends(userLogin: string) {
-		const currentUser = await this.findOneUser(userLogin);
+		const currentUser = await this.findUserByLogin(userLogin);
 		let acceptedList = await this.friendRequestRepository.find({
 			where: [
 				{ creator: currentUser, status: 'accepted' },

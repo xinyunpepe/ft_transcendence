@@ -5,9 +5,10 @@ export interface UserI {
 	login?: string;
 	username?: string;
 	avatar?: string;
-	isTwoFactorAuthEnabled: boolean;
-	twoFactorAuthSecret: string;
-	totalWins?: number,
-	totalLoses?: number,
-	ladderLevel?: number
+	isTwoFactorAuthEnabled?: boolean;
+	twoFactorAuthSecret?: string;
+	status?: STATUS;
+	totalWins?: number;
+	totalLoses?: number;
+	ladderLevel?: number;
 }

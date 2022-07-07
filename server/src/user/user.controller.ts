@@ -1,6 +1,7 @@
-import { Body, Param, Controller, Get, Post, Put, Delete, Req } from '@nestjs/common';
+import { Body, Param, Controller, Get, Post, Put, Delete, Req, Query } from '@nestjs/common';
 import { FriendRequestStatus } from './interfaces/friend-request.interface';
-import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
+import { CreateUserDto, UpdateUserDto } from './model/dto/user.dto';
+import { UserI } from './model/interface/user.interface';
 import { UserService } from './user.service';
 
 @Controller('users')
@@ -18,15 +19,23 @@ export class UserController {
 
 	@Get(':login')
 	// findOne(@Param() param: { id: number } ) Return the param as an object
-	findOneUser(
+	findUserByLogin(
 		@Param('login') login: string
 	) {
-		return this.userService.findOneUser(login);
+		return this.userService.findUserByLogin(login);
 	}
 
+	@Get('/username/:username')
+	// findOne(@Param() param: { id: number } ) Return the param as an object
+	findAllByUsername(
+		@Param('username') username: string
+	) {
+		return this.userService.findAllByUsername(username);
+	}
+	
 	@Post()
 	createUser(
-		@Body() user: CreateUserDto
+		@Body() user: UserI
 	) {
 		return this.userService.createUser(user);
 	}

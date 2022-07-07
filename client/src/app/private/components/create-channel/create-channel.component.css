@@ -1,0 +1,52 @@
+.container {
+	display: flex;
+	justify-content: center;
+	margin: 20px;
+	min-width: 350px;
+}
+.container .dashboard {
+	margin-bottom: 20px;
+}
+.container mat-card mat-card-content form {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+.container mat-card mat-card-content form mat-form-field {
+	width: 100%;
+	min-width: 300px;
+}
+.container mat-card mat-card-content form .button {
+	display: flex;
+	justify-content: flex-end;
+}
+.container {
+	display: flex;
+	justify-content: center;
+	margin: 20px;
+	min-width: 350px;
+}
+
+.container .dashboard {
+	margin-bottom: 20px;
+}
+
+.container mat-card mat-card-content form {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+.container mat-card mat-card-content form mat-form-field {
+	width: 100%;
+	min-width: 300px;
+}
+
+.container mat-card mat-card-content form .button {
+	display: flex;
+	justify-content: flex-end;
+}
+
+.mat-radio-button {
+	padding: 20px;
+  }

@@ -3,23 +3,32 @@ import { BrowserModule } from '@angular/platform-browser';
 import { HttpClientModule } from '@angular/common/http';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { JwtHelperService, JWT_OPTIONS  } from '@auth0/angular-jwt';
-import { NavbarComponent } from './public/components/navbar/navbar.component';
+import { LoginComponent } from './public/components/login/login.component';
+import { JwtModule } from '@auth0/angular-jwt';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+
+export function tokenGetter() {
+	return localStorage.getItem('access_token');
+}
 
 @NgModule({
 	declarations: [
 		AppComponent,
-		NavbarComponent
+		LoginComponent
 	],
 	imports: [
 		BrowserModule,
 		AppRoutingModule,
-		HttpClientModule
+		HttpClientModule,
+		BrowserAnimationsModule,
+		JwtModule.forRoot({
+			config: {
+				tokenGetter: tokenGetter,
+				allowedDomains: ['localhost:3000']
+			}
+		})
 	],
-	providers: [
-		{ provide: JWT_OPTIONS, useValue: JWT_OPTIONS },
-		JwtHelperService
-	],
+	providers: [],
 	bootstrap: [AppComponent]
 })
 export class AppModule { }

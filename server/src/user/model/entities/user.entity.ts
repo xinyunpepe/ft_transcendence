@@ -1,6 +1,7 @@
-import { ChannelEntity } from "src/chat/entities/channel.entity";
-import { MessageEntity } from "src/chat/entities/message.entity";
+import { ChannelEntity } from "src/chat/model/entities/channel.entity";
+import { MessageEntity } from "src/chat/model/entities/message.entity";
 import { Column, Entity, ManyToMany, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { STATUS } from "../interface/user.interface";
 import { FriendRequestEntity } from "./friend-request.entity";
 import { MatchHistoryEntity } from "./match-history.entity";
 
@@ -25,7 +26,7 @@ export class UserEntity {
 	twoFactorAuthSecret?: string;
 
 	@Column({ default: 'offline'})
-	status: string;
+	status: STATUS;
 
 	@Column({ default: 0 })
 	totalWins: number;

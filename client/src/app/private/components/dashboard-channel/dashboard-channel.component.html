@@ -1,0 +1,32 @@
+<app-navbar></app-navbar>
+
+<div class="container">
+	<mat-card>
+		<div style="display: flex; flex-direction: row;">
+
+			<div>
+				<div>
+					<span style="display: flex; flex-direction: row; align-items: baseline;">
+						<h2>My Channels</h2>
+					</span>
+					<button mat-button routerLink="/private/create-channel">Create new Channel</button>
+				</div>
+
+				<!-- <div *ngIf="channels$.length > 0" class="channel"> -->
+					<mat-selection-list [multiple]="false">
+						<mat-list-option *ngFor="let channel of (channels$ | async).items" [value]="channel">
+							Name: {{ channel.name }}
+							<mat-divider></mat-divider>
+						</mat-list-option>
+					</mat-selection-list>
+				<!-- </div> -->
+			</div>
+
+			<!-- <div class="chatroom">
+				<app-chat-room [chatRoom]="selectedRoom"></app-chat-room>
+
+			</div> -->
+
+		</div>
+	</mat-card>
+</div>
