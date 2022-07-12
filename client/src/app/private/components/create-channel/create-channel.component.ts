@@ -20,9 +20,8 @@ export class CreateChannelComponent implements OnInit {
 		users: new FormArray([], [Validators.required]),
 		type: new FormControl({ value: 'public', disabled: false }, [Validators.required]),
 		password: new FormControl({ value: '', disabled: true }),
-		// type: new FormControl({ value: 'public' }, [Validators.required]),
-		// admin: new FormArray([]),
-		// muted: new FormArray([]),
+		admin: new FormArray([]),
+		blocked: new FormArray([]),
 	});
 
 	constructor(
@@ -35,10 +34,16 @@ export class CreateChannelComponent implements OnInit {
 	}
 
 	create() {
-		// if (this.form.valid) {
-		// 	this.chatService.createChannel(this.form.getRawValue());
-		// 	this.router.navigate(['../dashboard-channel'], { relativeTo: this.activatedRoute });
-		// }
+		if (this.form.valid) {
+			try {
+				if (this.form.get('type').value != 'protected' && this.form.get('type').value != 'private') {
+					this.form.get('type').setValue('public');
+				}
+				this.chatService.createChannel(this.form.getRawValue());
+				this.router.navigate(['../dashboard-channel'], { relativeTo: this.activatedRoute });
+			}
+			catch (error) {}
+		}
 	}
 
 	initUser(user: UserI) {
@@ -53,16 +58,16 @@ export class CreateChannelComponent implements OnInit {
 		this.users.push(userFormControl);
 	}
 
+	removeUser(userId: number) {
+		this.users.removeAt(this.users.value.findIndex((user: UserI) => user.id === userId));
+	}
+
 	get name(): FormControl {
 		return this.form.get('name') as FormControl;
 	}
 
 	get users(): FormArray {
 		return this.form.get('users') as FormArray;
-	}
-
-	removeUser(userId: number) {
-		this.users.removeAt(this.users.value.findIndex((user: UserI) => user.id === userId));
 	}
 
 	radioType($event: MatRadioChange) {

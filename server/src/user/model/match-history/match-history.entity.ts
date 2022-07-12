@@ -1,5 +1,5 @@
 import { Column, Entity, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
-import { UserEntity } from "./user.entity";
+import { UserEntity } from "../user/user.entity";
 
 @Entity('match-history')
 export class MatchHistoryEntity {

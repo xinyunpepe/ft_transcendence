@@ -25,11 +25,13 @@ export class AuthService {
 	}
 
 	getLoggedInUser() {
-		// const helper = new JwtHelperService();
-		// const decodedToken = helper.decodeToken(this.getAccessToken());
-
 		const decodedToken = this.jwtService.decodeToken();
 		return decodedToken.login;
+	}
+
+	isAuthenticated(): boolean {
+		const token = localStorage.getItem('access_token');
+		return !this.jwtService.isTokenExpired(token);
 	}
 
 	logout() {

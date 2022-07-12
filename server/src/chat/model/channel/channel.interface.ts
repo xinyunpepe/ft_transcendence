@@ -1,10 +1,9 @@
-import { Meta } from "./meta.interface";
-import { UserI } from "./user.interface";
+import { UserI } from "src/user/model/user/user.interface";
 
 export enum ChannelType {
 	PUBLIC = 'public',
 	PRIVATE = 'private',
-	PROTECTED = 'protected'
+	PROTECTED = 'protected',
 }
 
 export interface ChannelI {
@@ -18,9 +17,4 @@ export interface ChannelI {
 	blocked?: UserI[];
 	createdAt?: Date;
 	updatedAt?: Date;
-}
-
-export interface ChannelPaginateI {
-	items: ChannelI[];
-	meta: Meta;
 }

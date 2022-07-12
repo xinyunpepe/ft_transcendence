@@ -1,13 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Like, Repository } from 'typeorm';
-import { FriendRequest_Status } from './interfaces/friend-request.interface';
-import { UpdateUserDto } from './model/dto/user.dto';
-import { FriendRequestEntity } from './model/entities/friend-request.entity';
-import { UserEntity } from './model/entities/user.entity';
-import { User_Status } from './interfaces/status.interface';
-import { MatchHistoryEntity } from './model/entities/match-history.entity';
-import { STATUS, UserI } from './model/interface/user.interface';
+import { FriendRequest_Status } from './model/friend-request/friend-request.interface';
+import { UpdateUserDto } from './model/user/user.dto';
+import { FriendRequestEntity } from './model/friend-request/friend-request.entity';
+import { UserEntity } from './model/user/user.entity';
+import { MatchHistoryEntity } from './model/match-history/match-history.entity';
+import { UserI, UserStatus } from './model/user/user.interface';
 
 @Injectable()
 export class UserService {
@@ -44,8 +43,8 @@ export class UserService {
 		})
 	}
 
-	public getOne(login: string): Promise<UserI> {
-		return this.userRepository.findOneOrFail({ where: { login }});
+	public findOne(login: string): Promise<UserI> {
+		return this.userRepository.findOne({ where: { login }});
 	}
 
 	async createUser(user: UserI) {
@@ -83,15 +82,23 @@ export class UserService {
 		throw new NotFoundException("User does not exist");
 	}
 
-	async updateUserStatus(login: string, status: STATUS) {
+	// async updateUserStatus(login: string, status: UserStatus.ON) {
+	// 	return this.userRepository.update({ login }, { status: status });
+	// }
+
+	async onlineStatus(login: string, status: UserStatus.ON) {
 		return this.userRepository.update({ login }, { status: status });
 	}
 
-	async getUserStatus(login: string) {
-		const user = await this.userRepository.findOne({ where: { login: login }});
-		if (user)
-			return user.status as User_Status;
+	async offlineStatus(login: string, status: UserStatus.OFF) {
+		return this.userRepository.update({ login }, { status: status });
 	}
+
+	// async getUserStatus(login: string) {
+	// 	const user = await this.userRepository.findOne({ where: { login: login }});
+	// 	if (user)
+	// 		return user.status as STATUS;
+	// }
 
 	//where AND or OR?
 	async getMatchHistory(login: string) {

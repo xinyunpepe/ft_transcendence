@@ -3,10 +3,10 @@ import { JwtService } from "@nestjs/jwt";
 import { toFileStream } from 'qrcode';
 import { Response } from "express";
 import { authenticator } from "otplib";
-import { CreateUserDto } from "src/user/model/dto/user.dto";
-import { UserEntity } from "src/user/model/entities/user.entity";
+import { CreateUserDto } from "src/user/model/user/user.dto";
+import { UserEntity } from "src/user/model/user/user.entity";
 import { UserService } from "src/user/user.service";
-import { UserI } from "src/user/model/interface/user.interface";
+import { UserI } from "src/user/model/user/user.interface";
 
 @Injectable()
 export class AuthService {

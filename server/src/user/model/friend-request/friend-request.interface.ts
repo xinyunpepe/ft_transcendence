@@ -1,4 +1,4 @@
-import { UserEntity } from "../model/entities/user.entity";
+import { UserEntity } from "../user/user.entity";
 
 export type FriendRequest_Status =
 	'pending' |

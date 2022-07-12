@@ -1,34 +1,31 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
 import { Repository } from 'typeorm';
-import { CreateMessageDto } from '../dto/message.dto';
-import { MessageEntity } from '../model/entities/message.entity';
+import { ChannelI } from '../model/channel/channel.interface';
+import { MessageEntity } from '../model/message/message.entity';
+import { MessageI } from '../model/message/message.interface';
 
 @Injectable()
 export class MessageService {
-constructor(
-	@InjectRepository(MessageEntity)
-	private readonly messageRepository: Repository<MessageEntity>
-) {}
+	constructor(
+		@InjectRepository(MessageEntity)
+		private readonly messageRepository: Repository<MessageEntity>
+	) {}
 
+	async create(message: MessageI) {
+		return this.messageRepository.save(this.messageRepository.create(message));
+	}
 
-//TODO improve
-async createMessage(messageDto: CreateMessageDto) {
-	console.log('Start creating message');
-	const newMessage = this.messageRepository.create(messageDto);
-	await this.messageRepository.save(newMessage);
-	return newMessage;
-}
+	async findMessageForChannel(channel: ChannelI, options: IPaginationOptions) {
+		const query = this.messageRepository
+			.createQueryBuilder('message')
+			.leftJoin('message.channel', 'channel')
+			.where('channel.id = :channelId', { channelId: channel.id })
+			.leftJoinAndSelect('message.user', 'user')
+			.orderBy('message.createdAt', 'ASC');
 
-findAll() {
-	return `This action returns all chat`;
-}
+		return paginate(query, options);
+	}
 
-findOne(id: number) {
-	return `This action returns a #${id} chat`;
-}
-
-remove(id: number) {
-	return `This action removes a #${id} chat`;
-}
 }

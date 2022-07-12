@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Post, Redirect, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { UserStatus } from 'src/user/model/user/user.interface';
 import { UserService } from 'src/user/user.service';
 import { AuthService } from './auth.service';
 import { TwoFactorAuthDto } from './dto/2fa.dto';
@@ -54,7 +55,7 @@ export class AuthController {
 			res.redirect('http://localhost:4200/2fa/authenticate');
 			return ;
 		}
-		await this.userService.updateUserStatus(user.login, 'online');
+		await this.userService.onlineStatus(user.login, UserStatus.ON);
 		res.redirect(`http://localhost:4200/private/profile`);
 	}
 
@@ -77,7 +78,7 @@ export class AuthController {
 		const token = await this.authService.loginWithTwoFactorAuth(currentUser, true);
 		res.clearCookie('accessToken');
 		res.cookie('accessToken', token.access_token);
-		await this.userService.updateUserStatus(currentUser.login, 'online');
+		await this.userService.onlineStatus(currentUser.login, UserStatus.ON);
 		res.redirect(`http://localhost:4200/private/profile`);
 	}
 
@@ -141,7 +142,7 @@ export class AuthController {
 		@Res() res
 	) {
 		console.log('Start logging out');
-		await this.userService.updateUserStatus(req.user.login, 'offline');
+		await this.userService.offlineStatus(req.user.login, UserStatus.OFF);
 		res.clearCookie('accessToken');
 		res.redirect('http://localhost:4200/public/login');
 	}

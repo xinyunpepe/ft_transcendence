@@ -2,9 +2,9 @@ import { Module } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserController } from './user.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserEntity } from './model/entities/user.entity';
-import { FriendRequestEntity } from './model/entities/friend-request.entity';
-import { MatchHistoryEntity } from './model/entities/match-history.entity';
+import { UserEntity } from './model/user/user.entity';
+import { FriendRequestEntity } from './model/friend-request/friend-request.entity';
+import { MatchHistoryEntity } from './model/match-history/match-history.entity';
 
 @Module({
 	imports: [

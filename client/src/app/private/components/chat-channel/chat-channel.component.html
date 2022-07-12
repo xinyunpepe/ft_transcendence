@@ -1,0 +1,35 @@
+<div *ngIf="chatChannel">
+	<!-- Header -->
+	<div style="height: 125px;">
+		<span style="display: flex; flex-direction: row; align-items: center; justify-content: space-between;">
+			<h2>{{ chatChannel.name }}</h2>
+			<span style="display: flex; flex-direction: row; align-items: center;">
+				<mat-icon>event</mat-icon>
+				<p style="margin-left: 10px;">{{ chatChannel.updatedAt | date}}</p>
+			</span>
+		</span>
+		<span>
+			<span *ngFor="let user of chatChannel.users">{{ user.username }}, </span>
+		</span>
+	</div>
+
+	<!-- Messages -->
+	<div #messages class="message">
+		<span *ngFor="let message of (messagesPaginate$ | async)?.items">
+			<app-chat-message [message]="message"></app-chat-message>
+		</span>
+	</div>
+
+	<!-- Add Message -->
+	<div style="position: absolute; bottom: 0; display: flex; flex-direction: row; align-items: center;">
+		<mat-form-field style="width: 350px;">
+			<input matInput [formControl]="chatMessage" type="text">
+		</mat-form-field>
+		<button mat-button [disabled]="!chatMessage.valid" (click)="sendMessage()">
+			<span style="display: flex; flex-direction: row; align-items: center;">
+				<mat-icon style="margin-left: 20px;">send</mat-icon>
+				<p style="margin-left:10px;">Send</p>
+			</span>
+		</button>
+	</div>
+</div>

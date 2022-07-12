@@ -1,4 +1,4 @@
-import { ChannelI } from "./channel.interface";
+import { ChannelI } from "src/chat/model/channel/channel.interface";
 
 export enum UserRole {
 	OWNER = 'owner',

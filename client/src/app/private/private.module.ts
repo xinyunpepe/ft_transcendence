@@ -21,8 +21,8 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatStepperModule } from '@angular/material/stepper';
 import { SelectUsersChannelComponent } from './components/select-users-channel/select-users-channel.component';
-
-
+import { ChatChannelComponent } from './components/chat-channel/chat-channel.component';
+import { ChatMessageComponent } from './components/chat-message/chat-message.component';
 
 @NgModule({
 	declarations: [
@@ -32,6 +32,8 @@ import { SelectUsersChannelComponent } from './components/select-users-channel/s
 		DashboardChannelComponent,
 		CreateChannelComponent,
 		SelectUsersChannelComponent,
+		ChatChannelComponent,
+		ChatMessageComponent,
 	],
 	imports: [
 		CommonModule,
