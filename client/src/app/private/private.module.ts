@@ -23,6 +23,7 @@ import { MatStepperModule } from '@angular/material/stepper';
 import { SelectUsersChannelComponent } from './components/select-users-channel/select-users-channel.component';
 import { ChatChannelComponent } from './components/chat-channel/chat-channel.component';
 import { ChatMessageComponent } from './components/chat-message/chat-message.component';
+import { GameComponent } from './components/game/game.component';
 
 @NgModule({
 	declarations: [
@@ -34,6 +35,7 @@ import { ChatMessageComponent } from './components/chat-message/chat-message.com
 		SelectUsersChannelComponent,
 		ChatChannelComponent,
 		ChatMessageComponent,
+		GameComponent,
 	],
 	imports: [
 		CommonModule,
