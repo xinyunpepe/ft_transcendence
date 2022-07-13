@@ -5,6 +5,7 @@ import { ProfileComponent } from './components/profile/profile.component';
 import { LogoutComponent } from './components/logout/logout.component';
 import { DashboardChannelComponent } from './components/dashboard-channel/dashboard-channel.component';
 import { CreateChannelComponent } from './components/create-channel/create-channel.component';
+import { GameComponent } from './components/game/game.component';
 
 const routes: Routes = [
 	{ path: 'profile',
@@ -15,6 +16,7 @@ const routes: Routes = [
 	},
 	{ path: 'dashboard-channel', component: DashboardChannelComponent },
 	{ path: 'create-channel', component: CreateChannelComponent },
+	{ path: 'game', component: GameComponent },
 	{ path: 'logout', component: LogoutComponent },
 	{ path: '**', component: PageNotFoundComponent },
 ];

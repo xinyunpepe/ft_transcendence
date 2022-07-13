@@ -2,12 +2,11 @@ import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { UserEntity } from "src/user/model/user/user.entity";
 import { Repository } from "typeorm";
-import { ChannelI } from "../model/channel/channel.interface";
+import { ChannelI, ChannelType } from "../model/channel/channel.interface";
 import { ChannelEntity } from "../model/channel/channel.entity";
 import { UserI } from "src/user/model/user/user.interface";
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
-
-// const bcrypt = require('bcrypt');
+// import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class ChannelService {
@@ -21,20 +20,24 @@ export class ChannelService {
 	async createChannel(channel: ChannelI, creator: UserI) {
 		console.log('Start creating channel');
 
-		// bcrypt doesnt work???
-		// if (channel.password) {
-		// 	channel.type = 'protected';
-		// 	const hashedPassword = await bcrypt.hash(channel.password, 12);
-		// 	channel.password = hashedPassword;
-		// }
-		// channel.owner = creator;
+		if (channel.password) {
+			channel.type = ChannelType.PROTECTED;
+			// const hashedPassword = await bcrypt.hash(channel.password, 12);
+			// channel.password = hashedPassword;
+		}
+		channel.owner = creator;
 		const newChannel = await this.addCreatorToChannel(channel, creator);
-		return this.channelRepository.save(newChannel);
+		const newChannelAdmin = await this.addAdminToChannel(newChannel, creator);
+		return this.channelRepository.save(newChannelAdmin);
 	}
 
 	async addCreatorToChannel(channel: ChannelI, creator: UserI) {
-		channel.owner = creator;
 		channel.users.push(creator);
+		return channel;
+	}
+
+	async addAdminToChannel(channel: ChannelI, user: UserI) {
+		channel.admin.push(user);
 		return channel;
 	}
 

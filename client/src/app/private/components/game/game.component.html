@@ -1,19 +1,21 @@
+<app-navbar></app-navbar>
 
+<style>
+	div {text-align: center;}
+</style>
 
-<p [hidden]="hideMatchButton[0]">
-	My id is {{userid}}
+<div [hidden]="hideMatchButton[0]">
+	My id is {{userLogin}}
 	<button (click)="RandomGame()">
 	find a random opponent
 	</button>
-</p>
+</div>
 
 <div>
 	<canvas #myCanvas width="{{canvasWidth}}" height="{{canvasHeight}}"></canvas>
 </div>
 
-<style>
-	div {text-align: center;}
-</style>
+
 <div [hidden]="hideScore[0]">
 	{{Points[0]}} : {{Points[1]}}
 </div>

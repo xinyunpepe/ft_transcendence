@@ -24,6 +24,8 @@ import { SelectUsersChannelComponent } from './components/select-users-channel/s
 import { ChatChannelComponent } from './components/chat-channel/chat-channel.component';
 import { ChatMessageComponent } from './components/chat-message/chat-message.component';
 import { GameComponent } from './components/game/game.component';
+import { SocketIoModule } from 'ngx-socket-io';
+import { config } from 'rxjs';
 
 @NgModule({
 	declarations: [
@@ -35,7 +37,7 @@ import { GameComponent } from './components/game/game.component';
 		SelectUsersChannelComponent,
 		ChatChannelComponent,
 		ChatMessageComponent,
-		GameComponent,
+		GameComponent
 	],
 	imports: [
 		CommonModule,
@@ -54,7 +56,7 @@ import { GameComponent } from './components/game/game.component';
 		MatIconModule,
 		FormsModule,
 		MatSlideToggleModule,
-		MatStepperModule
+		MatStepperModule,
 	]
 })
 export class PrivateModule { }

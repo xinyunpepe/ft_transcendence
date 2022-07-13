@@ -1,8 +1,8 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { UserInfoService } from '../../services/game/user-info.service';
 import { GameService } from '../../services/game/game.service';
 import { Subscription } from 'rxjs';
 import { HostListener } from '@angular/core';
+import { AuthService } from 'src/app/public/services/auth/auth.service';
 
 export class Rectangle {
 	constructor(private ctx: CanvasRenderingContext2D, private width: number, private height: number, public xPos: number, public yPos: number) {}
@@ -34,8 +34,8 @@ var sub: Subscription;
 var GameSub: Subscription;
 var PlayerSub: Subscription;
 var BallSub: Subscription;
-var userSub: Subscription;
-var userid: number;
+// var userSub: Subscription;
+var userLogin: string;
 var room: number = -1;
 var paddles: Rectangle[] = [];
 var ball: Rectangle;
@@ -57,7 +57,7 @@ var hideScore: boolean[] = [true];
 })
 export class GameComponent implements OnInit {
 
-  public userid: number = -1;
+  public userLogin: string = '';
   public gamePlayed : number = 0;
   private GameStatus: string = '';
   public hideMatchButton: boolean[] = hideMatchButton;
@@ -70,15 +70,15 @@ export class GameComponent implements OnInit {
   public canvasWidth: number = canvasWidth;
   public ctx!: CanvasRenderingContext2D;
 
-  constructor(private userinfo: UserInfoService, private game: GameService) {}
+  constructor(
+		private game: GameService,
+		private authService: AuthService
+	) {}
 
   ngOnInit(): void {
-    userSub = this.userinfo.getUserId().subscribe((id)=>{
-      userid = id;
-      this.userid = id;
-      userSub.unsubscribe();
-    });
-    let tmp: any = this.canvas.nativeElement.getContext('2d');
+	userLogin = this.authService.getLoggedInUser();
+    this.userLogin = userLogin;
+	let tmp: any = this.canvas.nativeElement.getContext('2d');
     if (typeof tmp != 'undefined') {
       this.ctx = tmp;
     }
@@ -89,17 +89,17 @@ export class GameComponent implements OnInit {
 
 
   @HostListener('document:keydown', ['$event'])
-  handleKeyboardEvent(event: KeyboardEvent) { 
-    if (room < 0 || this.userid == undefined || this.userid < 0 )
+  handleKeyboardEvent(event: KeyboardEvent) {
+    if (room < 0 || this.userLogin == undefined || this.userLogin == '' )
       return ;
     if (event.key == 'ArrowUp') {
-      this.game.sendPlayerMove(room, userid, 'up');
+      this.game.sendPlayerMove(room, userLogin, 'up');
     }
     if (event.key == 'ArrowDown') {
-      this.game.sendPlayerMove(room, userid, 'down');
+      this.game.sendPlayerMove(room, userLogin, 'down');
     }
     if (event.key == ' ') {
-      this.game.sendPlayerMove(room, userid, 'space');
+      this.game.sendPlayerMove(room, userLogin, 'space');
     }
   }
 
@@ -221,12 +221,12 @@ export class GameComponent implements OnInit {
       if (!data.content) {
         throw('ServerError: Player No Content');
       }
-      if (!this.userid)
-        this.userid = userid;
-      if (data.content.id == this.userid) {
+      if (this.userLogin == undefined || this.userLogin == '')
+        this.userLogin = userLogin;
+      if (data.content.id == this.userLogin) {
         this.leftHeight = data.content.height;
         points[0] = data.content.point;
-        
+
         if (this.rightHeight == undefined)
           this.rightHeight = canvasHeight / 2 - paddleHeight / 2;
         // if (!this.Points[1])
@@ -245,7 +245,7 @@ export class GameComponent implements OnInit {
       alert(err);
     }
     finally {
-      
+
       paddles[0].yPos = this.leftHeight;
       paddles[1].yPos = this.rightHeight;
       // console.log(toRealHeight(canvasHeight, this.leftHeight).toString() + ' ' + this.rightHeight.toString());
@@ -269,9 +269,9 @@ export class GameComponent implements OnInit {
       if (!data.content) {
         throw('ServerError: Ball No Content');
       }
-      if (!this.userid)
-        this.userid = userid;
-      if (data.content.id == this.userid) { // player1
+      if (this.userLogin == undefined || this.userLogin == '')
+        this.userLogin = userLogin;
+      if (data.content.id == this.userLogin) { // player1
         ball.xPos = data.content.x;
         ball.yPos = data.content.y;
       }
@@ -284,7 +284,7 @@ export class GameComponent implements OnInit {
       alert(err);
     }
     finally {
-      ball.draw(ballColor);    
+      ball.draw(ballColor);
     }
   }
 
@@ -303,11 +303,11 @@ export class GameComponent implements OnInit {
     PlayerSub = this.game.getPlayerInformation().subscribe(this.DealWithPlayerInformation);
     BallSub = this.game.getBallInformation().subscribe(this.DealWithBallInformation);
     // if (result != 'Waiting')
-    this.game.sendRoomRequest(this.userid, -1);
+    this.game.sendRoomRequest(this.userLogin, '');
 
-    // setTimeout(()=>{ 
+    // setTimeout(()=>{
     //   if (!sub.closed) {
-    //     sub.unsubscribe(); 
+    //     sub.unsubscribe();
     //     alert('Server didn\'t respond');
     //   }
     // }, 1000);
