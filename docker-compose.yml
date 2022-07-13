@@ -1,5 +1,18 @@
 version: "3.8"
 
+volumes:
+  frontend:
+    driver_opts:
+      device: /home/leofu/Documents/42/ft_transcendence/client
+      o: bind
+      type: none
+
+  backend:
+    driver_opts:
+      device: /home/leofu/Documents/42/ft_transcendence/server
+      o: bind
+      type: none
+
 services:
   server:
     build:
@@ -14,9 +27,8 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./server/:/usr/src/app
-      - /usr/src/app/node_modules
-    command: npm run start:dev
+      - backend:/usr/src/app
+    command: sh -c "npm install && npm run start:dev"
 
   client:
     build:
@@ -25,9 +37,8 @@ services:
     ports:
       - 4200:4200
     volumes:
-      - ./client/:/usr/client/src/app
-      - /usr/client/src/app/node_modules
-    command: npm run start
+      - frontend:/usr/src/app
+    command: sh -c "npm install && npm start --watch"
     links:
       - server
 
