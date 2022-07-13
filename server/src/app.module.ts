@@ -7,6 +7,8 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { ChatModule } from './chat/chat.module';
 import { UserModule } from './user/user.module';
+import { GameModule } from './game/game.module';
+import { GameGateway } from './game/game.gateway';
 
 @Module({
   imports: [
@@ -26,9 +28,10 @@ import { UserModule } from './user/user.module';
     PassportModule.register({ session: true }),
     AuthModule,
     UserModule,
-    ChatModule
+    ChatModule,
+    GameModule
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, GameGateway],
 })
 export class AppModule {}
