@@ -107,7 +107,7 @@ class GameRoom {
 
 // todo: connect and disconnect ? (manage socket and ids)
 
-@WebSocketGateway({cors: true})
+@WebSocketGateway({cors: { origin: ['http://localhost:3000', 'http://localhost:4200'] }})
 export class GameGateway {
   @WebSocketServer() server;
 
