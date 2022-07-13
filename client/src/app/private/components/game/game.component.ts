@@ -47,8 +47,9 @@ const ballWidth: number = 10;
 const ballHeight: number = 10;
 const ballColor: string = 'black';
 var points: number[] = [0,0];
-var hideMatchButton: boolean[] = [false];
+var hideItem: boolean[] = [false, true];
 var hideScore: boolean[] = [true];
+var opponentLogin: [string] = [''];
 
 @Component({
   selector: 'app-game',
@@ -58,9 +59,10 @@ var hideScore: boolean[] = [true];
 export class GameComponent implements OnInit {
 
   public userLogin: string = '';
+  public opponentLogin: string[] = opponentLogin;
   public gamePlayed : number = 0;
   private GameStatus: string = '';
-  public hideMatchButton: boolean[] = hideMatchButton;
+  public hideItem: boolean[] = hideItem;
   public hideScore: boolean[] = hideScore;
   private leftHeight: number = canvasHeight / 2 - paddleHeight / 2;
   private rightHeight: number = canvasHeight / 2 - paddleHeight / 2;
@@ -141,7 +143,7 @@ export class GameComponent implements OnInit {
     finally{
       if (result == 'Matched') {
         sub.unsubscribe();
-        hideMatchButton[0] = true;
+        hideItem[0] = true;
         hideScore[0] = false;
       }
     }
@@ -196,12 +198,11 @@ export class GameComponent implements OnInit {
       //   // todo: move ball
       // }
       if (this.GameStatus == 'Finish') {
-        ball.clean2(0,0,canvasWidth,canvasHeight);
+        ball.clean();
         GameSub.unsubscribe();
         PlayerSub.unsubscribe();
         BallSub.unsubscribe();
-        hideMatchButton[0] = false;
-        hideScore[0] = true;
+        hideItem[1] = false;
       }
     }
   }
@@ -233,6 +234,7 @@ export class GameComponent implements OnInit {
         //   this.Points[1] = 0;
       }
       else {
+        opponentLogin[0] = data.content.id;
         this.rightHeight = data.content.height;
         points[1] = data.content.point;
         if (this.leftHeight == undefined)
@@ -313,4 +315,10 @@ export class GameComponent implements OnInit {
     // }, 1000);
   }
 
+  BackToMatch(): void {
+    ball.clean2(0,0,canvasWidth,canvasHeight);
+    hideItem[0] = false;
+    hideScore[0] = true;
+    hideItem[1] = true;
+  }
 }

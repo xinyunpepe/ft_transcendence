@@ -3,20 +3,33 @@
 <style>
 	div {text-align: center;}
 </style>
+<style type="text/css">
+	span.red { color: #FF0000;font-size:25;}
+	span.blue { color: #0000FF;font-size:25;} 
+</style>
 
-<div [hidden]="hideMatchButton[0]">
-	My id is {{userLogin}}
+<div [hidden]="hideItem[0]">
 	<button (click)="RandomGame()">
 	find a random opponent
 	</button>
 </div>
 
-<div>
-	<canvas #myCanvas width="{{canvasWidth}}" height="{{canvasHeight}}"></canvas>
+<div [hidden]="!hideItem[0]">
+	<canvas #myCanvas width="{{canvasWidth}}" height="{{canvasHeight}}" style="border: 1px solid black;"></canvas>
 </div>
 
+<div [hidden]="hideItem[1]">
+	Game Result
+</div>
 
 <div [hidden]="hideScore[0]">
-	{{Points[0]}} : {{Points[1]}}
+	<span class="red">(Red) {{userLogin}} {{Points[0]}}</span> : <span class="blue">{{Points[1]}} (Blue) {{opponentLogin[0]}}</span>
+</div>
+<p class="detail">My Name is: <span class="name">Tintinecute</span> </p>
+
+<div [hidden]="hideItem[1]">
+	<button [hidden]="hideItem[1]" (click)="BackToMatch()">
+		next
+	</button>
 </div>
 
