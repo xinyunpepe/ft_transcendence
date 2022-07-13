@@ -45,8 +45,19 @@ export class ChannelService {
 		});
 	}
 
+	async deleteUser(userId: number, channelId: number) {
+		const channel = await this.getChannel(channelId);
+		const indexOfUser = channel.users.findIndex((user) => {
+			return user.id === userId;
+		});
+		if (indexOfUser !== -1) {
+			channel.users.splice(indexOfUser, 1);
+		}
+		return this.channelRepository.save(channel);
+	}
+
 	async getChannelsForUser(login: string, options: IPaginationOptions) {
-		console.log('Getting channels for user');
+		// console.log('Getting channels for user');
 		const query = this.channelRepository
 			// assign alias 'channel' to channel table when creating a quiry builder
 			// equivalent to SELECT ... FROM channel channel
@@ -59,5 +70,16 @@ export class ChannelService {
 			.orderBy('channel.updatedAt', 'DESC')
 
 		return paginate(query, options);
+	}
+
+	isUserMuted(userId: number, channel: ChannelI) {
+		const query = this.channelRepository
+			.createQueryBuilder('channel')
+			.leftJoinAndSelect('channel.mute', 'mute')
+			.where('mute.id = :userId', { userId })
+			.andWhere('channel.id = :channelId', { channelId: channel.id })
+			.getCount();
+
+		return (query);
 	}
 }

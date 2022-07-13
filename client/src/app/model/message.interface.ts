@@ -8,6 +8,7 @@ import { UserI } from "./user.interface";
 export interface MessageI {
 	id?: number;
 	text: string;
+	type: number;
 	user?: UserI;
 	channel: ChannelI;
 	createdAt?: Date;

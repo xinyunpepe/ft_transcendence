@@ -11,6 +11,9 @@ export class JoinedChannelEntity {
 	@Column()
 	socketId: string;
 
+	@Column()
+	userId: number;
+
 	@ManyToOne(() => UserEntity, user => user.joinedChannels)
 	@JoinColumn()
 	user: UserEntity;

@@ -234,4 +234,18 @@ export class UserService {
 		});
 		return this.userRepository.findByIds(friendsList);
 	}
+
+	isUserBlocked(creator: number, receiver: number){
+		  const query = this.friendRequestRepository
+			.createQueryBuilder("friend")
+			.leftJoin('friend.creator', 'creator')
+			.leftJoinAndSelect('friend.receiver', 'receiver')
+			.where('creator.id = :creatorId')
+			.andWhere('receiver.id = :receiverId', { receiverId: receiver })
+			.andWhere("friend.status = 'blocked'")
+			.setParameters({ creatorId: creator })
+			.getCount();
+
+		return  (query);
+	  }
 }

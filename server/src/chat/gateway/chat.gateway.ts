@@ -13,6 +13,7 @@ import { ConnectedUserI } from '../model/connected-user/connected-user.interface
 import { JoinedChannelService } from '../services/joined-channel.service';
 import { MessageI } from '../model/message/message.interface';
 import { JoinedChannelI } from '../model/joined-channel/joined-channel.interface';
+import { channel } from 'diagnostics_channel';
 
 /*
 ** Unlike controller who works with urls
@@ -48,7 +49,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
 	async handleConnection(socket: Socket) {
 		try {
-			console.log('Start handling connection');
+			// console.log('Start handling connection');
 			const decodedToken = await this.authService.verifyJwt(socket.handshake.headers.authorization);
 			const user: UserI = await this.userService.findOne(decodedToken.login);
 			if (!user) {
@@ -75,11 +76,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 	}
 
 	async handleDisconnect(socket: Socket) {
-		console.log('Gateway disconnected');
-
 		//remove connected users from DB
 		await this.connectedUserService.deleteBySocketId(socket.id);
-
 		socket.disconnect();
 	}
 
@@ -108,8 +106,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 		// add page +1 to match angular material paginator
 		page.page = page.page + 1;
 
-		const login = socket.data.user.login;
-		const channels = await this.channelService.getChannelsForUser(login, page);
+		const channels = await this.channelService.getChannelsForUser(socket.data.user.login, page);
 
 		// substract page -1 to match the angular material paginator
 		channels.meta.currentPage = channels.meta.currentPage - 1;
@@ -119,32 +116,42 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
 	@SubscribeMessage('joinChannel')
 	async onJoinChannel(socket: Socket, channel: ChannelI) {
-		const messages = await this.messageService.findMessageForChannel(channel, { page: 1, limit: 30 });
+		const messages = await this.messageService.findMessageForChannel(channel, { page: 1, limit: 10 });
 		messages.meta.currentPage = messages.meta.currentPage - 1;
 
 		// save connections to Channel
-		const user = socket.data.user;
-		const test = await this.joinedChannelService.create({ socketId: socket.id, user: user, channel });
-		await this.joinedChannelService.create({ socketId: socket.id, user: user, channel });
+		await this.joinedChannelService.create({ socketId: socket.id, user: socket.data.user, userId: socket.data.user.id, channel });
+
 		// send last messages from Channel to User
 		await this.server.to(socket.id).emit('messages', messages);
 	}
 
-	@SubscribeMessage('leaveChannel')
-	async onLeaveChannel(socket: Socket) {
+	@SubscribeMessage('leaveJoinedChannel')
+	async onLeaveJoinedChannel(socket: Socket) {
 		// remove connections from JoinedChannel
 		await this.joinedChannelService.deleteBySocketId(socket.id);
 	}
 
+	@SubscribeMessage('leaveChannel')
+	async onLeaveChannel(socket: Socket, channel: ChannelI) {
+		console.log("IN")
+;		// remove user from Channel
+		await this.channelService.deleteUser(socket.data.user.id, channel.id);
+	}
+
 	@SubscribeMessage('addMessage')
 	async onAddMessage(socket: Socket, message: MessageI) {
-		const user = socket.data.user;
-		const newMessage: MessageI = await this.messageService.create({ ...message, user: user });
-		const channel: ChannelI = await this.channelService.getChannel(newMessage.channel.id);
-		const joinedUsers: JoinedChannelI[] = await this.joinedChannelService.findByChannel(channel);
-		
-		for (const user of joinedUsers) {
-			await this.server.to(user.socketId).emit('messageAdded', newMessage);
+		const isMuted: number = await this.channelService.isUserMuted(socket.data.user.id, message.channel);
+		if (!isMuted) {
+			const newMessage: MessageI = await this.messageService.create({ ...message, user: socket.data.user });
+			const channel: ChannelI = await this.channelService.getChannel(newMessage.channel.id);
+			const joinedUsers: JoinedChannelI[] = await this.joinedChannelService.findByChannel(channel);
+			for (const user of joinedUsers) {
+				const isBlocked: number = await this.userService.isUserBlocked(user.userId, newMessage.user.id);
+				if (!isBlocked) {
+					await this.server.to(user.socketId).emit('messageAdded', newMessage);
+				}
+			}
 		}
 	}
 }

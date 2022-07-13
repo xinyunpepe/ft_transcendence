@@ -14,7 +14,7 @@ export interface ChannelI {
 	owner?: UserI;
 	users?: UserI[];
 	admin?: UserI[];
-	blocked?: UserI[];
+	mute?: UserI[];
 	createdAt?: Date;
 	updatedAt?: Date;
 }

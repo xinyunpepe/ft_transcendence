@@ -21,7 +21,7 @@ export class CreateChannelComponent implements OnInit {
 		type: new FormControl({ value: 'public', disabled: false }, [Validators.required]),
 		password: new FormControl({ value: '', disabled: true }),
 		admin: new FormArray([]),
-		blocked: new FormArray([]),
+		mute: new FormArray([]),
 	});
 
 	constructor(
@@ -58,6 +58,10 @@ export class CreateChannelComponent implements OnInit {
 		this.users.push(userFormControl);
 	}
 
+	addAdmin(userFormControl: FormControl) {
+		this.admin.push(userFormControl);
+	}
+
 	removeUser(userId: number) {
 		this.users.removeAt(this.users.value.findIndex((user: UserI) => user.id === userId));
 	}
@@ -68,6 +72,10 @@ export class CreateChannelComponent implements OnInit {
 
 	get users(): FormArray {
 		return this.form.get('users') as FormArray;
+	}
+
+	get admin(): FormArray {
+		return this.form.get('admin') as FormArray;
 	}
 
 	radioType($event: MatRadioChange) {

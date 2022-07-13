@@ -1,17 +1,18 @@
-import { UserEntity } from "../user/user.entity";
+import { UserI } from "../user/user.interface";
 
 export type FriendRequest_Status =
 	'pending' |
 	'accepted' |
-	'declined';
+	'declined' |
+	'blocked';
 
 export interface FriendRequestStatus {
 	status: FriendRequest_Status;
 }
 
-// export interface FriendRequest {
-// 	id: number;
-// 	creator: UserEntity;
-// 	receiver: UserEntity;
-// 	status: FriendRequest_Status;
-// }
+export interface FriendRequestI {
+	id: number;
+	creator: UserI;
+	receiver: UserI;
+	status: FriendRequest_Status;
+}

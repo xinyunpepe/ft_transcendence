@@ -10,6 +10,9 @@ export class MessageEntity {
 	@Column()
 	text: string;
 
+	@Column({ nullable: true })
+	type: number;
+
 	@ManyToOne(() => UserEntity, user => user.messages)
 	@JoinColumn()
 	user: UserEntity;

@@ -2,7 +2,10 @@
 	<!-- Header -->
 	<div style="height: 125px;">
 		<span style="display: flex; flex-direction: row; align-items: center; justify-content: space-between;">
-			<h2>{{ chatChannel.name }}</h2>
+			<h2>
+				<mat-icon>group</mat-icon>
+				{{ chatChannel.name }}
+			</h2>
 			<span style="display: flex; flex-direction: row; align-items: center;">
 				<mat-icon>event</mat-icon>
 				<p style="margin-left: 10px;">{{ chatChannel.updatedAt | date}}</p>
@@ -11,12 +14,30 @@
 		<span>
 			<span *ngFor="let user of chatChannel.users">{{ user.username }}, </span>
 		</span>
+		<span>
+			<!-- Edit Channel -->
+			<button mat-button (click)="leaveChannel()">
+				<i class="fas fa-sign-out-alt"></i>
+				Leave Channel
+			</button>
+			<button mat-button *ngIf="isOwner || isAdmin" (click)="editChannel(chatChannel.id)">
+				<i class="fas fa-user-cog"></i>
+				Edit Channel
+			</button>
+		</span>
 	</div>
 
 	<!-- Messages -->
 	<div #messages class="message">
 		<span *ngFor="let message of (messagesPaginate$ | async)?.items">
-			<app-chat-message [message]="message"></app-chat-message>
+			<div *ngIf="message.type == 0; else game">
+				<!-- <div *ngIf="message.type == 0"> -->
+				<app-chat-message [message]="message"></app-chat-message>
+			</div>
+			<ng-template #game>
+				<button class="gameButton" (click)="joinGame(message.id)">{{ message.user.username }}<div>{{
+						message.text }}</div></button>
+			</ng-template>
 		</span>
 	</div>
 

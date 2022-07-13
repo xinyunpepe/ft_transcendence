@@ -31,7 +31,7 @@ export class ChannelEntity {
 
 	@ManyToMany(() => UserEntity)
 	@JoinTable()
-	blocked: UserEntity[];
+	mute: UserEntity[];
 
 	@OneToMany(() => JoinedChannelEntity, joinedChannel => joinedChannel.channel)
 	joinedUsers: JoinedChannelEntity[];

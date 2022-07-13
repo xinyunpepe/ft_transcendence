@@ -31,6 +31,10 @@ export class ChatService {
 		this.socket.emit('joinChannel', channel);
 	}
 
+	leaveJoinedChannel(channel: ChannelI) {
+		this.socket.emit('leaveJoinedChannel', channel);
+	}
+
 	leaveChannel(channel: ChannelI) {
 		this.socket.emit('leaveChannel', channel);
 	}
