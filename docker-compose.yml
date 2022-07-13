@@ -18,18 +18,18 @@ services:
       - /usr/src/app/node_modules
     command: npm run start:dev
 
-  # client:
-  #   build:
-  #     context: ./client/
-  #   restart: always
-  #   ports:
-  #     - 4200:4200
-  #   volumes:
-  #     - ./client/:/usr/client/src/app
-  #     - /usr/client/src/app/node_modules
-  #   command: npm run start
-  #   links:
-  #     - server
+  client:
+    build:
+      context: ./client/
+    restart: always
+    ports:
+      - 4200:4200
+    volumes:
+      - ./client/:/usr/client/src/app
+      - /usr/client/src/app/node_modules
+    command: npm run start
+    links:
+      - server
 
   postgres:
     image: postgres:latest

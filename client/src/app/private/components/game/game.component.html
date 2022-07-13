@@ -1,1 +1,20 @@
-<p>game works!</p>
+
+
+<p [hidden]="hideMatchButton[0]">
+	My id is {{userid}}
+	<button (click)="RandomGame()">
+	find a random opponent
+	</button>
+</p>
+
+<div>
+	<canvas #myCanvas width="{{canvasWidth}}" height="{{canvasHeight}}"></canvas>
+</div>
+
+<style>
+	div {text-align: center;}
+</style>
+<div [hidden]="hideScore[0]">
+	{{Points[0]}} : {{Points[1]}}
+</div>
+
