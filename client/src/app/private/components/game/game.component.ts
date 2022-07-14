@@ -46,10 +46,14 @@ const paddleHeight: number = 30;
 const ballWidth: number = 10;
 const ballHeight: number = 10;
 const ballColor: string = 'black';
+const RoomWaitingTime: number = 42;
 var points: number[] = [0,0];
-var hideItem: boolean[] = [false, true];
+var hideItem: boolean[] = [false, true, true];
 var hideScore: boolean[] = [true];
 var opponentLogin: [string] = [''];
+var interval: NodeJS.Timer;
+var leftHeight: number = canvasHeight / 2 - paddleHeight / 2;
+var rightHeight: number = canvasHeight / 2 - paddleHeight / 2;
 
 @Component({
   selector: 'app-game',
@@ -64,13 +68,12 @@ export class GameComponent implements OnInit {
   private GameStatus: string = '';
   public hideItem: boolean[] = hideItem;
   public hideScore: boolean[] = hideScore;
-  private leftHeight: number = canvasHeight / 2 - paddleHeight / 2;
-  private rightHeight: number = canvasHeight / 2 - paddleHeight / 2;
   public Points: number[] = points;
   @ViewChild('myCanvas', {static: true})canvas!: ElementRef<HTMLCanvasElement>;
   public canvasHeight: number = canvasHeight;
   public canvasWidth: number = canvasWidth;
   public ctx!: CanvasRenderingContext2D;
+  public timeLeft: number;
 
   constructor(
 		private game: GameService,
@@ -84,9 +87,10 @@ export class GameComponent implements OnInit {
     if (typeof tmp != 'undefined') {
       this.ctx = tmp;
     }
-    paddles.push(new Rectangle(this.ctx, paddleWidth, paddleHeight, 0, this.leftHeight));
-    paddles.push(new Rectangle(this.ctx, paddleWidth, paddleHeight ,canvasWidth - paddleWidth, this.rightHeight));
+    paddles.push(new Rectangle(this.ctx, paddleWidth, paddleHeight, 0, leftHeight));
+    paddles.push(new Rectangle(this.ctx, paddleWidth, paddleHeight ,canvasWidth - paddleWidth, rightHeight));
     ball = new Rectangle(this.ctx, ballWidth, ballHeight, -1, -1);
+    this.timeLeft = RoomWaitingTime;
   }
 
 
@@ -123,7 +127,7 @@ export class GameComponent implements OnInit {
       switch(data.content) {
         case 'Duplicate':
           result = 'Waiting';
-          throw('You were already in line');
+          throw('You were already in line, please be patient');
         case 'Waiting':
           console.log('Waiting');
           result = 'Waiting';
@@ -132,6 +136,7 @@ export class GameComponent implements OnInit {
         case 'Matched':
           console.log('Matched');
           result = 'Matched';
+          clearInterval(interval);
           break ;
         default:
           throw('ServerError: Unknown Content\n' + data.content);
@@ -225,20 +230,20 @@ export class GameComponent implements OnInit {
       if (this.userLogin == undefined || this.userLogin == '')
         this.userLogin = userLogin;
       if (data.content.id == this.userLogin) {
-        this.leftHeight = data.content.height;
+        leftHeight = data.content.height;
         points[0] = data.content.point;
 
-        if (this.rightHeight == undefined)
-          this.rightHeight = canvasHeight / 2 - paddleHeight / 2;
+        if (rightHeight == undefined)
+          rightHeight = canvasHeight / 2 - paddleHeight / 2;
         // if (!this.Points[1])
         //   this.Points[1] = 0;
       }
       else {
         opponentLogin[0] = data.content.id;
-        this.rightHeight = data.content.height;
+        rightHeight = data.content.height;
         points[1] = data.content.point;
-        if (this.leftHeight == undefined)
-          this.leftHeight = canvasHeight / 2 - paddleHeight / 2;
+        if (leftHeight == undefined)
+          leftHeight = canvasHeight / 2 - paddleHeight / 2;
         // if (!this.Points[0])
         //   this.Points[0] = 0;
       }
@@ -248,12 +253,12 @@ export class GameComponent implements OnInit {
     }
     finally {
 
-      paddles[0].yPos = this.leftHeight;
-      paddles[1].yPos = this.rightHeight;
-      // console.log(toRealHeight(canvasHeight, this.leftHeight).toString() + ' ' + this.rightHeight.toString());
+      paddles[0].yPos = leftHeight;
+      paddles[1].yPos = rightHeight;
+      // console.log(toRealHeight(canvasHeight, leftHeight).toString() + ' ' + rightHeight.toString());
       paddles[0].draw('red');
       paddles[1].draw('blue');
-      // console.log('My Position(left): ' + this.leftHeight.toString() + ' Opponent Position(right): ' + this.rightHeight.toString() + '\
+      // console.log('My Position(left): ' + leftHeight.toString() + ' Opponent Position(right): ' + rightHeight.toString() + '\
                 //  \nMy Point(left)   : ' + this.Points[0].toString() +    ' Opponent Point(right)   : ' + this.Points[1].toString()) ;
     }
   }
@@ -294,6 +299,7 @@ export class GameComponent implements OnInit {
   RandomGame(): void {
     // console.log('A');
     if (result == 'Waiting') {
+      alert('You\'re already in line, please be patient.');
       return ;
     }
     if (result == 'Matched') {
@@ -305,14 +311,25 @@ export class GameComponent implements OnInit {
     PlayerSub = this.game.getPlayerInformation().subscribe(this.DealWithPlayerInformation);
     BallSub = this.game.getBallInformation().subscribe(this.DealWithBallInformation);
     // if (result != 'Waiting')
-    this.game.sendRoomRequest(this.userLogin, '');
+    this.game.sendRoomRequest(this.userLogin);
 
-    // setTimeout(()=>{
-    //   if (!sub.closed) {
-    //     sub.unsubscribe();
-    //     alert('Server didn\'t respond');
-    //   }
-    // }, 1000);
+    hideItem[2] = false;
+    this.timeLeft = RoomWaitingTime;
+    interval = setInterval(()=> {
+      if (this.timeLeft > 0) {
+        --(this.timeLeft);
+      }
+      else {
+        // cancel waiting
+        this.Cancel();
+      }
+    }, 1000);
+  }
+
+  Surrender(): void {
+    if (room < 0 || userLogin == undefined || userLogin == '' )
+      return ;
+    this.game.sendSurrender(room, userLogin);
   }
 
   BackToMatch(): void {
@@ -320,5 +337,18 @@ export class GameComponent implements OnInit {
     hideItem[0] = false;
     hideScore[0] = true;
     hideItem[1] = true;
+    hideItem[2] = true;
   }
-}
+
+  Cancel(): void {
+    this.timeLeft = RoomWaitingTime;
+    hideItem[2] = true;
+    clearInterval(interval);
+    result = '';
+    sub.unsubscribe();
+    GameSub.unsubscribe();
+    PlayerSub.unsubscribe();
+    BallSub.unsubscribe();
+    this.game.sendCancelRequest(userLogin);
+  }
+ }

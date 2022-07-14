@@ -12,10 +12,20 @@
 	<button (click)="RandomGame()">
 	find a random opponent
 	</button>
+	<div [hidden]="hideItem[2]">
+		Waiting for opponent ... {{timeLeft}}
+		<button (click)="Cancel()">
+			cancel
+		</button>
+	</div>
 </div>
 
 <div [hidden]="!hideItem[0]">
-	<canvas #myCanvas width="{{canvasWidth}}" height="{{canvasHeight}}" style="border: 1px solid black;"></canvas>
+		<canvas #myCanvas width="{{canvasWidth}}" height="{{canvasHeight}}" style="border: 1px solid black;"></canvas>
+</div>
+
+<div [hidden]="(!hideItem[0]) || (!hideItem[1])">
+	<button (click)="Surrender()">surrender</button>
 </div>
 
 <div [hidden]="hideItem[1]">
@@ -25,7 +35,6 @@
 <div [hidden]="hideScore[0]">
 	<span class="red">(Red) {{userLogin}} {{Points[0]}}</span> : <span class="blue">{{Points[1]}} (Blue) {{opponentLogin[0]}}</span>
 </div>
-<p class="detail">My Name is: <span class="name">Tintinecute</span> </p>
 
 <div [hidden]="hideItem[1]">
 	<button [hidden]="hideItem[1]" (click)="BackToMatch()">

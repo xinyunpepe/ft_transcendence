@@ -9,6 +9,7 @@ const ballWidth: number = 10;
 const ballHeight: number = 10;
 const animationFrameRate = 30;
 const WinningPoint: number = 3;
+var GameIsMoving: Map<number,boolean> = new Map<number,boolean>(); // GameIsMoving[room_number] = is_in_game
 
 class Response {
   constructor (public type: string, public content?: any) {}
@@ -160,7 +161,11 @@ export class GameGateway {
     const maxX = canvasWidth - ballWidth - paddleWidth;
     const minY = 0;
     const maxY = canvasHeight - ballHeight;
-    const i = setInterval(()=>{
+    const interval = setInterval(()=>{
+      if (GameIsMoving[room_number] == false) {
+        clearInterval(interval);
+        return ;
+      }
       ball.x += ball.vx;
       ball.y += ball.vy;
       if (ball.y < minY) {
@@ -192,7 +197,9 @@ export class GameGateway {
             this.server.to(room_number).emit('Ball', JSON.stringify(ball.getJSON()));
             this.server.to(room_number).emit('GameStatus', JSON.stringify((new Response('Game',  {status: 'Ready', room: room_number.toString()})).getJSON()));
           }
-          clearInterval(i);
+          // console.log(interval);
+          GameIsMoving[room_number] = false;
+          clearInterval(interval);
           return ;
         }
       }
@@ -217,7 +224,8 @@ export class GameGateway {
             this.server.to(room_number).emit('Ball', JSON.stringify(ball.getJSON()));
             this.server.to(room_number).emit('GameStatus', JSON.stringify((new Response('Game',  {status: 'Ready', room: room_number.toString()})).getJSON()));
           }
-          clearInterval(i);
+          GameIsMoving[room_number] = false;
+          clearInterval(interval);
           return ;
         }
       }
@@ -233,6 +241,7 @@ export class GameGateway {
         room.player1.carryBall = false;
         room.player2.carryBall = false;
         room.ball.isCarried = false;
+        GameIsMoving[room_number] = true;
         this.moveBall(parseInt(room_number));
       }
       return ;
@@ -284,35 +293,67 @@ export class GameGateway {
     }
   }
 
+  @SubscribeMessage('Special')
+  async speicalEvent(client, [room_number, id, information]) {
+    // console.log(room_number);
+    if (information == 'Surrender') {
+      // clearInterval(interval);
+      GameIsMoving[room_number] = false;
+      let player1: Player = this.gameRooms[room_number].player1, player2: Player = this.gameRooms[room_number].player2;
+      if (player1.id == id) {
+        player1.point = -42;
+        this.server.to(parseInt(room_number)).emit('Player', JSON.stringify(player1.getJSON()));
+      }
+      else if (player2.id == id) {
+        player2.point = -42;
+        this.server.to(parseInt(room_number)).emit('Player', JSON.stringify(player2.getJSON()));
+      }
+      this.server.to(parseInt(room_number)).emit('GameStatus', JSON.stringify((new Response('Game', {status: 'Finish'})).getJSON()));
+    }
+    else {
+      console.log('Unknown special event');
+    }
+  }
+
   @SubscribeMessage('RoomRequest')
-  async match(client, [from, to]) {
+  async match(client, id) {
     let response = new Response('Room');
-    this.SocketOfClient[from] = client;
-    if (to == '') { // random request
-      const release = await this.mutex.acquire();
-      if (this.waiting_clients.indexOf(from) != -1) {
-        response.content = 'Duplicate';
+    this.SocketOfClient[id] = client;
+    // if (to == '') { // random request
+    const release = await this.mutex.acquire();
+    if (this.waiting_clients.indexOf(id) != -1) {
+      response.content = 'Duplicate';
+    }
+    else {
+      let len = this.waiting_clients.length;
+      if (len > 0) {
+        let opponent = this.waiting_clients.pop();
+        release();
+        this.setGameReady( opponent, id );
+        return ;
       }
       else {
-        let len = this.waiting_clients.length;
-        if (len > 0) {
-          let opponent = this.waiting_clients.pop();
-          release();
-          this.setGameReady( opponent, from );
-          return ;
-        }
-        else {
-          this.waiting_clients.push(from);
-          response.content = 'Waiting';
-        }
+        this.waiting_clients.push(id);
+        response.content = 'Waiting';
       }
-      release();
     }
-    else { // to certain person
-      //todo
-    }
+    release();
+    // }
+    // else { // to certain person
+      // todo
+    // }
 
     this.server.to(client.id).emit('RoomResponse', JSON.stringify(response.getJSON()));
+  }
+
+  @SubscribeMessage('CancelRoom')
+  async cancelRoomRequest(client, id) {
+    const release = await this.mutex.acquire();
+    let index = this.waiting_clients.indexOf(id);
+    if (index != -1) {
+      this.waiting_clients.splice(index, 1);
+    }
+    release();
   }
   
 }
