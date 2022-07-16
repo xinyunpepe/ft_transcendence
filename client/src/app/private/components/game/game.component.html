@@ -1,9 +1,7 @@
 <app-navbar></app-navbar>
 
-<style>
-	div {text-align: center;}
-</style>
 <style type="text/css">
+	div {text-align: center;}
 	span.red { color: #FF0000;font-size:25;}
 	span.blue { color: #0000FF;font-size:25;} 
 </style>
@@ -13,7 +11,7 @@
 	find a random opponent
 	</button>
 	<div [hidden]="hideItem[2]">
-		Waiting for opponent ... {{timeLeft}}
+		Waiting for opponent ...
 		<button (click)="Cancel()">
 			cancel
 		</button>

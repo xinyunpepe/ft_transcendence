@@ -1,5 +1,6 @@
-import { SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
+import { SubscribeMessage, WebSocketGateway, WebSocketServer, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
 import { Mutex } from 'async-mutex';
+import { clear } from 'console';
 
 const canvasWidth: number = 600;
 const canvasHeight: number = 450;
@@ -7,7 +8,7 @@ const paddleWidth: number = 12;
 const paddleHeight: number = 30;
 const ballWidth: number = 10;
 const ballHeight: number = 10;
-const animationFrameRate = 30;
+const animationFrameRate = 20;
 const WinningPoint: number = 3;
 var GameIsMoving: Map<number,boolean> = new Map<number,boolean>(); // GameIsMoving[room_number] = is_in_game
 
@@ -24,10 +25,10 @@ class Response {
 
 class Player {
   public height: number;
-  public point: number;
+  public point: number = 0;
   constructor (public id: string, public socket: any, public carryBall: boolean) {
     this.height = canvasHeight / 2 - paddleHeight / 2;
-    this.point = 0;
+    // this.point = 0;
   }
 
   init() {
@@ -109,7 +110,7 @@ class GameRoom {
 // todo: connect and disconnect ? (manage socket and ids)
 
 @WebSocketGateway({cors: { origin: ['http://localhost:3000', 'http://localhost:4200'] }})
-export class GameGateway {
+export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server;
 
   waiting_clients = []
@@ -127,11 +128,17 @@ export class GameGateway {
     this.gameRooms = new Map<number, GameRoom>();
   }
 
+  handleConnection(client: any) {
+    // todo
+  }
+
+  handleDisconnect(client: any) {
+    // todo
+  }
+
   async setGameReady(player1_id, player2_id) {
     let player1 = new Player(player1_id, this.SocketOfClient[player1_id], true),
         player2 = new Player(player2_id, this.SocketOfClient[player2_id], false);
-    this.SocketOfClient.delete(player1_id);
-    this.SocketOfClient.delete(player2_id);
     const release = await this.room_mutex.acquire();
     let room_number = this.rooms++;
     release();
@@ -144,7 +151,8 @@ export class GameGateway {
         response.type = 'Game';
     response.content = {
       status: 'Ready',
-      room: room_number.toString()
+      room: room_number.toString(),
+      ballCarrier: player1_id
     };
 
     this.gameRooms[room_number] = new GameRoom(player1, player2);
@@ -154,9 +162,11 @@ export class GameGateway {
   }
 
   async moveBall(room_number: number) {
-    let room: GameRoom = this.gameRooms[room_number];
-    let ball: Ball = room.ball;
-    let player1: Player = room.player1, player2: Player = room.player2;
+    // let room: GameRoom = this.gameRooms[room_number];
+    // let ball: Ball = room.ball;
+    let balls: Ball[] = [this.gameRooms[room_number].ball];
+    let players: Player[] = [this.gameRooms[room_number].player1, this.gameRooms[room_number].player2];
+    // let player1: Player = room.player1, player2: Player = room.player2;
     const minX = paddleWidth;
     const maxX = canvasWidth - ballWidth - paddleWidth;
     const minY = 0;
@@ -166,36 +176,36 @@ export class GameGateway {
         clearInterval(interval);
         return ;
       }
-      ball.x += ball.vx;
-      ball.y += ball.vy;
-      if (ball.y < minY) {
-        ball.y = 2 * minY - ball.y;
-        ball.vy *= -1;
+      balls[0].x += balls[0].vx;
+      balls[0].y += balls[0].vy;
+      if (balls[0].y < minY) {
+        balls[0].y = 2 * minY - balls[0].y;
+        balls[0].vy *= -1;
       }
-      else if (ball.y > maxY) {
-        ball.y = 2 * maxY - ball.y;
-        ball.vy *= -1;
+      else if (balls[0].y > maxY) {
+        balls[0].y = 2 * maxY - balls[0].y;
+        balls[0].vy *= -1;
       }
-      if (ball.x < minX) {
-        if ((ball.y + ballHeight >= player1.height) && (ball.y <= player1.height + paddleHeight) ) {
-          ball.x = 2 * minX - ball.x;
-          ball.vx *= -1;
+      if (balls[0].x < minX) {
+        if ((balls[0].y + ballHeight >= players[0].height) && (balls[0].y <= players[0].height + paddleHeight) ) {
+          balls[0].x = 2 * minX - balls[0].x;
+          balls[0].vx *= -1;
         } 
         else {
-          ++(player2.point);
-          this.server.to(room_number).emit('Player', JSON.stringify(player2.getJSON()));
-          if (player2.point >= WinningPoint) {
+          ++(players[1].point);
+          this.server.to(room_number).emit('Player', JSON.stringify(players[1].getJSON()));
+          if (players[1].point >= WinningPoint) {
             this.server.to(room_number).emit('GameStatus', JSON.stringify((new Response('Game', {status: 'Finish'})).getJSON()));
           }
           else {
-            player1.init();
-            player2.init();
-            ball.init(player1.id);
-            player1.carryBall = true;
-            this.server.to(room_number).emit('Player', JSON.stringify(player1.getJSON()));
-            this.server.to(room_number).emit('Player', JSON.stringify(player2.getJSON()));
-            this.server.to(room_number).emit('Ball', JSON.stringify(ball.getJSON()));
-            this.server.to(room_number).emit('GameStatus', JSON.stringify((new Response('Game',  {status: 'Ready', room: room_number.toString()})).getJSON()));
+            players[0].init();
+            players[1].init();
+            balls[0].init(players[0].id);
+            players[0].carryBall = true;
+            this.server.to(room_number).emit('Player', JSON.stringify(players[0].getJSON()));
+            this.server.to(room_number).emit('Player', JSON.stringify(players[1].getJSON()));
+            this.server.to(room_number).emit('Ball', JSON.stringify(balls[0].getJSON()));
+            this.server.to(room_number).emit('GameStatus', JSON.stringify((new Response('Game',  {status: 'Ready', room: room_number.toString(), ballCarrier: players[0].id})).getJSON()));
           }
           // console.log(interval);
           GameIsMoving[room_number] = false;
@@ -203,90 +213,97 @@ export class GameGateway {
           return ;
         }
       }
-      else if (ball.x > maxX) {
-        if ((ball.y + ballHeight >= player2.height) && (ball.y <= player2.height + paddleHeight) ) {
-          ball.x = 2 * maxX - ball.x;
-          ball.vx *= -1;
+      else if (balls[0].x > maxX) {
+        if ((balls[0].y + ballHeight >= players[1].height) && (balls[0].y <= players[1].height + paddleHeight) ) {
+          balls[0].x = 2 * maxX - balls[0].x;
+          balls[0].vx *= -1;
         }
         else {
-          ++(player1.point);
-          this.server.to(room_number).emit('Player', JSON.stringify(player1.getJSON()));
-          if (player1.point >= WinningPoint) {
+          ++(players[0].point);
+          // console.log(this.gameRooms[room_number].player1.point);
+          this.server.to(room_number).emit('Player', JSON.stringify(players[0].getJSON()));
+          if (players[0].point >= WinningPoint) {
             this.server.to(room_number).emit('GameStatus', JSON.stringify((new Response('Game', {status: 'Finish'})).getJSON()));
           }
           else {
-            player1.init();
-            player2.init();
-            ball.init(player2.id);
-            player2.carryBall = true;
-            this.server.to(room_number).emit('Player', JSON.stringify(player1.getJSON()));
-            this.server.to(room_number).emit('Player', JSON.stringify(player2.getJSON()));
-            this.server.to(room_number).emit('Ball', JSON.stringify(ball.getJSON()));
-            this.server.to(room_number).emit('GameStatus', JSON.stringify((new Response('Game',  {status: 'Ready', room: room_number.toString()})).getJSON()));
+            players[0].init();
+            players[1].init();
+            balls[0].init(players[1].id);
+            players[1].carryBall = true;
+            // console.log(players[0].height);
+            // console.log(this.gameRooms[room_number].player1.height);
+            this.server.to(room_number).emit('Player', JSON.stringify(players[0].getJSON()));
+            this.server.to(room_number).emit('Player', JSON.stringify(players[1].getJSON()));
+            this.server.to(room_number).emit('Ball', JSON.stringify(balls[0].getJSON()));
+            this.server.to(room_number).emit('GameStatus', JSON.stringify((new Response('Game',  {status: 'Ready', room: room_number.toString(), ballCarrier: players[1].id})).getJSON()));
           }
           GameIsMoving[room_number] = false;
           clearInterval(interval);
           return ;
         }
       }
-      this.server.to(room_number).emit('Ball', JSON.stringify(ball.getJSON()));
+      this.server.to(room_number).emit('Ball', JSON.stringify(balls[0].getJSON()));
     }, animationFrameRate);
   }
 
   @SubscribeMessage('PlayerMove')
   async movePlayer(client, [room_number, id, direction]) {
-    let room: GameRoom = this.gameRooms[room_number];
+    // if (this.gameRooms[room_number].player2.carryBall)
+      // console.log(this.gameRooms[room_number].player1.point);
+      // console.log(this.gameRooms[room_number].player1.height);
     if (direction == 'space') {
-      if ( room.ball.isCarried && id == room.ball.ballCarrierId ) {
-        room.player1.carryBall = false;
-        room.player2.carryBall = false;
-        room.ball.isCarried = false;
+      if ( this.gameRooms[room_number].ball.isCarried && id == this.gameRooms[room_number].ball.ballCarrierId ) {
+        this.server.to(parseInt(room_number)).emit('GameStatus', JSON.stringify((new Response('Game', {status: 'Start'}).getJSON())));
+        this.gameRooms[room_number].player1.carryBall = false;
+        this.gameRooms[room_number].player2.carryBall = false;
+        this.gameRooms[room_number].ball.isCarried = false;
         GameIsMoving[room_number] = true;
         this.moveBall(parseInt(room_number));
       }
       return ;
     }
-    if (id == room.player1.id) {
+    if (id == this.gameRooms[room_number].player1.id) {
       switch (direction) {
         case 'up':
-          room.player1.height -= GameRoom.MoveDistance;
-          if (room.player1.height < 0)
-            room.player1.height = 0;
+          this.gameRooms[room_number].player1.height -= GameRoom.MoveDistance;
+          if (this.gameRooms[room_number].player1.height < 0)
+            this.gameRooms[room_number].player1.height = 0;
           break ;
         case 'down':
-          room.player1.height += GameRoom.MoveDistance;
-          if (room.player1.height > canvasHeight - paddleHeight)
-            room.player1.height = canvasHeight - paddleHeight;
+          this.gameRooms[room_number].player1.height += GameRoom.MoveDistance;
+          if (this.gameRooms[room_number].player1.height > canvasHeight - paddleHeight)
+            this.gameRooms[room_number].player1.height = canvasHeight - paddleHeight;
           break ;
         default:
           console.log('ClientError: Invalid PlayerMove direction ' + direction);
       }
-      if (room.player1.carryBall) {
-        room.ball.y = room.player1.height + paddleHeight / 2 - ballHeight / 2;
-        this.server.to(parseInt(room_number)).emit('Ball', JSON.stringify(room.ball.getJSON()));
+      if (this.gameRooms[room_number].player1.carryBall) {
+        this.gameRooms[room_number].ball.y = this.gameRooms[room_number].player1.height + paddleHeight / 2 - ballHeight / 2;
+        // this.server.to(parseInt(room_number)).emit('Ball', JSON.stringify(this.gameRooms[room_number].ball.getJSON()));
       }
-      this.server.to(parseInt(room_number)).emit('Player', JSON.stringify(room.player1.getJSON()));
+      // console.log(this.gameRooms[room_number].player1.point);
+      this.server.to(parseInt(room_number)).emit('Player', JSON.stringify(this.gameRooms[room_number].player1.getJSON()));
     }
-    else if (id == room.player2.id) {
+    else if (id == this.gameRooms[room_number].player2.id) {
       switch (direction) {
         case 'up':
-          room.player2.height -= GameRoom.MoveDistance;
-          if (room.player2.height < 0)
-            room.player2.height = 0;
+          this.gameRooms[room_number].player2.height -= GameRoom.MoveDistance;
+          if (this.gameRooms[room_number].player2.height < 0)
+            this.gameRooms[room_number].player2.height = 0;
           break ;
         case 'down':
-          room.player2.height += GameRoom.MoveDistance;
-          if (room.player2.height > canvasHeight - paddleHeight)
-            room.player2.height = canvasHeight - paddleHeight;
+          this.gameRooms[room_number].player2.height += GameRoom.MoveDistance;
+          if (this.gameRooms[room_number].player2.height > canvasHeight - paddleHeight)
+            this.gameRooms[room_number].player2.height = canvasHeight - paddleHeight;
           break ;
         default:
           console.log('ClientError: Invalid PlayerMove direction ' + direction);
       }
-      if (room.player2.carryBall) {
-        room.ball.y = room.player2.height + paddleHeight / 2 - ballHeight / 2;
-        this.server.to(parseInt(room_number)).emit('Ball', JSON.stringify(room.ball.getJSON()));
+      if (this.gameRooms[room_number].player2.carryBall) {
+        this.gameRooms[room_number].ball.y = this.gameRooms[room_number].player2.height + paddleHeight / 2 - ballHeight / 2;
+        // this.server.to(parseInt(room_number)).emit('Ball', JSON.stringify(this.gameRooms[room_number].ball.getJSON()));
       }
-      this.server.to(parseInt(room_number)).emit('Player', JSON.stringify(room.player2.getJSON()));
+      this.server.to(parseInt(room_number)).emit('Player', JSON.stringify(this.gameRooms[room_number].player2.getJSON()));
     }
     else {
       console.log('ClientError: Invalid PlayerMove room_number or id');
@@ -338,10 +355,6 @@ export class GameGateway {
       }
     }
     release();
-    // }
-    // else { // to certain person
-      // todo
-    // }
 
     this.server.to(client.id).emit('RoomResponse', JSON.stringify(response.getJSON()));
   }

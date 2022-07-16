@@ -39,6 +39,7 @@ var userLogin: string;
 var room: number = -1;
 var paddles: Rectangle[] = [];
 var ball: Rectangle;
+var ballIsWith: number = 0;
 const canvasWidth: number = 600;
 const canvasHeight: number = 450;
 const paddleWidth: number = 12;
@@ -54,6 +55,7 @@ var opponentLogin: [string] = [''];
 var interval: NodeJS.Timer;
 var leftHeight: number = canvasHeight / 2 - paddleHeight / 2;
 var rightHeight: number = canvasHeight / 2 - paddleHeight / 2;
+var GameStatus: string = '';
 
 @Component({
   selector: 'app-game',
@@ -65,7 +67,6 @@ export class GameComponent implements OnInit {
   public userLogin: string = '';
   public opponentLogin: string[] = opponentLogin;
   public gamePlayed : number = 0;
-  private GameStatus: string = '';
   public hideItem: boolean[] = hideItem;
   public hideScore: boolean[] = hideScore;
   public Points: number[] = points;
@@ -73,7 +74,6 @@ export class GameComponent implements OnInit {
   public canvasHeight: number = canvasHeight;
   public canvasWidth: number = canvasWidth;
   public ctx!: CanvasRenderingContext2D;
-  public timeLeft: number;
 
   constructor(
 		private game: GameService,
@@ -90,7 +90,6 @@ export class GameComponent implements OnInit {
     paddles.push(new Rectangle(this.ctx, paddleWidth, paddleHeight, 0, leftHeight));
     paddles.push(new Rectangle(this.ctx, paddleWidth, paddleHeight ,canvasWidth - paddleWidth, rightHeight));
     ball = new Rectangle(this.ctx, ballWidth, ballHeight, -1, -1);
-    this.timeLeft = RoomWaitingTime;
   }
 
 
@@ -156,7 +155,7 @@ export class GameComponent implements OnInit {
 
   DealWithGameStatus(info: any) {
     try {
-      this.GameStatus = '';
+      GameStatus = '';
       if (typeof info != 'string') {
         throw('ServerError: Game Status is not a string');
       }
@@ -170,21 +169,26 @@ export class GameComponent implements OnInit {
       }
       switch(data.content.status ) {
         case 'Ready':
-          this.GameStatus = 'Ready';
+          GameStatus = 'Ready';
           room = data.content.room;
+          if (userLogin == data.content.ballCarrier)
+            ballIsWith = 1;
+          else
+            ballIsWith = 2;
           break ;
-        // case 'Start':
-        //   this.GameStatus = 'Start';
-        //   break ;
+        case 'Start':
+          GameStatus = 'Start';
+          // ballIsWith = 0;
+          break ;
         case 'Finish':
           result = '';
           room = -1;
-          this.GameStatus = 'Finish';
+          GameStatus = 'Finish';
           break ;
         default:
           result = '';
           room = -1;
-          this.GameStatus = '';
+          GameStatus = '';
           throw('ServerError: Game Status Unknown Content\n' + data.content);
       }
     }
@@ -192,17 +196,18 @@ export class GameComponent implements OnInit {
       alert(err);
     }
     finally {
-      if (this.GameStatus == 'Ready') {
+      if (GameStatus == 'Ready') {
         // other things dissapear
         // todo
         paddles[0].draw('red');
         paddles[1].draw('blue');
       }
-      // if (this.GameStatus == 'Start') {
-      //   console.log('Start');
-      //   // todo: move ball
-      // }
-      if (this.GameStatus == 'Finish') {
+      if (GameStatus == 'Start') {
+        console.log('Start');
+        ballIsWith = 0;
+        // todo: move ball
+      }
+      if (GameStatus == 'Finish') {
         ball.clean();
         GameSub.unsubscribe();
         PlayerSub.unsubscribe();
@@ -229,7 +234,7 @@ export class GameComponent implements OnInit {
       }
       if (this.userLogin == undefined || this.userLogin == '')
         this.userLogin = userLogin;
-      if (data.content.id == this.userLogin) {
+      if (data.content.id == userLogin) {
         leftHeight = data.content.height;
         points[0] = data.content.point;
 
@@ -252,7 +257,16 @@ export class GameComponent implements OnInit {
       alert(err);
     }
     finally {
-
+      if (ballIsWith == 1) {
+        ball.clean();
+        ball.yPos = paddles[0].yPos + paddleHeight / 2 - ballHeight / 2;
+        ball.draw(ballColor);
+      }
+      if (ballIsWith == 2) {
+        ball.clean();
+        ball.yPos = paddles[1].yPos + paddleHeight / 2 - ballHeight / 2;
+        ball.draw(ballColor);
+      }
       paddles[0].yPos = leftHeight;
       paddles[1].yPos = rightHeight;
       // console.log(toRealHeight(canvasHeight, leftHeight).toString() + ' ' + rightHeight.toString());
@@ -264,6 +278,8 @@ export class GameComponent implements OnInit {
   }
 
   DealWithBallInformation(info: any) {
+    if (ballIsWith != 0)
+      return ;
     try {
       ball.clean();
       if (typeof info != 'string') {
@@ -314,16 +330,6 @@ export class GameComponent implements OnInit {
     this.game.sendRoomRequest(this.userLogin);
 
     hideItem[2] = false;
-    this.timeLeft = RoomWaitingTime;
-    interval = setInterval(()=> {
-      if (this.timeLeft > 0) {
-        --(this.timeLeft);
-      }
-      else {
-        // cancel waiting
-        this.Cancel();
-      }
-    }, 1000);
   }
 
   Surrender(): void {
@@ -341,7 +347,6 @@ export class GameComponent implements OnInit {
   }
 
   Cancel(): void {
-    this.timeLeft = RoomWaitingTime;
     hideItem[2] = true;
     clearInterval(interval);
     result = '';
