@@ -10,7 +10,7 @@ const ballWidth: number = 10;
 const ballHeight: number = 10;
 const animationFrameRate = 20;
 const WinningPoint: number = 3;
-var GameIsMoving: Map<number,boolean> = new Map<number,boolean>(); // GameIsMoving[room_number] = is_in_game
+// var GameIsMoving: Map<number,boolean> = new Map<number,boolean>(); // GameIsMoving[room_number] = is_in_game
 
 class Response {
   constructor (public type: string, public content?: any) {}
@@ -172,10 +172,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const minY = 0;
     const maxY = canvasHeight - ballHeight;
     const interval = setInterval(()=>{
-      if (GameIsMoving[room_number] == false) {
-        clearInterval(interval);
-        return ;
-      }
+      // if (GameIsMoving[room_number] == false) {
+      //   clearInterval(interval);
+      //   return ;
+      // }
       balls[0].x += balls[0].vx;
       balls[0].y += balls[0].vy;
       if (balls[0].y < minY) {
@@ -208,7 +208,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
             this.server.to(room_number).emit('GameStatus', JSON.stringify((new Response('Game',  {status: 'Ready', room: room_number.toString(), ballCarrier: players[0].id})).getJSON()));
           }
           // console.log(interval);
-          GameIsMoving[room_number] = false;
+          // GameIsMoving[room_number] = false;
           clearInterval(interval);
           return ;
         }
@@ -237,7 +237,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
             this.server.to(room_number).emit('Ball', JSON.stringify(balls[0].getJSON()));
             this.server.to(room_number).emit('GameStatus', JSON.stringify((new Response('Game',  {status: 'Ready', room: room_number.toString(), ballCarrier: players[1].id})).getJSON()));
           }
-          GameIsMoving[room_number] = false;
+          // GameIsMoving[room_number] = false;
           clearInterval(interval);
           return ;
         }
@@ -257,7 +257,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         this.gameRooms[room_number].player1.carryBall = false;
         this.gameRooms[room_number].player2.carryBall = false;
         this.gameRooms[room_number].ball.isCarried = false;
-        GameIsMoving[room_number] = true;
+        // GameIsMoving[room_number] = true;
         this.moveBall(parseInt(room_number));
       }
       return ;
@@ -315,7 +315,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // console.log(room_number);
     if (information == 'Surrender') {
       // clearInterval(interval);
-      GameIsMoving[room_number] = false;
+      // GameIsMoving[room_number] = false;
       let player1: Player = this.gameRooms[room_number].player1, player2: Player = this.gameRooms[room_number].player2;
       if (player1.id == id) {
         player1.point = -42;
