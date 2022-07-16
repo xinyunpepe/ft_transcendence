@@ -146,6 +146,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     player2.socket.join(room_number);
     let response = new Response('Room', 'Matched');
     this.server.to(room_number).emit('RoomResponse',  JSON.stringify(response.getJSON()));
+    // let roomHash = Math.random().toString(36).substring(7);
+    // this.server.to(room_number).emit('RoomInfo', JSON.stringify((new Response('RoomHash',)).getJSON()));
     this.server.to(room_number).emit('Player', JSON.stringify(player1.getJSON()));
     this.server.to(room_number).emit('Player', JSON.stringify(player2.getJSON()));
         response.type = 'Game';
@@ -195,6 +197,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           ++(players[1].point);
           this.server.to(room_number).emit('Player', JSON.stringify(players[1].getJSON()));
           if (players[1].point >= WinningPoint) {
+            this.gameRooms.delete(room_number);
             this.server.to(room_number).emit('GameStatus', JSON.stringify((new Response('Game', {status: 'Finish'})).getJSON()));
           }
           else {
@@ -223,6 +226,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           // console.log(this.gameRooms[room_number].player1.point);
           this.server.to(room_number).emit('Player', JSON.stringify(players[0].getJSON()));
           if (players[0].point >= WinningPoint) {
+            this.gameRooms.delete(room_number);
             this.server.to(room_number).emit('GameStatus', JSON.stringify((new Response('Game', {status: 'Finish'})).getJSON()));
           }
           else {
@@ -325,6 +329,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         player2.point = -42;
         this.server.to(parseInt(room_number)).emit('Player', JSON.stringify(player2.getJSON()));
       }
+      this.gameRooms.delete(room_number);
       this.server.to(parseInt(room_number)).emit('GameStatus', JSON.stringify((new Response('Game', {status: 'Finish'})).getJSON()));
     }
     else {
@@ -357,6 +362,42 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     release();
 
     this.server.to(client.id).emit('RoomResponse', JSON.stringify(response.getJSON()));
+  }
+
+  @SubscribeMessage('WatchRequest')
+  async watch(client, [room_number_str, id]) {
+    let response = new Response('Watch');
+    this.SocketOfClient[id] = client;
+    // if (to == '') { // random request
+    let room_number: number = parseInt(room_number_str);
+    if (this.gameRooms[room_number] == undefined) {
+      response.content = 'Refused';
+    }
+    else {
+      response.content = 'Accepted';
+      client.join(room_number);
+    }
+    this.server.to(client.id).emit('WatchResponse', JSON.stringify(response.getJSON()));
+    // const release = await this.mutex.acquire();
+    // if (this.waiting_clients.indexOf(id) != -1) {
+    //   response.content = 'Duplicate';
+    // }
+    // else {
+    //   let len = this.waiting_clients.length;
+    //   if (len > 0) {
+    //     let opponent = this.waiting_clients.pop();
+    //     release();
+    //     this.setGameReady( opponent, id );
+    //     return ;
+    //   }
+    //   else {
+    //     this.waiting_clients.push(id);
+    //     response.content = 'Waiting';
+    //   }
+    // }
+    // release();
+
+    // this.server.to(client.id).emit('RoomResponse', JSON.stringify(response.getJSON()));
   }
 
   @SubscribeMessage('CancelRoom')

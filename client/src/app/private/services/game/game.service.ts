@@ -39,4 +39,12 @@ export class GameService {
     this.socket.emit('Special', [room, login, 'Surrender']);
   }
 
+  sendWatchRequest(room: string, login: string) {
+    this.socket.emit('WatchRequest', [room, login]);
+  }
+
+  getWatchResponse() {
+    return this.socket.fromEvent('WatchResponse');
+  }
+
 }

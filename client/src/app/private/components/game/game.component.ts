@@ -3,6 +3,7 @@ import { GameService } from '../../services/game/game.service';
 import { Subscription } from 'rxjs';
 import { HostListener } from '@angular/core';
 import { AuthService } from 'src/app/public/services/auth/auth.service';
+import { FormBuilder } from '@angular/forms';
 
 export class Rectangle {
 	constructor(private ctx: CanvasRenderingContext2D, private width: number, private height: number, public xPos: number, public yPos: number) {}
@@ -34,9 +35,10 @@ var sub: Subscription;
 var GameSub: Subscription;
 var PlayerSub: Subscription;
 var BallSub: Subscription;
+var WatchSub: Subscription;
 // var userSub: Subscription;
 var userLogin: string;
-var room: number = -1;
+var room: number[] = [-1];
 var paddles: Rectangle[] = [];
 var ball: Rectangle;
 var ballIsWith: number = 0;
@@ -47,12 +49,11 @@ const paddleHeight: number = 30;
 const ballWidth: number = 10;
 const ballHeight: number = 10;
 const ballColor: string = 'black';
-const RoomWaitingTime: number = 42;
+// const RoomWaitingTime: number = 42;
 var points: number[] = [0,0];
 var hideItem: boolean[] = [false, true, true];
 var hideScore: boolean[] = [true];
 var opponentLogin: [string] = [''];
-var interval: NodeJS.Timer;
 var leftHeight: number = canvasHeight / 2 - paddleHeight / 2;
 var rightHeight: number = canvasHeight / 2 - paddleHeight / 2;
 var GameStatus: string = '';
@@ -74,10 +75,15 @@ export class GameComponent implements OnInit {
   public canvasHeight: number = canvasHeight;
   public canvasWidth: number = canvasWidth;
   public ctx!: CanvasRenderingContext2D;
+  public roomNumber: number[] = room;
+  public watchForm = this.formBuilder.group({
+    number: ''
+  });
 
   constructor(
 		private game: GameService,
-		private authService: AuthService
+		private authService: AuthService,
+    private formBuilder: FormBuilder
 	) {}
 
   ngOnInit(): void {
@@ -95,16 +101,16 @@ export class GameComponent implements OnInit {
 
   @HostListener('document:keydown', ['$event'])
   handleKeyboardEvent(event: KeyboardEvent) {
-    if (room < 0 || this.userLogin == undefined || this.userLogin == '' )
+    if (room[0] < 0 || this.userLogin == undefined || this.userLogin == '' )
       return ;
     if (event.key == 'ArrowUp') {
-      this.game.sendPlayerMove(room, userLogin, 'up');
+      this.game.sendPlayerMove(room[0], userLogin, 'up');
     }
     if (event.key == 'ArrowDown') {
-      this.game.sendPlayerMove(room, userLogin, 'down');
+      this.game.sendPlayerMove(room[0], userLogin, 'down');
     }
     if (event.key == ' ') {
-      this.game.sendPlayerMove(room, userLogin, 'space');
+      this.game.sendPlayerMove(room[0], userLogin, 'space');
     }
   }
 
@@ -135,7 +141,6 @@ export class GameComponent implements OnInit {
         case 'Matched':
           console.log('Matched');
           result = 'Matched';
-          clearInterval(interval);
           break ;
         default:
           throw('ServerError: Unknown Content\n' + data.content);
@@ -150,6 +155,36 @@ export class GameComponent implements OnInit {
         hideItem[0] = true;
         hideScore[0] = false;
       }
+    }
+  }
+
+  DealWithWatchResponse(msg: any) {
+    try {
+      if (typeof msg != 'string')
+        throw('ServerError: response is not a string');
+      let data = JSON.parse(msg);
+      if (!data.type || data.type != 'Watch')
+        throw('ServerError: response type is not Watch');
+      if (!data.content)
+        throw('ServerError: No Content');
+      if (typeof data.content != 'string')
+        throw('ServerError: Content is not a string');
+      switch(data.content) {
+        case 'Accepted':
+          // result = 'Matched';
+          break ;
+        case 'Refused':
+          alert('Error: Room Number Not Found');
+          break ;
+        default:
+          throw('ServerError: Unknown Content\n' + data.content);
+      }
+    }
+    catch(err: any) {
+      alert(err);
+    }
+    finally{
+      WatchSub.unsubscribe();
     }
   }
 
@@ -170,7 +205,7 @@ export class GameComponent implements OnInit {
       switch(data.content.status ) {
         case 'Ready':
           GameStatus = 'Ready';
-          room = data.content.room;
+          room[0] = data.content.room;
           if (userLogin == data.content.ballCarrier)
             ballIsWith = 1;
           else
@@ -182,12 +217,12 @@ export class GameComponent implements OnInit {
           break ;
         case 'Finish':
           result = '';
-          room = -1;
+          room[0] = -1;
           GameStatus = 'Finish';
           break ;
         default:
           result = '';
-          room = -1;
+          room[0] = -1;
           GameStatus = '';
           throw('ServerError: Game Status Unknown Content\n' + data.content);
       }
@@ -333,9 +368,9 @@ export class GameComponent implements OnInit {
   }
 
   Surrender(): void {
-    if (room < 0 || userLogin == undefined || userLogin == '' )
+    if (room[0] < 0 || userLogin == undefined || userLogin == '' )
       return ;
-    this.game.sendSurrender(room, userLogin);
+    this.game.sendSurrender(room[0], userLogin);
   }
 
   BackToMatch(): void {
@@ -348,12 +383,17 @@ export class GameComponent implements OnInit {
 
   Cancel(): void {
     hideItem[2] = true;
-    clearInterval(interval);
     result = '';
     sub.unsubscribe();
     GameSub.unsubscribe();
     PlayerSub.unsubscribe();
     BallSub.unsubscribe();
     this.game.sendCancelRequest(userLogin);
+  }
+
+  onSubmit() {
+    WatchSub = this.game.getWatchResponse().subscribe(this.DealWithWatchResponse);
+    this.game.sendWatchRequest(this.watchForm.value.number, userLogin);
+    this.watchForm.reset();
   }
  }

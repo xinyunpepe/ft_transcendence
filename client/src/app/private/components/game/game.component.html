@@ -16,9 +16,17 @@
 			cancel
 		</button>
 	</div>
+	<div [hidden]="!hideItem[2]">
+		<form [formGroup]="watchForm" (ngSubmit)="onSubmit()">
+			Watch game in room number:
+			<input type="text" formControlName="number">
+			<button type="submit">submit</button>
+		</form>
+	</div>
 </div>
 
 <div [hidden]="!hideItem[0]">
+		<div [hidden]="!hideItem[1]">Room Number: {{roomNumber[0]}}</div>
 		<canvas #myCanvas width="{{canvasWidth}}" height="{{canvasHeight}}" style="border: 1px solid black;"></canvas>
 </div>
 
