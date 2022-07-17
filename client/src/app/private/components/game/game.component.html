@@ -30,7 +30,11 @@
 		<canvas #myCanvas width="{{canvasWidth}}" height="{{canvasHeight}}" style="border: 1px solid black;"></canvas>
 </div>
 
-<div [hidden]="(!hideItem[0]) || (!hideItem[1])">
+<div [hidden]="(!hideItem[0]) || (!hideItem[1]) || (!hideItem[3])">
+	<button (click)="LeaveWatchingMode()">leave watching mode</button>
+</div>
+
+<div [hidden]="(!hideItem[0]) || (!hideItem[1]) || hideItem[3]">
 	<button (click)="Surrender()">surrender</button>
 </div>
 
@@ -40,6 +44,10 @@
 
 <div [hidden]="hideScore[0]">
 	<span class="red">(Red) {{userLogin}} {{Points[0]}}</span> : <span class="blue">{{Points[1]}} (Blue) {{opponentLogin[0]}}</span>
+</div>
+
+<div [hidden]="hideScore[1]">
+	<span class="red">(Red) {{leftLogin[0]}} {{Points[0]}}</span> : <span class="blue">{{Points[1]}} (Blue) {{opponentLogin[0]}}</span>
 </div>
 
 <div [hidden]="hideItem[1]">

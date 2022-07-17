@@ -38,6 +38,7 @@ var BallSub: Subscription;
 var WatchSub: Subscription;
 // var userSub: Subscription;
 var userLogin: string;
+var leftLogin: string[] = [''];
 var room: number[] = [-1];
 var paddles: Rectangle[] = [];
 var ball: Rectangle;
@@ -51,8 +52,8 @@ const ballHeight: number = 10;
 const ballColor: string = 'black';
 // const RoomWaitingTime: number = 42;
 var points: number[] = [0,0];
-var hideItem: boolean[] = [false, true, true];
-var hideScore: boolean[] = [true];
+var hideItem: boolean[] = [false, true, true, false];
+var hideScore: boolean[] = [true, true];
 var opponentLogin: [string] = [''];
 var leftHeight: number = canvasHeight / 2 - paddleHeight / 2;
 var rightHeight: number = canvasHeight / 2 - paddleHeight / 2;
@@ -66,6 +67,7 @@ var GameStatus: string = '';
 export class GameComponent implements OnInit {
 
   public userLogin: string = '';
+  public leftLogin: string[] = leftLogin;
   public opponentLogin: string[] = opponentLogin;
   public gamePlayed : number = 0;
   public hideItem: boolean[] = hideItem;
@@ -88,7 +90,7 @@ export class GameComponent implements OnInit {
 
   ngOnInit(): void {
 	userLogin = this.authService.getLoggedInUser();
-    this.userLogin = userLogin;
+  this.userLogin = userLogin;
 	let tmp: any = this.canvas.nativeElement.getContext('2d');
     if (typeof tmp != 'undefined') {
       this.ctx = tmp;
@@ -101,7 +103,7 @@ export class GameComponent implements OnInit {
 
   @HostListener('document:keydown', ['$event'])
   handleKeyboardEvent(event: KeyboardEvent) {
-    if (room[0] < 0 || this.userLogin == undefined || this.userLogin == '' )
+    if (room[0] < 0 || userLogin == undefined || userLogin == '' )
       return ;
     if (event.key == 'ArrowUp') {
       this.game.sendPlayerMove(room[0], userLogin, 'up');
@@ -134,12 +136,12 @@ export class GameComponent implements OnInit {
           result = 'Waiting';
           throw('You were already in line, please be patient');
         case 'Waiting':
-          console.log('Waiting');
+          // console.log('Waiting');
           result = 'Waiting';
           // add a popout window
           break ;
         case 'Matched':
-          console.log('Matched');
+          // console.log('Matched');
           result = 'Matched';
           break ;
         default:
@@ -167,11 +169,12 @@ export class GameComponent implements OnInit {
         throw('ServerError: response type is not Watch');
       if (!data.content)
         throw('ServerError: No Content');
-      if (typeof data.content != 'string')
-        throw('ServerError: Content is not a string');
-      switch(data.content) {
+      switch(data.content.status) {
         case 'Accepted':
-          // result = 'Matched';
+          hideItem[0] = true;
+          hideItem[3] = true; //
+          hideScore[1] = false;
+          leftLogin[0] = data.content.id;
           break ;
         case 'Refused':
           alert('Error: Room Number Not Found');
@@ -206,7 +209,7 @@ export class GameComponent implements OnInit {
         case 'Ready':
           GameStatus = 'Ready';
           room[0] = data.content.room;
-          if (userLogin == data.content.ballCarrier)
+          if (leftLogin[0] == data.content.ballCarrier)
             ballIsWith = 1;
           else
             ballIsWith = 2;
@@ -238,7 +241,7 @@ export class GameComponent implements OnInit {
         paddles[1].draw('blue');
       }
       if (GameStatus == 'Start') {
-        console.log('Start');
+        // console.log('Start');
         ballIsWith = 0;
         // todo: move ball
       }
@@ -248,6 +251,8 @@ export class GameComponent implements OnInit {
         PlayerSub.unsubscribe();
         BallSub.unsubscribe();
         hideItem[1] = false;
+        hideItem[3] = false;
+        // hideScore[1] = true;
       }
     }
   }
@@ -267,9 +272,9 @@ export class GameComponent implements OnInit {
       if (!data.content) {
         throw('ServerError: Player No Content');
       }
-      if (this.userLogin == undefined || this.userLogin == '')
-        this.userLogin = userLogin;
-      if (data.content.id == userLogin) {
+      // if (this.userLogin == undefined || this.userLogin == '')
+      //   this.userLogin = userLogin;
+      if (data.content.id == leftLogin[0]) {
         leftHeight = data.content.height;
         points[0] = data.content.point;
 
@@ -327,9 +332,9 @@ export class GameComponent implements OnInit {
       if (!data.content) {
         throw('ServerError: Ball No Content');
       }
-      if (this.userLogin == undefined || this.userLogin == '')
-        this.userLogin = userLogin;
-      if (data.content.id == this.userLogin) { // player1
+      // if (this.userLogin == undefined || this.userLogin == '')
+      //   this.userLogin = userLogin;
+      if (data.content.id == leftLogin[0]) { // player1
         ball.xPos = data.content.x;
         ball.yPos = data.content.y;
       }
@@ -357,12 +362,13 @@ export class GameComponent implements OnInit {
       alert('You\'re already in game');
       return ;
     }
+    leftLogin[0] = userLogin;
     sub = this.game.getRoomResponse().subscribe(this.DealWithRoomResponse);
     GameSub = this.game.getGameStatus().subscribe(this.DealWithGameStatus);
     PlayerSub = this.game.getPlayerInformation().subscribe(this.DealWithPlayerInformation);
     BallSub = this.game.getBallInformation().subscribe(this.DealWithBallInformation);
     // if (result != 'Waiting')
-    this.game.sendRoomRequest(this.userLogin);
+    this.game.sendRoomRequest(userLogin);
 
     hideItem[2] = false;
   }
@@ -377,8 +383,23 @@ export class GameComponent implements OnInit {
     ball.clean2(0,0,canvasWidth,canvasHeight);
     hideItem[0] = false;
     hideScore[0] = true;
+    hideScore[1] = true;
     hideItem[1] = true;
     hideItem[2] = true;
+  }
+
+  LeaveWatchingMode(): void {
+    ball.clean2(0,0,canvasWidth,canvasHeight);
+    GameSub.unsubscribe();
+    PlayerSub.unsubscribe();
+    BallSub.unsubscribe();
+    hideItem[3] = false;
+    hideItem[0] = false;
+    hideScore[0] = true;
+    hideScore[1] = true;
+    hideItem[1] = true;
+    hideItem[2] = true;
+    this.game.sendLeaveWatching(room[0].toString(), userLogin);
   }
 
   Cancel(): void {
@@ -393,6 +414,10 @@ export class GameComponent implements OnInit {
 
   onSubmit() {
     WatchSub = this.game.getWatchResponse().subscribe(this.DealWithWatchResponse);
+    GameSub = this.game.getGameStatus().subscribe(this.DealWithGameStatus);
+    PlayerSub = this.game.getPlayerInformation().subscribe(this.DealWithPlayerInformation);
+    BallSub = this.game.getBallInformation().subscribe(this.DealWithBallInformation);
+    room[0] = parseInt(this.watchForm.value.number);
     this.game.sendWatchRequest(this.watchForm.value.number, userLogin);
     this.watchForm.reset();
   }

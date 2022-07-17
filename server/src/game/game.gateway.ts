@@ -1,6 +1,6 @@
 import { SubscribeMessage, WebSocketGateway, WebSocketServer, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
 import { Mutex } from 'async-mutex';
-import { clear } from 'console';
+import { Socket } from 'socket.io';
 
 const canvasWidth: number = 600;
 const canvasHeight: number = 450;
@@ -309,9 +309,6 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
       this.server.to(parseInt(room_number)).emit('Player', JSON.stringify(this.gameRooms[room_number].player2.getJSON()));
     }
-    else {
-      console.log('ClientError: Invalid PlayerMove room_number or id');
-    }
   }
 
   @SubscribeMessage('Special')
@@ -371,10 +368,14 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // if (to == '') { // random request
     let room_number: number = parseInt(room_number_str);
     if (this.gameRooms[room_number] == undefined) {
-      response.content = 'Refused';
+      response.content = { status: 'Refused' };
     }
     else {
-      response.content = 'Accepted';
+      // console.log(this.gameRooms[room_number]);
+      response.content = { status: 'Accepted', id: this.gameRooms[room_number].player1.id};
+      this.server.to(client.id).emit('Player', JSON.stringify(this.gameRooms[room_number].player1.getJSON()));
+      this.server.to(client.id).emit('Player', JSON.stringify(this.gameRooms[room_number].player2.getJSON()));
+      this.server.to(client.id).emit('Ball', JSON.stringify(this.gameRooms[room_number].ball.getJSON()));  
       client.join(room_number);
     }
     this.server.to(client.id).emit('WatchResponse', JSON.stringify(response.getJSON()));
@@ -398,6 +399,12 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // release();
 
     // this.server.to(client.id).emit('RoomResponse', JSON.stringify(response.getJSON()));
+  }
+
+  @SubscribeMessage('LeaveWatching')
+  async leaveWatching(client, [room_number_str, login]) {
+    let room_number: number = parseInt(room_number_str);
+    this.SocketOfClient[login].leave(room_number);
   }
 
   @SubscribeMessage('CancelRoom')
