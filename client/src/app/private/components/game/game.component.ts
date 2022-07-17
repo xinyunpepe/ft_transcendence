@@ -175,8 +175,12 @@ export class GameComponent implements OnInit {
           hideItem[3] = true; //
           hideScore[1] = false;
           leftLogin[0] = data.content.id;
+          ballIsWith = data.content.ballIsWith;
           break ;
         case 'Refused':
+          GameSub.unsubscribe();
+          PlayerSub.unsubscribe();
+          BallSub.unsubscribe();
           alert('Error: Room Number Not Found');
           break ;
         default:
@@ -184,6 +188,9 @@ export class GameComponent implements OnInit {
       }
     }
     catch(err: any) {
+      GameSub.unsubscribe();
+      PlayerSub.unsubscribe();
+      BallSub.unsubscribe();
       alert(err);
     }
     finally{
@@ -300,12 +307,16 @@ export class GameComponent implements OnInit {
       if (ballIsWith == 1) {
         ball.clean();
         ball.yPos = paddles[0].yPos + paddleHeight / 2 - ballHeight / 2;
+        ball.xPos = paddleWidth;
         ball.draw(ballColor);
+        // console.log(room[0].toString() + 'A');
       }
       if (ballIsWith == 2) {
         ball.clean();
+        ball.xPos = canvasWidth - ballWidth - paddleWidth;
         ball.yPos = paddles[1].yPos + paddleHeight / 2 - ballHeight / 2;
         ball.draw(ballColor);
+        // console.log(room[0].toString() + 'B');
       }
       paddles[0].yPos = leftHeight;
       paddles[1].yPos = rightHeight;
@@ -342,12 +353,16 @@ export class GameComponent implements OnInit {
         ball.xPos = canvasWidth - ballWidth - data.content.x;
         ball.yPos = data.content.y;
       }
+      // console.log(data.content.id);
+      // console.log(leftLogin[0]);
+      // console.log(info);
     }
     catch(err: any) {
       alert(err);
     }
     finally {
       ball.draw(ballColor);
+      // console.log(room[0].toString() + 'C');
     }
   }
 
@@ -386,6 +401,7 @@ export class GameComponent implements OnInit {
     hideScore[1] = true;
     hideItem[1] = true;
     hideItem[2] = true;
+    leftLogin[0] = userLogin;
   }
 
   LeaveWatchingMode(): void {
@@ -399,6 +415,7 @@ export class GameComponent implements OnInit {
     hideScore[1] = true;
     hideItem[1] = true;
     hideItem[2] = true;
+    leftLogin[0] = userLogin;
     this.game.sendLeaveWatching(room[0].toString(), userLogin);
   }
 

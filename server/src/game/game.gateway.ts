@@ -8,7 +8,7 @@ const paddleWidth: number = 12;
 const paddleHeight: number = 30;
 const ballWidth: number = 10;
 const ballHeight: number = 10;
-const animationFrameRate = 20;
+const animationFrameRate = 30;
 const WinningPoint: number = 3;
 // var GameIsMoving: Map<number,boolean> = new Map<number,boolean>(); // GameIsMoving[room_number] = is_in_game
 
@@ -372,13 +372,24 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
     else {
       // console.log(this.gameRooms[room_number]);
-      response.content = { status: 'Accepted', id: this.gameRooms[room_number].player1.id};
+      if (this.gameRooms[room_number].ball.isCarried == false) {
+        response.content = { status: 'Accepted', id: this.gameRooms[room_number].player1.id, ballIsWith: 0};
+      }
+      else if (this.gameRooms[room_number].ball.ballCarrierId == this.gameRooms[room_number].player1.id) {
+        response.content = { status: 'Accepted', id: this.gameRooms[room_number].player1.id, ballIsWith: 1};
+      }
+      else {
+        response.content = { status: 'Accepted', id: this.gameRooms[room_number].player1.id, ballIsWith: 2};
+      }
+    
+      
       this.server.to(client.id).emit('Player', JSON.stringify(this.gameRooms[room_number].player1.getJSON()));
       this.server.to(client.id).emit('Player', JSON.stringify(this.gameRooms[room_number].player2.getJSON()));
       this.server.to(client.id).emit('Ball', JSON.stringify(this.gameRooms[room_number].ball.getJSON()));  
       client.join(room_number);
     }
     this.server.to(client.id).emit('WatchResponse', JSON.stringify(response.getJSON()));
+
     // const release = await this.mutex.acquire();
     // if (this.waiting_clients.indexOf(id) != -1) {
     //   response.content = 'Duplicate';

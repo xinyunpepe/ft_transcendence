@@ -7,7 +7,7 @@
 </style>
 
 <div [hidden]="hideItem[0]">
-	<button (click)="RandomGame()">
+	<button [hidden]="!hideItem[2]" (click)="RandomGame()">
 	find a random opponent
 	</button>
 	<div [hidden]="hideItem[2]">
