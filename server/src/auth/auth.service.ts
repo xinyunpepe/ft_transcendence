@@ -3,7 +3,6 @@ import { JwtService } from "@nestjs/jwt";
 import { toFileStream } from 'qrcode';
 import { Response } from "express";
 import { authenticator } from "otplib";
-import { CreateUserDto } from "src/user/model/user/user.dto";
 import { UserEntity } from "src/user/model/user/user.entity";
 import { UserService } from "src/user/user.service";
 import { UserI } from "src/user/model/user/user.interface";
@@ -17,8 +16,7 @@ export class AuthService {
 
 	async validateUser(userI: UserI) {
 		console.log('Start of validate user');
-		const { login } = userI;
-		const user = await this.userService.findUserByLogin(login);
+		const user = await this.userService.findUserByLogin(userI.login);
 		if (user) {
 			console.log('User exists in the database');
 			// await this.userService.updateUserStatus(user.login, 'online');
@@ -32,11 +30,10 @@ export class AuthService {
 		return newUser;
 	}
 
-	login(user: UserEntity) {
+	login(user: UserI) {
 		console.log('Start creating token');
-		const payload = { login: user.login };
 		return {
-			access_token: this.jwtService.sign(payload)
+			access_token: this.jwtService.sign({ user })
 		};
 	}
 

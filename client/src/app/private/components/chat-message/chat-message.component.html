@@ -1,5 +1,5 @@
-<span style="display: flex;" [ngClass]="{ ownContainer: message.user.login === userLogin }">
-	<p [ngClass]="{ ownMessage: message.user.login === userLogin }">
+<span style="display: flex;" [ngClass]="{ ownContainer: message.user.id === user.id }">
+	<p [ngClass]="{ ownMessage: message.user.id === user.id }">
 		<em>{{ message.user.username }}</em> <br /> {{ message.text }}
 	</p>
 </span>

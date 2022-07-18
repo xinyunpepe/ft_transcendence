@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
-import { UserStatus } from 'src/user/model/user/user.interface';
+import { UserI, UserStatus } from 'src/user/model/user/user.interface';
 import { UserService } from 'src/user/user.service';
 import { AuthService } from './auth.service';
 import { TwoFactorAuthDto } from './dto/2fa.dto';
@@ -44,7 +44,7 @@ export class AuthController {
 		@Req() req,
 		@Res() res
 	) {
-		const user = req.user;
+		const user: UserI = req.user;
 		if (user) {
 			// console.log(`${ user.login } is ${ user.status } now`);
 			const token = await this.authService.login(user);

@@ -13,7 +13,6 @@ import { ConnectedUserI } from '../model/connected-user/connected-user.interface
 import { JoinedChannelService } from '../services/joined-channel.service';
 import { MessageI } from '../model/message/message.interface';
 import { JoinedChannelI } from '../model/joined-channel/joined-channel.interface';
-import { channel } from 'diagnostics_channel';
 
 /*
 ** Unlike controller who works with urls
@@ -49,15 +48,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
 	async handleConnection(socket: Socket) {
 		try {
-			// console.log('Start handling connection');
+			console.log('Start handling connection');
 			const decodedToken = await this.authService.verifyJwt(socket.handshake.headers.authorization);
-			const user: UserI = await this.userService.findOne(decodedToken.login);
+			const user: UserI = await this.userService.findUserById(decodedToken.user.id);
 			if (!user) {
 				socket.emit('Error', new UnauthorizedException());
 				socket.disconnect();
 			} else {
 				socket.data.user = user;
-				const channels = await this.channelService.getChannelsForUser(user.login, { page: 1, limit: 10 });
+				const channels = await this.channelService.getChannelsForUser(user.id, { page: 1, limit: 10 });
 
 				// substract page -1 to match the angular material paginator
 				channels.meta.currentPage = channels.meta.currentPage - 1;
@@ -83,12 +82,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
 	@SubscribeMessage('createChannel')
 	async onCreateChannel(socket: Socket, channel: ChannelI) {
-		const creator = socket.data.user;
-		const newChannel = await this.channelService.createChannel(channel, creator);
+		const newChannel: ChannelI = await this.channelService.createChannel(channel, socket.data.user);
 
 		for (const user of newChannel.users) {
 			const connections: ConnectedUserI[] = await this.connectedUserService.findByUser(user);
-			const channels = await this.channelService.getChannelsForUser(user.login, { page: 1, limit: 10 });
+			const channels = await this.channelService.getChannelsForUser(user.id, { page: 1, limit: 10 });
 
 			// substract page -1 to match the angular material paginator
 			channels.meta.currentPage = channels.meta.currentPage - 1;
@@ -106,7 +104,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 		// add page +1 to match angular material paginator
 		page.page = page.page + 1;
 
-		const channels = await this.channelService.getChannelsForUser(socket.data.user.login, page);
+		const channels = await this.channelService.getChannelsForUser(socket.data.user.id, page);
 
 		// substract page -1 to match the angular material paginator
 		channels.meta.currentPage = channels.meta.currentPage - 1;
@@ -134,9 +132,56 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
 	@SubscribeMessage('leaveChannel')
 	async onLeaveChannel(socket: Socket, channel: ChannelI) {
-		console.log("IN")
-;		// remove user from Channel
+		// remove user from Channel
 		await this.channelService.deleteUser(socket.data.user.id, channel.id);
+	}
+
+	// set admin
+	@SubscribeMessage('setAdmin')
+	async onSetAdmin(socket: Socket, data: any) {
+		let channel: ChannelI = data.channel;
+		let user: UserI = data.user;
+		// verify is current user is channel admin
+		const isAdmin: Number = await this.channelService.isUserAdmin(socket.data.user.id, channel);
+		if (isAdmin) {
+			await this.channelService.addAdmin(channel, user);
+		}
+		this.channelService.saveChannel(channel);
+	}
+
+	// mute user
+	@SubscribeMessage('muteUser')
+	async onMuteUser(socket: Socket, data: any) {
+		let channel: ChannelI = data.channel;
+		let user: UserI = data.user;
+		const isAdmin: Number = await this.channelService.isUserAdmin(socket.data.user.id, channel);
+		if (isAdmin && user != channel.owner) {
+			await this.channelService.addMute(channel, user);
+		}
+		this.channelService.saveChannel(channel);
+	}
+
+	// unset admin
+	@SubscribeMessage('unsetAdmin')
+	async onUnsetAdmin(socket: Socket, data: any) {
+		let channel: ChannelI = data.channel;
+		let user: UserI = data.user;
+		// verify is current user is channel admin
+		const isAdmin: Number = await this.channelService.isUserAdmin(socket.data.user.id, channel);
+		if (isAdmin && user != channel.owner) {
+			await this.channelService.removeAdmin(channel.id, user.id);
+		}
+	}
+
+	// unmute user
+	@SubscribeMessage('unmuteUser')
+	async onUnmuteUser(socket: Socket, data: any) {
+		let channel: ChannelI = data.channel;
+		let user: UserI = data.user;
+		const isAdmin: Number = await this.channelService.isUserAdmin(socket.data.user.id, channel);
+		if (isAdmin) {
+			await this.channelService.removeMute(channel.id, user.id);
+		}
 	}
 
 	@SubscribeMessage('addMessage')

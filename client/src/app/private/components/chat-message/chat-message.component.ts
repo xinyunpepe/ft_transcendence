@@ -11,7 +11,7 @@ import { AuthService } from 'src/app/public/services/auth/auth.service';
 export class ChatMessageComponent {
 
 	@Input() message: MessageI;
-	userLogin: string = this.authService.getLoggedInUser();
+	user: UserI = this.authService.getLoggedInUser();
 
 	constructor(private authService: AuthService) {}
 }

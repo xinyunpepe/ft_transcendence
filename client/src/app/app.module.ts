@@ -6,6 +6,7 @@ import { AppComponent } from './app.component';
 import { LoginComponent } from './public/components/login/login.component';
 import { JwtModule } from '@auth0/angular-jwt';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 export function tokenGetter() {
 	return localStorage.getItem('access_token');
@@ -21,6 +22,7 @@ export function tokenGetter() {
 		AppRoutingModule,
 		HttpClientModule,
 		BrowserAnimationsModule,
+		MatSnackBarModule,
 		JwtModule.forRoot({
 			config: {
 				tokenGetter: tokenGetter,

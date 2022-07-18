@@ -43,8 +43,8 @@ export class UserService {
 		})
 	}
 
-	public findOne(login: string): Promise<UserI> {
-		return this.userRepository.findOne({ where: { login }});
+	public findUserById(id: number) {
+		return this.userRepository.findOne({ where: { id: id }});
 	}
 
 	async createUser(user: UserI) {

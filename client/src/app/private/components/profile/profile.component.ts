@@ -29,8 +29,8 @@ export class ProfileComponent implements OnInit {
 	ngOnInit(): void {
 		console.log('profile');
 		localStorage.setItem('access_token', this.authService.getAccessToken());
-		const login = this.authService.getLoggedInUser(); //subscribe???
-		this.http.get(`${ environment.baseUrl }/users/${ login }`).subscribe({
+		const user = this.authService.getLoggedInUser(); //subscribe???
+		this.http.get(`${ environment.baseUrl }/users/${ user.login }`).subscribe({
 			next: data => {
 				if (!data) {
 					return;

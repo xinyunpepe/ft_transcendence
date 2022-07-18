@@ -12,17 +12,17 @@
 			</span>
 		</span>
 		<span>
-			<span *ngFor="let user of chatChannel.users">{{ user.username }}, </span>
+			<span *ngFor="let user of chatChannel.users">{{ user.username }} | </span>
 		</span>
-		<span>
+		<span style="display: flex; flex-direction: row; align-items: right; justify-content: flex-end;">
 			<!-- Edit Channel -->
-			<button mat-button (click)="leaveChannel()">
-				<i class="fas fa-sign-out-alt"></i>
-				Leave Channel
-			</button>
 			<button mat-button *ngIf="isOwner || isAdmin" (click)="editChannel(chatChannel.id)">
 				<i class="fas fa-user-cog"></i>
 				Edit Channel
+			</button>
+			<button mat-button (click)="leaveChannel()">
+				<i class="fas fa-sign-out-alt"></i>
+				Leave Channel
 			</button>
 		</span>
 	</div>

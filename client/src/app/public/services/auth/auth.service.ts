@@ -26,7 +26,7 @@ export class AuthService {
 
 	getLoggedInUser() {
 		const decodedToken = this.jwtService.decodeToken();
-		return decodedToken.login;
+		return decodedToken.user;
 	}
 
 	isAuthenticated(): boolean {

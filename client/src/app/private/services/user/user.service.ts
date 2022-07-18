@@ -11,8 +11,8 @@ export class UserService {
 
 	constructor(private http: HttpClient) { }
 
-	findByLogin(login: string): Observable<UserI> {
-		return this.http.get<UserI>(`${ environment.baseUrl }/users/${ login }`).pipe(
+	findById(id: number): Observable<UserI> {
+		return this.http.get<UserI>(`${ environment.baseUrl }/users/id/${ id }`).pipe(
 			map((user: UserI) => user)
 		);
 	}

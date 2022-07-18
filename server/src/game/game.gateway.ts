@@ -1,5 +1,5 @@
 import { SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
-import { Mutex } from 'async-mutex';
+// import { Mutex } from 'async-mutex';
 
 const canvasWidth: number = 600;
 const canvasHeight: number = 450;
@@ -12,7 +12,7 @@ const WinningPoint: number = 3;
 
 class Response {
   constructor (public type: string, public content?: any) {}
-  
+
   getJSON() {
     if (this.content) {
       return {type: this.type, content: this.content};
@@ -37,7 +37,7 @@ class Player {
     return {
       type: "Player",
       content: {
-        id: this.id, 
+        id: this.id,
         height: this.height,
         point: this.point
       }
@@ -112,16 +112,16 @@ export class GameGateway {
   @WebSocketServer() server;
 
   waiting_clients = []
-  mutex: Mutex;
-  room_mutex: Mutex;
+//   mutex: Mutex;
+//   room_mutex: Mutex;
   SocketOfClient: Map<string,any>;
   rooms: number;
   gameRooms: Map<number, GameRoom>;
 
   constructor() {
     this.rooms = 0;
-    this.room_mutex = new Mutex();
-    this.mutex = new Mutex();
+    // this.room_mutex = new Mutex();
+    // this.mutex = new Mutex();
     this.SocketOfClient = new Map<string, any>();
     this.gameRooms = new Map<number, GameRoom>();
   }
@@ -131,9 +131,9 @@ export class GameGateway {
         player2 = new Player(player2_id, this.SocketOfClient[player2_id], false);
     this.SocketOfClient.delete(player1_id);
     this.SocketOfClient.delete(player2_id);
-    const release = await this.room_mutex.acquire();
+    // const release = await this.room_mutex.acquire();
     let room_number = this.rooms++;
-    release();
+    // release();
     player1.socket.join(room_number);
     player2.socket.join(room_number);
     let response = new Response('Room', 'Matched');
@@ -175,7 +175,7 @@ export class GameGateway {
         if ((ball.y + ballHeight >= player1.height) && (ball.y <= player1.height + paddleHeight) ) {
           ball.x = 2 * minX - ball.x;
           ball.vx *= -1;
-        } 
+        }
         else {
           ++(player2.point);
           this.server.to(room_number).emit('Player', JSON.stringify(player2.getJSON()));
@@ -289,7 +289,7 @@ export class GameGateway {
     let response = new Response('Room');
     this.SocketOfClient[from] = client;
     if (to == '') { // random request
-      const release = await this.mutex.acquire();
+    //   const release = await this.mutex.acquire();
       if (this.waiting_clients.indexOf(from) != -1) {
         response.content = 'Duplicate';
       }
@@ -297,7 +297,7 @@ export class GameGateway {
         let len = this.waiting_clients.length;
         if (len > 0) {
           let opponent = this.waiting_clients.pop();
-          release();
+        //   release();
           this.setGameReady( opponent, from );
           return ;
         }
@@ -306,7 +306,7 @@ export class GameGateway {
           response.content = 'Waiting';
         }
       }
-      release();
+    //   release();
     }
     else { // to certain person
       //todo
@@ -314,7 +314,7 @@ export class GameGateway {
 
     this.server.to(client.id).emit('RoomResponse', JSON.stringify(response.getJSON()));
   }
-  
+
 }
 
 
@@ -338,10 +338,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('chat')
   async onChat(client, message) {
-    
+
     client.broadcast.emit('chat', message);
   }
-  
+
 }
 
 */
