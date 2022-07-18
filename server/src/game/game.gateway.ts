@@ -1,4 +1,4 @@
-import { SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
+import { OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Mutex } from 'async-mutex';
 
 const canvasWidth: number = 600;
@@ -101,7 +101,7 @@ class GameRoom {
 }
 
 @WebSocketGateway({cors: { origin: ['http://localhost:3000', 'http://localhost:4200'] }})
-export class GameGateway {
+export class GameGateway implements OnGatewayDisconnect {
   @WebSocketServer() server;
 
   waiting_clients = []
@@ -117,6 +117,10 @@ export class GameGateway {
     this.mutex = new Mutex();
     this.SocketOfClient = new Map<string, any>();
     this.gameRooms = new Map<number, GameRoom>();
+  }
+
+  handleDisconnect(client: any) {
+    // todo
   }
 
   async setGameReady(player1_id, player2_id) {

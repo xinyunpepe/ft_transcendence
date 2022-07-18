@@ -51,4 +51,12 @@ export class GameService {
     return this.socket.fromEvent('WatchResponse');
   }
 
+  sendNewConnectInfo(login: string) {
+    this.socket.emit('NewConnect', login);
+  }
+
+  getConnectInfo() {
+    return this.socket.fromEvent('ConnectInfo');
+  }
+
 }

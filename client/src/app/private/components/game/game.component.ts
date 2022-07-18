@@ -4,7 +4,6 @@ import { Subscription } from 'rxjs';
 import { HostListener } from '@angular/core';
 import { AuthService } from 'src/app/public/services/auth/auth.service';
 import { FormBuilder } from '@angular/forms';
-import { ParseSourceFile } from '@angular/compiler';
 
 export class Rectangle {
 	constructor(public ctx: CanvasRenderingContext2D, private width: number, private height: number, public xPos: number, public yPos: number) {}
@@ -87,7 +86,9 @@ export class GameComponent implements OnInit {
 		private game: GameService,
 		private authService: AuthService,
     private formBuilder: FormBuilder
-	) {}
+	) {
+    
+  }
 
   ngOnInit(): void {
     userLogin = this.authService.getLoggedInUser();
