@@ -26,7 +26,7 @@
 </div>
 
 <div [hidden]="!hideItem[0]">
-		<div [hidden]="!hideItem[1]">Room Number: {{roomNumber[0]}}</div>
+		<div>Room Number: {{roomNumber[0]}}</div>
 		<canvas #myCanvas width="{{canvasWidth}}" height="{{canvasHeight}}" style="border: 1px solid black;"></canvas>
 </div>
 
@@ -42,11 +42,11 @@
 	Game Result
 </div>
 
-<div [hidden]="hideScore[0]">
+<div [hidden]="hideItem[4]">
 	<span class="red">(Red) {{userLogin}} {{Points[0]}}</span> : <span class="blue">{{Points[1]}} (Blue) {{opponentLogin[0]}}</span>
 </div>
 
-<div [hidden]="hideScore[1]">
+<div [hidden]="hideItem[5]">
 	<span class="red">(Red) {{leftLogin[0]}} {{Points[0]}}</span> : <span class="blue">{{Points[1]}} (Blue) {{opponentLogin[0]}}</span>
 </div>
 

@@ -52,8 +52,7 @@ const ballHeight: number = 10;
 const ballColor: string = 'black';
 // const RoomWaitingTime: number = 42;
 var points: number[] = [0,0];
-var hideItem: boolean[] = [false, true, true, false];
-var hideScore: boolean[] = [true, true];
+var hideItem: boolean[] = [false, true, true, false, true, true];
 var opponentLogin: [string] = [''];
 var leftHeight: number = canvasHeight / 2 - paddleHeight / 2;
 var rightHeight: number = canvasHeight / 2 - paddleHeight / 2;
@@ -71,7 +70,6 @@ export class GameComponent implements OnInit {
   public opponentLogin: string[] = opponentLogin;
   public gamePlayed : number = 0;
   public hideItem: boolean[] = hideItem;
-  public hideScore: boolean[] = hideScore;
   public Points: number[] = points;
   @ViewChild('myCanvas', {static: true})canvas!: ElementRef<HTMLCanvasElement>;
   public canvasHeight: number = canvasHeight;
@@ -170,7 +168,7 @@ export class GameComponent implements OnInit {
       if (result == 'Matched') {
         sub.unsubscribe();
         hideItem[0] = true;
-        hideScore[0] = false;
+        hideItem[4] = false;
       }
     }
   }
@@ -188,7 +186,7 @@ export class GameComponent implements OnInit {
         case 'Accepted':
           hideItem[0] = true;
           hideItem[3] = true; //
-          hideScore[1] = false;
+          hideItem[5] = false;
           leftLogin[0] = data.content.id;
           ballIsWith = data.content.ballIsWith;
           break ;
@@ -242,7 +240,6 @@ export class GameComponent implements OnInit {
           break ;
         case 'Finish':
           result = '';
-          room[0] = -1;
           GameStatus = 'Finish';
           break ;
         default:
@@ -276,7 +273,7 @@ export class GameComponent implements OnInit {
         BallSub.unsubscribe();
         hideItem[1] = false;
         hideItem[3] = false;
-        // hideScore[1] = true;
+        // hideItem[5] = true;
       }
     }
   }
@@ -423,11 +420,12 @@ export class GameComponent implements OnInit {
   BackToMatch(): void {
     ball.clean2(0,0,canvasWidth,canvasHeight);
     hideItem[0] = false;
-    hideScore[0] = true;
-    hideScore[1] = true;
+    hideItem[4] = true;
+    hideItem[5] = true;
     hideItem[1] = true;
     hideItem[2] = true;
     leftLogin[0] = userLogin;
+    room[0] = -1;
   }
 
   LeaveWatchingMode(): void {
@@ -437,12 +435,13 @@ export class GameComponent implements OnInit {
     BallSub.unsubscribe();
     hideItem[3] = false;
     hideItem[0] = false;
-    hideScore[0] = true;
-    hideScore[1] = true;
+    hideItem[4] = true;
+    hideItem[5] = true;
     hideItem[1] = true;
     hideItem[2] = true;
     leftLogin[0] = userLogin;
     this.game.sendLeaveWatching(room[0].toString(), userLogin);
+    room[0] = -1;
   }
 
   Cancel(): void {
