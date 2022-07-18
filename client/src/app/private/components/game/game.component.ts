@@ -268,6 +268,8 @@ export class GameComponent implements OnInit {
       }
       if (GameStatus == 'Finish') {
         ball.clean();
+        ball.xPos = canvasWidth;
+        ball.yPos = canvasHeight;
         GameSub.unsubscribe();
         PlayerSub.unsubscribe();
         BallSub.unsubscribe();
@@ -403,13 +405,13 @@ export class GameComponent implements OnInit {
     hideItem[2] = false;
   }
 
-  showCanvas() {
+  // showCanvas() {
 
-  }
+  // }
 
-  hideCanvas() {
+  // hideCanvas() {
 
-  }
+  // }
 
   Surrender(): void {
     if (room[0] < 0 || userLogin == undefined || userLogin == '' )
@@ -461,4 +463,4 @@ export class GameComponent implements OnInit {
     this.game.sendWatchRequest(this.watchForm.value.number, userLogin);
     this.watchForm.reset();
   }
- }
+}

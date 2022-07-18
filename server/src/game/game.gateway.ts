@@ -1,6 +1,5 @@
 import { SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Mutex } from 'async-mutex';
-import { Socket } from 'socket.io';
 
 const canvasWidth: number = 600;
 const canvasHeight: number = 450;
@@ -75,6 +74,12 @@ class Ball {
     }
   }
 
+  destroy() {
+    this.isCarried = false;
+    this.x = canvasWidth;
+    this.y = canvasHeight;
+  }
+
   getJSON() {
     return {
       type: "Ball",
@@ -85,18 +90,6 @@ class Ball {
       }
     };
   }
-
-  // getOppositeJSON() {
-  //   return {
-  //     type: "Ball",
-  //     content: {
-  //       x:  canvasWidth - paddleWidth - ballWidth - this.x,
-  //       y: this.y,
-  //       vx: -1 * this.vx,
-  //       vy: this.vy
-  //     }
-  //   };
-  // }
 }
 
 class GameRoom {
@@ -106,8 +99,6 @@ class GameRoom {
     this.ball = new Ball(player1.id); // todo?
   }
 }
-
-// todo: connect and disconnect ? (manage socket and ids)
 
 @WebSocketGateway({cors: { origin: ['http://localhost:3000', 'http://localhost:4200'] }})
 export class GameGateway {
@@ -170,6 +161,10 @@ export class GameGateway {
       //   clearInterval(interval);
       //   return ;
       // }
+      if (players[0].point < 0 || players[1].point < 0) {
+        clearInterval(interval);
+        return ;
+      }
       balls[0].x += balls[0].vx;
       balls[0].y += balls[0].vy;
       if (balls[0].y < minY) {
@@ -190,6 +185,7 @@ export class GameGateway {
           this.server.to(room_number).emit('Player', JSON.stringify(players[1].getJSON()));
           if (players[1].point >= WinningPoint) {
             // this.gameRooms.delete(room_number);
+            balls[0].destroy();
             this.server.to(room_number).emit('GameStatus', JSON.stringify((new Response('Game', {status: 'Finish'})).getJSON()));
           }
           else {
@@ -219,6 +215,7 @@ export class GameGateway {
           this.server.to(room_number).emit('Player', JSON.stringify(players[0].getJSON()));
           if (players[0].point >= WinningPoint) {
             // this.gameRooms.delete(room_number);
+            balls[0].destroy();
             this.server.to(room_number).emit('GameStatus', JSON.stringify((new Response('Game', {status: 'Finish'})).getJSON()));
           }
           else {
@@ -320,8 +317,7 @@ export class GameGateway {
       }
       else return ;
       // this.gameRooms.delete(room_number);
-      this.gameRooms[room_number].ball.x = canvasWidth;
-      this.gameRooms[room_number].ball.y = canvasHeight;
+      this.gameRooms[room_number].ball.destroy();
       this.server.to(parseInt(room_number)).emit('Ball', JSON.stringify(this.gameRooms[room_number].ball.getJSON()));
       this.server.to(parseInt(room_number)).emit('GameStatus', JSON.stringify((new Response('Game', {status: 'Finish'})).getJSON()));
     }
