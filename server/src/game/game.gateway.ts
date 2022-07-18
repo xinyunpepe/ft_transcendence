@@ -1,4 +1,4 @@
-import { SubscribeMessage, WebSocketGateway, WebSocketServer, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
+import { SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Mutex } from 'async-mutex';
 import { Socket } from 'socket.io';
 
@@ -110,7 +110,7 @@ class GameRoom {
 // todo: connect and disconnect ? (manage socket and ids)
 
 @WebSocketGateway({cors: { origin: ['http://localhost:3000', 'http://localhost:4200'] }})
-export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class GameGateway {
   @WebSocketServer() server;
 
   waiting_clients = []
@@ -126,14 +126,6 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.mutex = new Mutex();
     this.SocketOfClient = new Map<string, any>();
     this.gameRooms = new Map<number, GameRoom>();
-  }
-
-  handleConnection(client: any) {
-    // todo
-  }
-
-  handleDisconnect(client: any) {
-    // todo
   }
 
   async setGameReady(player1_id, player2_id) {
@@ -197,7 +189,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           ++(players[1].point);
           this.server.to(room_number).emit('Player', JSON.stringify(players[1].getJSON()));
           if (players[1].point >= WinningPoint) {
-            this.gameRooms.delete(room_number);
+            // this.gameRooms.delete(room_number);
             this.server.to(room_number).emit('GameStatus', JSON.stringify((new Response('Game', {status: 'Finish'})).getJSON()));
           }
           else {
@@ -226,7 +218,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
           // console.log(this.gameRooms[room_number].player1.point);
           this.server.to(room_number).emit('Player', JSON.stringify(players[0].getJSON()));
           if (players[0].point >= WinningPoint) {
-            this.gameRooms.delete(room_number);
+            // this.gameRooms.delete(room_number);
             this.server.to(room_number).emit('GameStatus', JSON.stringify((new Response('Game', {status: 'Finish'})).getJSON()));
           }
           else {
@@ -326,7 +318,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         player2.point = -42;
         this.server.to(parseInt(room_number)).emit('Player', JSON.stringify(player2.getJSON()));
       }
-      this.gameRooms.delete(room_number);
+      else return ;
+      // this.gameRooms.delete(room_number);
+      this.gameRooms[room_number].ball.x = canvasWidth;
+      this.gameRooms[room_number].ball.y = canvasHeight;
+      this.server.to(parseInt(room_number)).emit('Ball', JSON.stringify(this.gameRooms[room_number].ball.getJSON()));
       this.server.to(parseInt(room_number)).emit('GameStatus', JSON.stringify((new Response('Game', {status: 'Finish'})).getJSON()));
     }
     else {

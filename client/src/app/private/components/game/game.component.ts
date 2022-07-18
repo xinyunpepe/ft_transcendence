@@ -4,9 +4,10 @@ import { Subscription } from 'rxjs';
 import { HostListener } from '@angular/core';
 import { AuthService } from 'src/app/public/services/auth/auth.service';
 import { FormBuilder } from '@angular/forms';
+import { ParseSourceFile } from '@angular/compiler';
 
 export class Rectangle {
-	constructor(private ctx: CanvasRenderingContext2D, private width: number, private height: number, public xPos: number, public yPos: number) {}
+	constructor(public ctx: CanvasRenderingContext2D, private width: number, private height: number, public xPos: number, public yPos: number) {}
 
 	draw(color: string) {
 		// if (this.xPos < 0 || this.yPos < 0)
@@ -89,15 +90,28 @@ export class GameComponent implements OnInit {
 	) {}
 
   ngOnInit(): void {
-	userLogin = this.authService.getLoggedInUser();
-  this.userLogin = userLogin;
-	let tmp: any = this.canvas.nativeElement.getContext('2d');
+    userLogin = this.authService.getLoggedInUser();
+    this.userLogin = userLogin;
+    let tmp: any = this.canvas.nativeElement.getContext('2d');
     if (typeof tmp != 'undefined') {
       this.ctx = tmp;
     }
-    paddles.push(new Rectangle(this.ctx, paddleWidth, paddleHeight, 0, leftHeight));
-    paddles.push(new Rectangle(this.ctx, paddleWidth, paddleHeight ,canvasWidth - paddleWidth, rightHeight));
-    ball = new Rectangle(this.ctx, ballWidth, ballHeight, -1, -1);
+    if (paddles.length == 0) {
+      paddles.push(new Rectangle(this.ctx, paddleWidth, paddleHeight, 0, leftHeight));
+      paddles.push(new Rectangle(this.ctx, paddleWidth, paddleHeight ,canvasWidth - paddleWidth, rightHeight));
+      ball = new Rectangle(this.ctx, ballWidth, ballHeight, -1, -1);
+    }
+    else {
+      paddles[0].ctx = this.ctx;
+      paddles[1].ctx = this.ctx;
+      ball.ctx = this.ctx;
+      setTimeout(()=>{
+        paddles[0].draw('red');
+        paddles[1].draw('blue');
+        ball.draw(ballColor);
+      },10);
+      
+    }
   }
 
 
@@ -321,6 +335,7 @@ export class GameComponent implements OnInit {
       paddles[0].yPos = leftHeight;
       paddles[1].yPos = rightHeight;
       // console.log(toRealHeight(canvasHeight, leftHeight).toString() + ' ' + rightHeight.toString());
+      // console.log(paddles[0].xPos.toString() + " " + paddles[0].yPos.toString());
       paddles[0].draw('red');
       paddles[1].draw('blue');
       // console.log('My Position(left): ' + leftHeight.toString() + ' Opponent Position(right): ' + rightHeight.toString() + '\
@@ -386,6 +401,14 @@ export class GameComponent implements OnInit {
     this.game.sendRoomRequest(userLogin);
 
     hideItem[2] = false;
+  }
+
+  showCanvas() {
+
+  }
+
+  hideCanvas() {
+
   }
 
   Surrender(): void {
