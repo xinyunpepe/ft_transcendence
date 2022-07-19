@@ -10,12 +10,13 @@
 						<h2>My Channels</h2>
 					</span>
 					<button mat-button routerLink="/private/create-channel">Create new Channel</button>
+					<button mat-button routerLink="/private/explore-channel">Explore more Channels</button>
 				</div>
 
 				<div *ngIf="(channels$ | async)?.items.length > 0" class="channels">
 					<mat-selection-list [multiple]="false" (selectionChange)="onSelectChannel($event)">
 						<mat-list-option *ngFor="let channel of (channels$ | async)?.items" [value]="channel">
-							Name: {{ channel.name }}
+							Name: {{ channel.name }} ID: {{ channel.id }}
 							<mat-divider></mat-divider>
 						</mat-list-option>
 					</mat-selection-list>

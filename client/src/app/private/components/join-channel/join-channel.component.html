@@ -1,0 +1,36 @@
+<div *ngIf="joinChannel">
+	<!-- Header -->
+	<div style="height: 125px;">
+		<span style="display: flex; flex-direction: row; align-items: center; justify-content: space-between;">
+			<h2>
+				<mat-icon>group</mat-icon>
+				{{ joinChannel.name }}
+			</h2>
+		</span>
+
+		<!-- Messages -->
+		<div *ngIf="!isJoined; else alreadyJoined">
+			<div *ngIf="joinChannel.type == protected; else join">
+				<form class="form" (ngSubmit)="addUser()">
+					<mat-form-field appearance="standard">
+						<input matInput placeholder="Password" [formControl]="password" type="password">
+					</mat-form-field>
+					<button mat-raised-button color="primary" [disabled]="!password.valid || isJoined" type="submit">Join Channel</button>
+				</form>
+			</div>
+		</div>
+
+		<ng-template #alreadyJoined>
+			<div class="addUser">
+				<h3>You are already in this room</h3>
+			</div>
+		</ng-template>
+
+		<ng-template #join>
+			<div class="addUser">
+				<button mat-raised-button color="primary" (click)="addUser()">Join Channel</button>
+			</div>
+		</ng-template>
+
+	</div>
+</div>

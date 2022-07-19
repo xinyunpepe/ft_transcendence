@@ -54,16 +54,14 @@ export class ChatChannelComponent implements OnChanges, OnDestroy, AfterViewInit
 				}
 			})
 
-			// if (this.chatChannel.mute && this.chatChannel.mute.some(m => m.id === this.user.id)) {
-			// 	console.log('IN5');
-			// 	this.chatMessage.disable();
-			// 	this.chatMessage.setValue('You are muted');
-			// }
-			// else {
-			// 	console.log('IN6');
-				// this.chatMessage.enable();
-				// this.chatMessage.setValue('');
-			// }
+			if (this.chatChannel.mute && this.chatChannel.mute.some(m => m.id === this.user.id)) {
+				this.chatMessage.disable();
+				this.chatMessage.setValue('You are muted');
+			}
+			else {
+				this.chatMessage.enable();
+				this.chatMessage.setValue('');
+			}
 			return messagePaginate;
 		}),
 		tap(() => this.scrollToBottom())
@@ -97,13 +95,13 @@ export class ChatChannelComponent implements OnChanges, OnDestroy, AfterViewInit
 
 	sendMessage() {
 		if (this.chatMessage.valid) {
-			if (this.chatChannel.mute.some((user) => {
-				return user.id === this.user.id;
-			})) {
-				this.snackbar.open('You have been muted', 'Close', {
-					duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
-				});
-			}
+			// if (this.chatChannel.mute.some((user) => {
+			// 	return user.id === this.user.id;
+			// })) {
+			// 	this.snackbar.open('You have been muted', 'Close', {
+			// 		duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
+			// 	});
+			// }
 			const test = this.chatService.sendMessage({ text: this.chatMessage.value, channel: this.chatChannel, type: 0 });
 			this.chatMessage.reset();
 		}

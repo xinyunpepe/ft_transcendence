@@ -1,24 +1,13 @@
-.container {
-	display: flex;
-	justify-content: center;
-}
-
-.container mat-card {
-	position: fixed;
-	margin: 30px;
-}
-
-.container mat-card .channels {
-	height: 500px;
-	width: 250;
+.message {
+	background-color: rgb(236, 236, 236);
+	height: 400px;
 	overflow-y: scroll;
 	scrollbar-color: lightgrey darkgrey;
 	scrollbar-width: thin;
 }
 
-.container mat-card .chats {
-	margin-left: 40px;
-	width: 600px;
+.gameButton{
+	right: 0%;
 }
 
 ::-webkit-scrollbar-track {

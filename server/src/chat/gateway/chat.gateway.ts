@@ -5,7 +5,7 @@ import { AuthService } from 'src/auth/auth.service';
 import { UserService } from 'src/user/user.service';
 import { OnModuleInit, UnauthorizedException } from '@nestjs/common';
 import { ChannelService } from '../services/channel.service';
-import { ChannelI } from '../model/channel/channel.interface';
+import { ChannelI, ChannelType } from '../model/channel/channel.interface';
 import { UserI } from 'src/user/model/user/user.interface';
 import { PageI } from '../model/page.interface';
 import { ConnectedUserService } from '../services/connected-user.service';
@@ -97,6 +97,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 		}
 	}
 
+	// get all the joined channels for user
 	@SubscribeMessage('paginateChannels')
 	async onPaginateChannel(socket: Socket, page: PageI) {
 		page.limit = page.limit > 100 ? 100 : page.limit;
@@ -105,6 +106,22 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 		page.page = page.page + 1;
 
 		const channels = await this.channelService.getChannelsForUser(socket.data.user.id, page);
+
+		// substract page -1 to match the angular material paginator
+		channels.meta.currentPage = channels.meta.currentPage - 1;
+
+		return this.server.to(socket.id).emit('channels', channels);
+	}
+
+	// get all public and protected channels for user
+	@SubscribeMessage('paginateAllChannels')
+	async onPaginateAllChannel(socket: Socket, page: PageI) {
+		page.limit = page.limit > 100 ? 100 : page.limit;
+
+		// add page +1 to match angular material paginator
+		page.page = page.page + 1;
+
+		const channels = await this.channelService.getAllChannelsForUser(page);
 
 		// substract page -1 to match the angular material paginator
 		channels.meta.currentPage = channels.meta.currentPage - 1;
@@ -134,6 +151,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 	async onLeaveChannel(socket: Socket, channel: ChannelI) {
 		// remove user from Channel
 		await this.channelService.deleteUser(socket.data.user.id, channel.id);
+	}
+
+	// add user
+	@SubscribeMessage('addUser')
+	async onAddUser(socket: Socket, data: any) {
+		let channel: ChannelI = data.channel;
+		let password: string = data.password;
+		await this.channelService.addUser(channel.id, socket.data.user, password);
 	}
 
 	// set admin
@@ -181,6 +206,20 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 		const isAdmin: Number = await this.channelService.isUserAdmin(socket.data.user.id, channel);
 		if (isAdmin) {
 			await this.channelService.removeMute(channel.id, user.id);
+		}
+	}
+
+	@SubscribeMessage('changeType')
+	async onChangeType(socket: Socket, data: any) {
+		let channel: ChannelI = data.channel;
+		if (channel.owner.id === socket.data.user.id) {
+			if (channel.type === ChannelType.PROTECTED) {
+				await this.channelService.changeType(channel, channel.type);
+				await this.channelService.changePassword(channel, channel.password);
+			}
+			else {
+				await this.channelService.changeType(channel, channel.type);
+			}
 		}
 	}
 

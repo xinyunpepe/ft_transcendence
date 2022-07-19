@@ -115,7 +115,6 @@ export class UserController {
 		@Param('receiverLogin') receiverLogin: string,
 		@Req() req
 	) {
-		console.log(req.user);
 		return this.userService.sendFriendRequest(req.user.login, receiverLogin);
 	}
 

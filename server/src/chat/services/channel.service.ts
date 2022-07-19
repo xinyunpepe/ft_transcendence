@@ -6,7 +6,7 @@ import { ChannelI, ChannelType } from "../model/channel/channel.interface";
 import { ChannelEntity } from "../model/channel/channel.entity";
 import { UserI } from "src/user/model/user/user.interface";
 import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
-import * as bcrypt from 'bcrypt';
+import { Observable, of } from "rxjs";
 
 @Injectable()
 export class ChannelService {
@@ -27,7 +27,6 @@ export class ChannelService {
 			channel.password = channel.password;
 		}
 		channel.owner = creator;
-		console.log(channel.owner);
 		const newChannel = await this.addCreator(channel, creator);
 		const newChannelAdmin = await this.addAdmin(newChannel, creator);
 		return this.channelRepository.save(newChannelAdmin);
@@ -40,6 +39,28 @@ export class ChannelService {
 	async addCreator(channel: ChannelI, creator: UserI) {
 		channel.users.push(creator);
 		return channel;
+	}
+
+	async addUser(channeiId: number, user: UserI, password: string): Promise<Observable<{ error: string } | { success: string }>> {
+		const channel = await this.getChannel(channeiId);
+		const isJoined = await this.isUserJoined(user.id, channel);
+		if (isJoined) {
+			return of({ error: 'Already joined the channel' });
+		}
+		if (channel.type === ChannelType.PUBLIC) {
+			const newChannel = await this.addCreator(channel, user);
+			this.channelRepository.save(newChannel);
+			return of({ success: 'Channel joined' });
+		}
+		if (channel.type === ChannelType.PROTECTED) {
+			const isMatched: boolean = await this.validatePassword(password, channel.password);
+			if (isMatched) {
+				const newChannel = await this.addCreator(channel, user);
+				this.channelRepository.save(newChannel);
+				return of({ success: 'Channel joined' });
+			}
+			return of({ error: 'Wrong password' });
+		}
 	}
 
 	async addAdmin(channel: ChannelI, user: UserI) {
@@ -64,10 +85,22 @@ export class ChannelService {
 		return this.channelRepository.save(channel);
 	}
 
+	async changeType(channel: ChannelI, type: ChannelType) {
+		channel.type = type;
+		return this.channelRepository.save(channel);
+	}
+
+	// TODO hash password
+	async changePassword(channel: ChannelI, password: string) {
+		channel.password = password;
+		return this.channelRepository.save(channel);
+	}
+
 	async getChannel(channelId: number) {
 		return this.channelRepository.findOne({
 			where: [{ id: channelId }],
-			relations: ['users', 'owner', 'admin', 'mute']
+			relations: ['users', 'owner', 'admin', 'mute'],
+			select: ['id', 'name', 'type', 'password']
 		});
 	}
 
@@ -101,6 +134,32 @@ export class ChannelService {
 		return paginate(query, options);
 	}
 
+	async getAllChannelsForUser(options: IPaginationOptions) {
+		// console.log('Getting All channels for user');
+		const query = this.channelRepository
+			.createQueryBuilder('channel')
+			.where('channel.type = :public', { public: ChannelType.PUBLIC })
+			.orWhere('channel.type = :protected', { protected: ChannelType.PROTECTED })
+			.leftJoinAndSelect('channel.users', 'all_users')
+			.leftJoinAndSelect('channel.admin', 'all_admin')
+			.leftJoinAndSelect('channel.mute', 'all_mute')
+			.leftJoinAndSelect('channel.owner', 'owner')
+			.orderBy('channel.updatedAt', 'DESC')
+
+		return paginate(query, options);
+	}
+
+	isUserJoined(userId: number, channel: ChannelI) {
+		const query = this.channelRepository
+			.createQueryBuilder('channel')
+			.leftJoinAndSelect('channel.users', 'users')
+			.where('users.id = :userId', { userId })
+			.andWhere('channel.id = :channelId', { channelId: channel.id })
+			.getCount();
+
+		return (query);
+	}
+
 	isUserMuted(userId: number, channel: ChannelI) {
 		const query = this.channelRepository
 			.createQueryBuilder('channel')
@@ -121,5 +180,11 @@ export class ChannelService {
 			.getCount();
 
 		return (query);
-	  }
+	}
+
+	// TODO bcypt
+	private async validatePassword(password: string, hashedPassword: string) {
+		// return bcrypt.compare(password, hashedPassword);
+		return password === hashedPassword;
+	}
 }

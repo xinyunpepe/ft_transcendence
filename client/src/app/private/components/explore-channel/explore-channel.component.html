@@ -1,0 +1,27 @@
+<app-navbar></app-navbar>
+
+<div class="container">
+	<div>
+		<mat-card>
+			<mat-card-title>All Channels</mat-card-title>
+			<div *ngIf="(channels$ | async)?.items?.length > 0" class="channels">
+				<mat-selection-list [multiple]="false" (selectionChange)="onSelectChannel($event)">
+					<mat-list-option *ngFor="let channel of (channels$ | async)?.items" [value]="channel">
+						Name: {{ channel.name }} ID: {{ channel.id }}
+						<mat-divider></mat-divider>
+					</mat-list-option>
+				</mat-selection-list>
+				<mat-paginator
+				[length]="(channels$ | async)?.meta?.totalItems"
+				[pageIndex]="(channels$ | async)?.meta?.currentPage"
+				[pageSize]="(channels$ | async)?.meta?.itemsPerPage"
+				(page)="onPaginateChannels($event)"
+				[pageSizeOptions]="[10, 25, 50]"
+				></mat-paginator>
+			</div>
+			<div class="chat">
+				<app-join-channel [joinChannel]="selectedChannel" [isJoined]="isJoined"></app-join-channel>
+			</div>
+		</mat-card>
+	</div>
+</div>

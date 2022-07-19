@@ -16,7 +16,7 @@ export class DashboardChannelComponent implements OnInit, AfterViewInit {
 
 	// name$ convention for async value
 	channels$: Observable<ChannelPaginateI> = this.chatService.getChannels();
-	selectedChannel = null;
+	selectedChannel: ChannelI = null;
 
 	constructor(
 		private chatService: ChatService

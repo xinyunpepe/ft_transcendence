@@ -25,6 +25,8 @@ import { ChatChannelComponent } from './components/chat-channel/chat-channel.com
 import { ChatMessageComponent } from './components/chat-message/chat-message.component';
 import { GameComponent } from './components/game/game.component';
 import { EditChannelComponent } from './components/edit-channel/edit-channel.component';
+import { ExploreChannelComponent } from './components/explore-channel/explore-channel.component';
+import { JoinChannelComponent } from './components/join-channel/join-channel.component';
 
 @NgModule({
 	declarations: [
@@ -37,7 +39,9 @@ import { EditChannelComponent } from './components/edit-channel/edit-channel.com
 		ChatChannelComponent,
 		ChatMessageComponent,
 		GameComponent,
-		EditChannelComponent
+		EditChannelComponent,
+		ExploreChannelComponent,
+		JoinChannelComponent
 	],
 	imports: [
 		CommonModule,

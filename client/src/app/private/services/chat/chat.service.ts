@@ -1,7 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { map, Observable } from 'rxjs';
-import { ChannelI, ChannelPaginateI } from 'src/app/model/channel.interface';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { Router } from '@angular/router';
+import { map, Observable, tap } from 'rxjs';
+import { ChannelI, ChannelPaginateI, ChannelType } from 'src/app/model/channel.interface';
 import { MessageI, MessagePaginateI } from 'src/app/model/message.interface';
 import { UserI } from 'src/app/model/user.interface';
 import { CustomSocket } from 'src/app/private/sockets/custom-sockets';
@@ -17,7 +19,9 @@ export class ChatService {
 
 	constructor(
 		private authService: AuthService,
-		private http: HttpClient
+		private http: HttpClient,
+		private snackbar: MatSnackBar,
+		private router: Router
 	) {
 		if (this.authService.isAuthenticated) {
 			this.socket = new CustomSocket();
@@ -32,6 +36,10 @@ export class ChatService {
 		this.socket.emit('paginateChannels', { limit, page });
 	}
 
+	emitPaginateAllChannel(limit: number, page: number) {
+		this.socket.emit('paginateAllChannels', { limit, page });
+	}
+
 	joinChannel(channel: ChannelI) {
 		this.socket.emit('joinChannel', channel);
 	}
@@ -44,8 +52,8 @@ export class ChatService {
 		this.socket.emit('leaveChannel', channel);
 	}
 
-	sendMessage(message: MessageI) {
-		this.socket.emit('addMessage', message);
+	addUser(channel: ChannelI, password: string) {
+		this.socket.emit('addUser', { channel, password });
 	}
 
 	setAdmin(channel: ChannelI, user: UserI) {
@@ -64,6 +72,14 @@ export class ChatService {
 		this.socket.emit('unmuteUser', { user, channel });
 	}
 
+	changeType(channel: ChannelI) {
+		this.socket.emit('changeType', { channel });
+	}
+
+	sendMessage(message: MessageI) {
+		this.socket.emit('addMessage', message);
+	}
+
 	getMessages(): Observable<MessagePaginateI> {
 		return this.socket.fromEvent<MessagePaginateI>('messages');
 	}
@@ -79,6 +95,24 @@ export class ChatService {
 	findChannelById(id: number): Observable<ChannelI> {
 		return this.http.get<UserI>(`${ environment.baseUrl }/channel/${ id }`).pipe(
 			map((channel: ChannelI) => channel)
+		);
+	}
+
+	joinProtectedChannel(channelId: number, userId: number): Observable<number> {
+		return this.http.get<number>(`${ environment.baseUrl }/channel/${ channelId }/${ userId }`).pipe(
+			tap(res => {
+				if (res < 1) {
+					this.snackbar.open('Password failed, try again', 'Close', {
+						duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
+					});
+				}
+				else {
+					this.snackbar.open('You joined the channel', 'Close', {
+						duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
+					});
+				}
+				this.router.navigate(['../../private/dashboard-channel']);
+			})
 		);
 	}
 }

@@ -4,66 +4,67 @@
 	<div>
 		<mat-card>
 			<mat-card-title>Channel {{ channel.name }}</mat-card-title>
-			<h3>Channel Settings</h3>
-			<mat-divider></mat-divider>
 			<mat-card-content>
-				<form [formGroup]="form" (ngSubmit)="modify()">
-					<mat-radio-group (change)="radioType($event)" class="radio">
-						<mat-radio-button value="private" required>Private</mat-radio-button>
-						<mat-radio-button value="public" required>Public</mat-radio-button>
-						<mat-radio-button value="protected" required>Protected</mat-radio-button>
-					</mat-radio-group>
 
+				<!-- only open to owner -->
+				<div *ngIf="isOwner(user)">
+					<h3>Channel Settings</h3>
 					<mat-divider></mat-divider>
+					<form [formGroup]="form" (ngSubmit)="modify()">
+						<mat-radio-group (change)="radioType($event)" class="radio">
+							<mat-radio-button value="private" required>Private</mat-radio-button>
+							<mat-radio-button value="public" required>Public</mat-radio-button>
+							<mat-radio-button value="protected" required>Protected</mat-radio-button>
+						</mat-radio-group>
 
-					<mat-form-field appearance="standard">
-						<input matInput placeholder="Password" formControlName="password" placeholder="Password" />
-					</mat-form-field>
+						<mat-divider></mat-divider>
 
-					<mat-hint *ngIf="!form.valid"><small>Please fill out all needed information</small></mat-hint>
+						<mat-form-field appearance="standard">
+							<input matInput placeholder="Password" formControlName="password" placeholder="Password" />
+						</mat-form-field>
 
-					<div class="button">
-						<button mat-button type="submit" [disabled]="!form.valid">Confirm changes</button>
-					</div>
-				</form>
+						<mat-hint *ngIf="!form.valid"><small>Please fill out all needed information</small></mat-hint>
+
+						<div class="button">
+							<button mat-button type="submit" [disabled]="!form.valid">Confirm changes</button>
+						</div>
+					</form>
+				</div>
+
+				<div *ngIf="(channel$ | async)?.users?.length > 0" class="friends-list">
+					<h3>Users Settings</h3>
+					<mat-divider></mat-divider>
+					<mat-list>
+						<mat-list-item *ngFor="let channelUser of (channel$ | async)?.users">
+							{{ channelUser.username }}
+
+							<!-- <button mat-button class="firstbutton" (click)="removeUser(user)">
+								Remove user
+							</button> -->
+
+							<!-- only open to owner -->
+							<div *ngIf="isOwner(user)">
+								<button mat-button *ngIf="!isAdmin(channelUser); else Unadmin" class="firstbutton" (click)="setAdmin(channelUser)">
+									Set admin
+								</button>
+								<ng-template #Unadmin>
+									<button mat-button class="firstbutton" (click)="unsetAdmin(channelUser)">
+										Unset admin
+									</button>
+								</ng-template>
+							</div>
+
+							<button mat-button *ngIf="!isMute(channelUser); else Unmute" class="firstbutton" (click)="muteUser(channelUser)">
+								Mute user
+							</button>
+							<ng-template #Unmute>
+								<button mat-button class="firstbutton" (click)="unmuteUser(user)">
+									Unmute user
+								</button>
+							</ng-template>
+						</mat-list-item>
+					</mat-list>
+				</div>
 			</mat-card-content>
-		</mat-card>
-
-		<mat-card>
-			<div *ngIf="(channel$ | async)?.users?.length > 0" class="friends-list">
-				<h3>Users Settings</h3>
-				<mat-divider></mat-divider>
-				<mat-list>
-					<mat-list-item *ngFor="let user of (channel$ | async)?.users">
-							{{ user.username }}
-
-						<!-- <button mat-button class="firstbutton" (click)="removeUser(user)">
-							Remove user
-						</button> -->
-
-						<button mat-button *ngIf="!isAdmin(user); else Unadmin" class="firstbutton" (click)="setAdmin(user)">
-							Set admin
-						</button>
-						<ng-template #Unadmin>
-							<button mat-button class="firstbutton" (click)="unsetAdmin(user)">
-								Unset admin
-							</button>
-						</ng-template>
-
-						<button mat-button *ngIf="!isMute(user); else Unmute" class="firstbutton" (click)="muteUser(user)">
-							Mute user
-						</button>
-						<ng-template #Unmute>
-							<button mat-button class="firstbutton" (click)="unmuteUser(user)">
-								Unmute user
-							</button>
-						</ng-template>
-
-					</mat-list-item>
-				</mat-list>
-			</div>
-		</mat-card>
-	</div>
-
-
+	</mat-card>
 </div>

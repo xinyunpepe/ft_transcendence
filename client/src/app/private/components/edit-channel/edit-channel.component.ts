@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatRadioChange } from '@angular/material/radio';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { ActivatedRoute, Params } from '@angular/router';
+import { ActivatedRoute, Params, Router } from '@angular/router';
 import { map, Observable, switchMap } from 'rxjs';
 import { ChannelI } from 'src/app/model/channel.interface';
 import { UserI } from 'src/app/model/user.interface';
@@ -41,10 +41,9 @@ export class EditChannelComponent implements OnInit {
 		private chatService: ChatService,
 		private authService: AuthService,
 		private userService: UserService,
-		private snackbar: MatSnackBar
-	) {
-
-	}
+		private snackbar: MatSnackBar,
+		private router: Router
+	) {}
 
 	ngOnInit() {
 		this.userService.findById(this.user.id).subscribe(user => {
@@ -65,11 +64,13 @@ export class EditChannelComponent implements OnInit {
 				});
 			});
 		});
-		console.log(this.channel);
 	}
 
 	modify() {
-
+		if (this.form.valid) {
+			this.chatService.changeType(this.form.getRawValue());
+			this.router.navigate(['../../dashboard-channel'], { relativeTo: this.activatedRoute });
+		}
 	}
 
 	radioType($event: MatRadioChange) {
@@ -93,6 +94,10 @@ export class EditChannelComponent implements OnInit {
 			this.form.get('type').setValue('protected');
 			this.beforeType = 'protected';
 		}
+	}
+
+	isOwner(user: UserI) {
+		return this.channel.owner && this.channel.owner.id === user.id;
 	}
 
 	isAdmin(user: UserI) {

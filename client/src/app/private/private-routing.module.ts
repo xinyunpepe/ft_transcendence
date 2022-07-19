@@ -7,6 +7,8 @@ import { DashboardChannelComponent } from './components/dashboard-channel/dashbo
 import { CreateChannelComponent } from './components/create-channel/create-channel.component';
 import { GameComponent } from './components/game/game.component';
 import { EditChannelComponent } from './components/edit-channel/edit-channel.component';
+import { ExploreChannelComponent } from './components/explore-channel/explore-channel.component';
+import { JoinChannelComponent } from './components/join-channel/join-channel.component';
 
 const routes: Routes = [
 	{ path: 'profile',
@@ -16,6 +18,7 @@ const routes: Routes = [
 		]
 	},
 	{ path: 'dashboard-channel', component: DashboardChannelComponent },
+	{ path: 'explore-channel', component: ExploreChannelComponent },
 	{ path: 'create-channel', component: CreateChannelComponent },
 	{ path: 'edit-channel/:id', component: EditChannelComponent },
 	{ path: 'game', component: GameComponent },
