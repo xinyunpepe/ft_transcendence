@@ -80,6 +80,10 @@ export class ChatService {
 		this.socket.emit('addMessage', message);
 	}
 
+	inviteGame(message: MessageI, id: number) {
+		this.socket.emit('inviteGame', message);
+	}
+
 	getMessages(): Observable<MessagePaginateI> {
 		return this.socket.fromEvent<MessagePaginateI>('messages');
 	}
@@ -93,7 +97,7 @@ export class ChatService {
 	}
 
 	findChannelById(id: number): Observable<ChannelI> {
-		return this.http.get<UserI>(`${ environment.baseUrl }/channel/${ id }`).pipe(
+		return this.http.get<ChannelI>(`${ environment.baseUrl }/channel/${ id }`).pipe(
 			map((channel: ChannelI) => channel)
 		);
 	}

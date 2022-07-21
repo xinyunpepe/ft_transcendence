@@ -238,4 +238,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 			}
 		}
 	}
+
+	@SubscribeMessage('inviteGame')
+	async onInviteGame(socket: Socket, message: MessageI, id: number) {
+		const newMessage: MessageI = await this.messageService.create({ ...message, user: socket.data.user });
+		const channel: ChannelI = await this.channelService.getChannel(newMessage.channel.id);
+		const joinedUsers: JoinedChannelI[] = await this.joinedChannelService.findByChannel(channel);
+		for (const user of joinedUsers) {
+			const isBlocked: number = await this.userService.isUserBlocked(user.userId, newMessage.user.id);
+			if (!isBlocked) {
+				await this.server.to(user.socketId).emit('messageAdded', newMessage);
+			}
+		}
+	}
 }

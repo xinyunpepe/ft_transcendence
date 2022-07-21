@@ -1,15 +1,18 @@
 .container {
 	display: flex;
 	justify-content: center;
+	margin: 30px;
+	min-width: 350px;
 }
 
 .container mat-card {
-	position: fixed;
-	margin: 30px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
 }
 
 .container mat-card .channels {
-	height: 500px;
+	height: 300px;
 	width: 250;
 	overflow-y: scroll;
 	scrollbar-color: lightgrey darkgrey;

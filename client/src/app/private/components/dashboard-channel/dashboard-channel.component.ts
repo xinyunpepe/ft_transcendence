@@ -3,9 +3,7 @@ import { MatSelectionListChange } from '@angular/material/list';
 import { PageEvent } from '@angular/material/paginator';
 import { Observable } from 'rxjs';
 import { ChannelI, ChannelPaginateI } from 'src/app/model/channel.interface';
-import { UserI } from 'src/app/model/user.interface';
 import { ChatService } from 'src/app/private/services/chat/chat.service';
-import { AuthService } from 'src/app/public/services/auth/auth.service';
 
 @Component({
   selector: 'app-dashboard-channel',

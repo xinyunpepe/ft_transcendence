@@ -1,6 +1,5 @@
 import { AfterViewInit, Component, ElementRef, Input, OnChanges, OnDestroy, SimpleChanges, ViewChild } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { combineLatest, map, Observable, startWith, tap } from 'rxjs';
 import { ChannelI } from 'src/app/model/channel.interface';
@@ -74,9 +73,10 @@ export class ChatChannelComponent implements OnChanges, OnDestroy, AfterViewInit
 		private authService: AuthService,
 		private userService: UserService,
 		private router: Router,
-		private activatedRoute: ActivatedRoute,
-		private snackbar: MatSnackBar
-	) {}
+		private activatedRoute: ActivatedRoute
+	) {
+		// TODO start game?
+	}
 
 	ngAfterViewInit(){
 		this.scrollToBottom();
@@ -102,13 +102,22 @@ export class ChatChannelComponent implements OnChanges, OnDestroy, AfterViewInit
 			// 		duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
 			// 	});
 			// }
-			const test = this.chatService.sendMessage({ text: this.chatMessage.value, channel: this.chatChannel, type: 0 });
+			this.chatService.sendMessage({ text: this.chatMessage.value, channel: this.chatChannel, type: 0 });
 			this.chatMessage.reset();
 		}
 	}
 
-	joinGame(id: number) {
+	inviteGame() {
+		this.chatService.inviteGame({ text: 'Game Invitation', channel: this.chatChannel, type: 1 }, this.user.id);
+		this.chatMessage.reset();
+	}
 
+	joinGame(id: number) {
+		// TODO join game
+	}
+
+	accessProfile(userId: number) {
+		this.router.navigate(['../profile/' + userId], { relativeTo: this.activatedRoute });
 	}
 
 	leaveChannel() {

@@ -12,10 +12,13 @@
 			</span>
 		</span>
 		<span>
-			<span *ngFor="let user of chatChannel.users">{{ user.username }} | </span>
+			<span class="user-profile" *ngFor="let user of chatChannel.users" (click)="accessProfile(user.id)">{{ user.username }} | </span>
 		</span>
 		<span style="display: flex; flex-direction: row; align-items: right; justify-content: flex-end;">
-			<!-- Edit Channel -->
+			<button mat-button (click)="inviteGame()">
+				<i class="fas fa-gamepad-alt"></i>
+				Invite Game
+			</button>
 			<button mat-button *ngIf="isOwner || isAdmin" (click)="editChannel(chatChannel.id)">
 				<i class="fas fa-user-cog"></i>
 				Edit Channel
@@ -31,19 +34,19 @@
 	<div #messages class="message">
 		<span *ngFor="let message of (messagesPaginate$ | async)?.items">
 			<div *ngIf="message.type == 0; else game">
-				<!-- <div *ngIf="message.type == 0"> -->
 				<app-chat-message [message]="message"></app-chat-message>
 			</div>
 			<ng-template #game>
-				<button class="gameButton" (click)="joinGame(message.id)">{{ message.user.username }}<div>{{
-						message.text }}</div></button>
+				<button class="game-button" (click)="joinGame(message.id)">{{ message.user.username }}
+					<div>{{ message.text }}</div>
+				</button>
 			</ng-template>
 		</span>
 	</div>
 
 	<!-- Add Message -->
 	<div style="position: absolute; bottom: 0; display: flex; flex-direction: row; align-items: center;">
-		<mat-form-field style="width: 350px;">
+		<mat-form-field style="width: 450px;">
 			<input matInput [formControl]="chatMessage" type="text">
 		</mat-form-field>
 		<button mat-button [disabled]="!chatMessage.valid" (click)="sendMessage()">

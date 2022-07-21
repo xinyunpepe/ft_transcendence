@@ -8,13 +8,13 @@ import { CreateChannelComponent } from './components/create-channel/create-chann
 import { GameComponent } from './components/game/game.component';
 import { EditChannelComponent } from './components/edit-channel/edit-channel.component';
 import { ExploreChannelComponent } from './components/explore-channel/explore-channel.component';
-import { JoinChannelComponent } from './components/join-channel/join-channel.component';
+import { ProfileUserComponent } from './components/profile-user/profile-user.component';
 
 const routes: Routes = [
 	{ path: 'profile',
 		children: [
-			{ path: '', component: ProfileComponent},
-			// { path: ':userLogin', component: ProfileComponent}
+			{ path: '', component: ProfileComponent },
+			{ path: ':id', component: ProfileUserComponent }
 		]
 	},
 	{ path: 'dashboard-channel', component: DashboardChannelComponent },

@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { UserI } from 'src/app/model/user.interface';
 import { AuthService } from 'src/app/public/services/auth/auth.service';
 import { environment } from 'src/environments/environment';
 
@@ -11,14 +11,9 @@ import { environment } from 'src/environments/environment';
 })
 export class ProfileComponent implements OnInit {
 
-	private subscription: Subscription = new Subscription();
-
-	user: any;
-
+	user: UserI = {};
 	twoFactorAuthActive: boolean = false;
-
 	twoFactorAuth: any = {};
-
 	qrCode: string = '';
 
 	constructor(
@@ -26,11 +21,10 @@ export class ProfileComponent implements OnInit {
 		private authService: AuthService,
 	) {}
 
-	ngOnInit(): void {
-		console.log('profile');
+	ngOnInit() {
 		localStorage.setItem('access_token', this.authService.getAccessToken());
-		const user = this.authService.getLoggedInUser(); //subscribe???
-		this.http.get(`${ environment.baseUrl }/users/${ user.login }`).subscribe({
+		this.user = this.authService.getLoggedInUser(); //subscribe???
+		this.http.get(`${ environment.baseUrl }/users/${ this.user.login }`).subscribe({
 			next: data => {
 				if (!data) {
 					return;
@@ -45,25 +39,11 @@ export class ProfileComponent implements OnInit {
 		});
 	}
 
-	ngOnDestroy(): void {
-		this.subscription.unsubscribe();
+	editProfile(user: UserI) {
+
 	}
 
-	turnOn2FA() {
-		this.authService.generate2fa().subscribe({
-			next: data => {
-				this.twoFactorAuth = data;
-				console.log(this.twoFactorAuth);
-				this.twoFactorAuthActive = true;
-			},
-			error: error => {
-				console.log(error);
-			}
-		})
+	editFriends(user: UserI) {
+
 	}
-
-	turnOff2FA() {
-	}
-
-
 }

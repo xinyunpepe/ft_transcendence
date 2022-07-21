@@ -1,18 +1,29 @@
 <app-navbar></app-navbar>
-<div class="card">
-	<img src="{{ user.avatar }}" alt="avatar" style="width:100%">
-	<h1>42 login: {{ user.login }}</h1>
-	<p>username: {{ user.username }}</p>
-	<p>status: {{ user.status }}</p>
-	<p>total wins: {{ user.totalwins }}</p>
-	<p>total loses: {{ user.totalloses }}</p>
-	<p>laddel level: {{ user.laddlelevel }}</p>
 
-	<div *ngIf="!twoFactorAuthActive">
-		<button (click)="turnOn2FA()">Turn on 2Fa</button>
-	</div>
+<div class="container">
+	<mat-card>
+		<div style="display: flex; flex-direction: row;">
+			<div class="profile">
+				<img src="{{ user.avatar }}" alt="avatar" style="width:90%">
+				<mat-card-title>{{ user.username }}</mat-card-title>
+				<p>42 login: {{ user.login }}</p>
+				<p>{{ user.status }}</p>
+				<p>Total Wins: {{ user.totalWins }}</p>
+				<p>Total Loses: {{ user.totalLoses }}</p>
+				<p>Ladder Level: {{ user.ladderLevel }}</p>
 
-	<div *ngIf="twoFactorAuthActive">
-		<button (click)="turnOff2FA()">Turn off 2Fa</button>
-	</div>
+				<button mat-button (click)="editProfile(user)">
+					Edit Profile
+				</button>
+				<button mat-button (click)="editFriends(user)">
+					Edit Friends
+				</button>
+			</div>
+
+
+			<div class="match-history">
+				<h3>// TODO match history</h3>
+			</div>
+		</div>
+	</mat-card>
 </div>

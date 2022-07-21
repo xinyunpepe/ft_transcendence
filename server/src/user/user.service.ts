@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Like, Repository } from 'typeorm';
-import { FriendRequest_Status } from './model/friend-request/friend-request.interface';
+import { FriendStatus } from './model/friend-request/friend-request.interface';
 import { UpdateUserDto } from './model/user/user.dto';
 import { FriendRequestEntity } from './model/friend-request/friend-request.entity';
 import { UserEntity } from './model/user/user.entity';
@@ -138,16 +138,27 @@ export class UserService {
 		});
 	}
 
-	async findRequestByReceiver(receiverLogin: string) {
-		const receiver = await this.findUserByLogin(receiverLogin);
+	async findRequestByUser(currentUser: UserEntity, receiverId: number) {
+		const receiver = await this.findUserById(receiverId);
+		return await this.friendRequestRepository.findOne({
+			where: [
+				{ creator: currentUser, receiver: receiver },
+				{ creator: receiver, receiver: currentUser }
+			],
+			relations: ['creator', 'receiver']
+		})
+	}
+
+	async findRequestByReceiver(receiverId: number) {
+		const receiver = await this.findUserById(receiverId);
 		return await this.friendRequestRepository.findOne({
 			where: [{ receiver: receiver }],
 			relations: ['creator', 'receiver']
 		});
 	}
 
-	async findRequestByCreator(creatorLogin: string) {
-		const creator = await this.findUserByLogin(creatorLogin);
+	async findRequestByCreator(creatorId: number) {
+		const creator = await this.findUserById(creatorId);
 		return await this.friendRequestRepository.findOne({
 			where: [{ creator: creator }],
 			relations: ['creator', 'receiver']
@@ -162,38 +173,54 @@ export class UserService {
 	**		- if it's a send request and its status is pending/accepted, throw error
 	** 	- else create a new request
 	*/
-	async sendFriendRequest(creatorLogin: string, receiverLogin: string) {
-		if (receiverLogin === creatorLogin)
+	async sendFriendRequest(creatorId: number, receiverId: number) {
+		if (creatorId === receiverId)
 			throw new Error("You cannot send a friend request to yourself");
-		const receiver = await this.findUserByLogin(receiverLogin);
-		const creator = await this.findUserByLogin(creatorLogin);
+		const receiver = await this.findUserById(receiverId);
+		const creator = await this.findUserById(creatorId);
 		if (!receiver)
 			throw new NotFoundException("User does not exist");
 		if (this.existFriendRequest(receiver, creator)) {
 			const receivedRequest = await this.friendRequestRepository.findOne({ where: { creator: receiver, receiver: creator }});
 			if (receivedRequest) {
-				if (receivedRequest.status === 'pending')
-					throw new Error(`A friend request has been send from ${ receiverLogin }`);
-				else if (receivedRequest.status === 'accepted')
-					throw new Error(`You and ${ receiverLogin } are already friends`);
+				if (receivedRequest.status === FriendStatus.PENDING)
+					throw new Error(`A friend request has been send from ${ receiverId }`);
+				else if (receivedRequest.status === FriendStatus.ACCEPTED)
+					throw new Error(`You and ${ receiverId } are already friends`);
 			}
 			const sentRequest = await this.friendRequestRepository.findOne({ where: { creator: creator, receiver: receiver }});
 			if (sentRequest) {
-				if (sentRequest.status === 'pending')
-					throw new Error(`A friend request has been sent to ${ receiverLogin }`);
-				else if (sentRequest.status === 'declined')
-					throw new Error(`Your friend request to ${ receiverLogin } has been declined`);
-				else if (sentRequest.status === 'accepted')
-					throw new Error(`You and ${ receiverLogin } are already friends`);
+				if (sentRequest.status === FriendStatus.PENDING)
+					throw new Error(`A friend request has been sent to ${ receiverId }`);
+				else if (sentRequest.status === FriendStatus.DECLIEND)
+					throw new Error(`Your friend request to ${ receiverId } has been declined`);
+				else if (sentRequest.status === FriendStatus.ACCEPTED)
+					throw new Error(`You and ${ receiverId } are already friends`);
 			}
 		}
-		console.log('Start sending friend request');
 		const newRequest = this.friendRequestRepository.create({
 			creator: creator,
 			receiver: receiver,
-			status: 'pending'
+			status: FriendStatus.PENDING
 		})
 		this.friendRequestRepository.save(newRequest);
+	}
+
+	async removeFriendRequest(creatorId: number, receiverId: number) {
+		if (creatorId === receiverId)
+			throw new Error("You cannot remove a friend request to yourself");
+		const receiver = await this.findUserById(receiverId);
+		const creator = await this.findUserById(creatorId);
+		if (!receiver)
+			throw new NotFoundException("User does not exist");
+		const request = await this.friendRequestRepository.findOne({
+			where: [
+				{ creator: creator, receiver: receiver },
+				{ creator: receiver, receiver: creator }
+			],
+			relations: ['creator', 'receiver']
+		})
+		this.friendRequestRepository.delete(request);
 	}
 
 	// Check friend-request database if the request exists already
@@ -206,7 +233,7 @@ export class UserService {
 		return false;
 	}
 
-	async responseToFriendRequest(requestId: number, response: FriendRequest_Status) {
+	async responseToFriendRequest(requestId: number, response: FriendStatus) {
 		const exsitRequest = await this.findRequestById(requestId);
 		if (exsitRequest)
 			return this.friendRequestRepository.update(requestId, { status: response }); //or find & save?
@@ -216,7 +243,7 @@ export class UserService {
 		const currentUser = await this.findUserByLogin(userLogin);
 		let acceptedList = await this.friendRequestRepository.find({
 			where: [
-				{ creator: currentUser, status: 'accepted' },
+				{ creator: currentUser, status: FriendStatus.ACCEPTED },
 				// { receiver: user, status: 'accepted' }
 			],
 			relations: ['creator', 'receiver']
@@ -246,6 +273,6 @@ export class UserService {
 			.setParameters({ creatorId: creator })
 			.getCount();
 
-		return  (query);
+		return (query);
 	  }
 }

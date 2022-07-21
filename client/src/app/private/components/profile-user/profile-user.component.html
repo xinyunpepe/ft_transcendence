@@ -1,0 +1,51 @@
+<app-navbar></app-navbar>
+
+<div *ngIf="isFriend()" class="container">
+	<mat-card>
+		<div style="display: flex; flex-direction: row;">
+			<div class="profile">
+				<img src="{{ currentUser.avatar }}" alt="avatar" style="width:90%">
+				<mat-card-title>{{ currentUser.username }}</mat-card-title>
+				<h3 *ngIf="requestStatus==2">{{ currentUser.status }}</h3>
+				<p>42 login: {{ currentUser.login }}</p>
+				<p>Total Wins: {{ currentUser.totalWins }}</p>
+				<p>Total Loses: {{ currentUser.totalLoses }}</p>
+				<p>Tadder Level: {{ currentUser.ladderLevel }}</p>
+
+				<div style="display: flex; flex-direction: column;">
+					<button mat-button *ngIf="requestStatus==5;" (click)="addFriend()">
+						Send friend request
+					</button>
+					<button mat-button *ngIf="requestStatus==0;" (click)="removeFriend()">
+						Cancel friend request
+					</button>
+					<button mat-button *ngIf="requestStatus==1;" (click)="responseToRequest('accepted')">
+						Accept friend request
+					</button>
+					<button mat-button *ngIf="requestStatus==1;" (click)="responseToRequest('declined')">
+						Decline friend request
+					</button>
+					<button mat-button *ngIf="requestStatus==2;" (click)="removeFriend()">
+						Remove friend
+					</button>
+					<button mat-button *ngIf="requestStatus==3;">
+						Friend request declined
+					</button>
+				</div>
+
+				<button mat-button *ngIf="!isBlock(currentUser); else Unblock" (click)="blockUser(currentUser)">
+					Block user
+				</button>
+				<ng-template #Unblock>
+					<button mat-button (click)="unblockUser(currentUser)">
+						Unblock user
+					</button>
+				</ng-template>
+			</div>
+
+			<div class="match-history">
+				<h3>// TODO match history</h3>
+			</div>
+		</div>
+	</mat-card>
+</div>

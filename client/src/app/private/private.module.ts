@@ -20,6 +20,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatStepperModule } from '@angular/material/stepper';
+import { MatSidenavModule } from '@angular/material/sidenav';
 import { SelectUsersChannelComponent } from './components/select-users-channel/select-users-channel.component';
 import { ChatChannelComponent } from './components/chat-channel/chat-channel.component';
 import { ChatMessageComponent } from './components/chat-message/chat-message.component';
@@ -27,6 +28,7 @@ import { GameComponent } from './components/game/game.component';
 import { EditChannelComponent } from './components/edit-channel/edit-channel.component';
 import { ExploreChannelComponent } from './components/explore-channel/explore-channel.component';
 import { JoinChannelComponent } from './components/join-channel/join-channel.component';
+import { ProfileUserComponent } from './components/profile-user/profile-user.component';
 
 @NgModule({
 	declarations: [
@@ -41,7 +43,8 @@ import { JoinChannelComponent } from './components/join-channel/join-channel.com
 		GameComponent,
 		EditChannelComponent,
 		ExploreChannelComponent,
-		JoinChannelComponent
+		JoinChannelComponent,
+		ProfileUserComponent
 	],
 	imports: [
 		CommonModule,
@@ -61,6 +64,7 @@ import { JoinChannelComponent } from './components/join-channel/join-channel.com
 		FormsModule,
 		MatSlideToggleModule,
 		MatStepperModule,
+		MatSidenavModule
 	]
 })
 export class PrivateModule { }

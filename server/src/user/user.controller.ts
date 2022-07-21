@@ -1,5 +1,6 @@
-import { Body, Param, Controller, Get, Post, Put, Delete, Req, Query } from '@nestjs/common';
-import { FriendRequestStatus } from './model/friend-request/friend-request.interface';
+import { Body, Param, Controller, Get, Post, Put, Delete, Req, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
+import { FriendStatus } from './model/friend-request/friend-request.interface';
 import { UpdateUserDto } from './model/user/user.dto';
 import { UserI } from './model/user/user.interface';
 import { UserService } from './user.service';
@@ -89,6 +90,7 @@ export class UserController {
 	** ========== Friend request ==========
 	*/
 
+	@UseGuards(JwtAuthGuard)
 	@Get('friend-request/:requestId')
 	findRequestById(
 		@Param('requestId') requestId: number
@@ -96,36 +98,59 @@ export class UserController {
 		return this.userService.findRequestById(requestId);
 	}
 
-	@Get('friend-request/receiver/:receiverLogin')
-	findRequestByReceiver(
-		@Param('receiverLogin') receiverLogin: string
-	) {
-		return this.userService.findRequestByReceiver(receiverLogin);
-	}
-
-	@Get('friend-request/creator/:creatorLogin')
-	findRequestByCreator(
-		@Param('creatorLogin') creatorLogin: string
-	) {
-		return this.userService.findRequestByCreator(creatorLogin);
-	}
-
-	@Post('friend-request/send/:receiverLogin')
-	sendFriendRequest(
-		@Param('receiverLogin') receiverLogin: string,
+	@UseGuards(JwtAuthGuard)
+	@Get('friend-request/status/:receiverId')
+	findRequestByUser(
+		@Param('receiverId') receiverId: number,
 		@Req() req
 	) {
-		return this.userService.sendFriendRequest(req.user.login, receiverLogin);
+		return this.userService.findRequestByUser(req.user, receiverId);
 	}
 
+	@UseGuards(JwtAuthGuard)
+	@Get('friend-request/receiver/:receiverId')
+	findRequestByReceiver(
+		@Param('receiverId') receiverId: number
+	) {
+		return this.userService.findRequestByReceiver(receiverId);
+	}
+
+	@UseGuards(JwtAuthGuard)
+	@Get('friend-request/creator/:creatorId')
+	findRequestByCreator(
+		@Param('creatorId') creatorId: number
+	) {
+		return this.userService.findRequestByCreator(creatorId);
+	}
+
+	@UseGuards(JwtAuthGuard)
+	@Post('friend-request/send/:receiverId')
+	sendFriendRequest(
+		@Param('receiverId') receiverId: number,
+		@Req() req
+	) {
+		return this.userService.sendFriendRequest(req.user.id, receiverId);
+	}
+
+	@UseGuards(JwtAuthGuard)
+	@Post('friend-request/remove/:receiverId')
+	removeFriendRequest(
+		@Param('receiverId') receiverId: number,
+		@Req() req
+	) {
+		return this.userService.removeFriendRequest(req.user.id, receiverId);
+	}
+
+	@UseGuards(JwtAuthGuard)
 	@Put('friend-request/response/:requestId')
 	responseToFriendRequest(
 		@Param('requestId') requestId: number,
-		@Body() response: FriendRequestStatus
+		@Req() req
 	) {
-		return this.userService.responseToFriendRequest(requestId, response.status);
+		return this.userService.responseToFriendRequest(requestId, req.body.response);
 	}
 
+	@UseGuards(JwtAuthGuard)
 	@Get('friends-request/friends')
 	findFriends(
 		@Req() req

@@ -6,8 +6,20 @@
 	scrollbar-width: thin;
 }
 
-.gameButton{
-	right: 0%;
+.game-button{
+	font-size: medium;
+	padding: 5px;
+	width: fit-content;
+	border-radius: 5px;
+	margin: 7px;
+}
+
+.game-button:hover {
+	cursor: pointer;
+}
+
+.user-profile:hover {
+	cursor: pointer;
 }
 
 ::-webkit-scrollbar-track {

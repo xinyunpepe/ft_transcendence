@@ -1,4 +1,4 @@
-import { UserI } from "../user/user.interface";
+import { UserI } from "./user.interface";
 
 export enum FriendStatus {
 	PENDING = 'pending',
