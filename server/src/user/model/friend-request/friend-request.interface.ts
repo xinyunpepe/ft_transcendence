@@ -5,6 +5,7 @@ export enum FriendStatus {
 	ACCEPTED = 'accepted',
 	DECLIEND = 'declined',
 	BLOCKED = 'blocked',
+	NOTSENT = 'not-sent'
 }
 
 export interface FriendRequestI {

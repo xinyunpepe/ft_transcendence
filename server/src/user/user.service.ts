@@ -217,16 +217,19 @@ export class UserService {
 			where: [
 				{ creator: creator, receiver: receiver },
 				{ creator: receiver, receiver: creator }
-			],
-			relations: ['creator', 'receiver']
-		})
-		this.friendRequestRepository.delete(request);
+			]
+		});
+		if (request) {
+			this.friendRequestRepository.delete(request);
+		}
 	}
 
 	// Check friend-request database if the request exists already
 	async existFriendRequest(creator: UserEntity, receiver: UserEntity) {
 		const exsitRequest = await this.friendRequestRepository.findOne({
-			where: [{ creator: creator, receiver: receiver }]
+			where: [
+				{ creator: creator, receiver: receiver }
+			]
 		});
 		if (exsitRequest)
 			return true;
@@ -260,6 +263,49 @@ export class UserService {
 				friendsList.push(e.creator.id);
 		});
 		return this.userRepository.findByIds(friendsList);
+	}
+
+	async blockUser(creatorId: number, receiverId: number) {
+		if (creatorId === receiverId)
+			throw new Error("You cannot block yourself");
+		const receiver = await this.findUserById(receiverId);
+		const creator = await this.findUserById(creatorId);
+		if (!receiver)
+			throw new NotFoundException("User does not exist");
+		const request = await this.friendRequestRepository.findOne({
+			where: [
+				{ creator: creator, receiver: receiver }
+			],
+			relations: ['creator', 'receiver']
+		});
+		if (request) {
+			return this.friendRequestRepository.update(request, { status: FriendStatus.BLOCKED });
+		}
+		else {
+			const newRequest = this.friendRequestRepository.create({
+				creator: creator,
+				receiver: receiver,
+				status: FriendStatus.BLOCKED
+			})
+			this.friendRequestRepository.save(newRequest);
+		}
+	}
+
+	async unblockUser(creatorId: number, receiverId: number) {
+		if (creatorId === receiverId)
+			throw new Error("You cannot unblock yourself");
+		const receiver = await this.findUserById(receiverId);
+		const creator = await this.findUserById(creatorId);
+		if (!receiver)
+			throw new NotFoundException("User does not exist");
+		const request = await this.friendRequestRepository.findOne({
+			where: [
+				{ creator: creator, receiver: receiver, status: FriendStatus.BLOCKED }
+			]
+		});
+		if (request) {
+			this.friendRequestRepository.delete(request);
+		}
 	}
 
 	isUserBlocked(creator: number, receiver: number){

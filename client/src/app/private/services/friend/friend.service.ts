@@ -19,7 +19,7 @@ export class FriendService {
 		);
 	}
 
-	sentFriendRequest(userId: number): Observable<FriendRequestI | { error: string }> {
+	sendFriendRequest(userId: number): Observable<FriendRequestI | { error: string }> {
 		return this.http.post<FriendRequestI | { error: string }>(`${ environment.baseUrl }/users/friend-request/send/${ userId }`, {});
 	}
 
@@ -29,5 +29,13 @@ export class FriendService {
 
 	responseToRequest(requestId: number, response: string): Observable<FriendRequestI> {
 		return this.http.put<FriendRequestI>(`${ environment.baseUrl }/users/friend-request/response/${ requestId }`, { response });
+	}
+
+	blockUser(userId: number): Observable<FriendRequestI | { error: string } | { success: string }> {
+		return this.http.post<FriendRequestI | { error: string } | { success: string }>(`${ environment.baseUrl }/users/friend-request/block/${ userId }`, {});
+	}
+
+	unblockUser(userId: number): Observable<FriendRequestI | { error: string } | { success: string }> {
+		return this.http.post<FriendRequestI | { error: string } | { success: string }>(`${ environment.baseUrl }/users/friend-request/unblock/${ userId }`, {});
 	}
 }

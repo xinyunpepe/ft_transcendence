@@ -151,6 +151,24 @@ export class UserController {
 	}
 
 	@UseGuards(JwtAuthGuard)
+	@Post('friend-request/block/:receiverId')
+	blockUser(
+		@Param('receiverId') receiverId: number,
+		@Req() req
+	) {
+		return this.userService.blockUser(req.user.id, receiverId);
+	}
+
+	@UseGuards(JwtAuthGuard)
+	@Post('friend-request/unblock/:receiverId')
+	unblockUser(
+		@Param('receiverId') receiverId: number,
+		@Req() req
+	) {
+		return this.userService.unblockUser(req.user.id, receiverId);
+	}
+
+	@UseGuards(JwtAuthGuard)
 	@Get('friends-request/friends')
 	findFriends(
 		@Req() req

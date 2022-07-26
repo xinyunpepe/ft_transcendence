@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Params } from '@angular/router';
-import { map, Observable, switchMap } from 'rxjs';
+import { ActivatedRoute, Params, Route, Router } from '@angular/router';
+import { map, Observable, switchMap, tap } from 'rxjs';
 import { FriendRequestI, FriendStatus } from 'src/app/model/friend-request.interface';
 import { UserI } from 'src/app/model/user.interface';
 import { AuthService } from 'src/app/public/services/auth/auth.service';
@@ -45,12 +45,19 @@ export class ProfileUserComponent implements OnInit {
 		private activatedRoute: ActivatedRoute,
 		private authService: AuthService,
 		private userService: UserService,
-		private friendService: FriendService
+		private friendService: FriendService,
+		private router: Router
 	) {}
 
 	ngOnInit() {
 		this.currentUser$.subscribe(currentUser => {
 			this.currentUser = currentUser;
+			if (!this.currentUser) {
+				this.router.navigate(['../page-not-found'], { relativeTo: this.activatedRoute });
+			}
+			else if (this.currentUser.id == this.user.id) {
+				this.router.navigate(['../../profile'], { relativeTo: this.activatedRoute });
+			}
 		})
 		this.friendRequest$.subscribe(friendRequest => {
 			this.friendRequest = friendRequest;
@@ -79,7 +86,12 @@ export class ProfileUserComponent implements OnInit {
 				this.requestStatus = 3;
 			}
 			else if (this.friendRequest.status === FriendStatus.BLOCKED) {
-				this.requestStatus = 4;
+				if (this.isCreator()) {
+					this.requestStatus = 4;
+				}
+				else {
+					return false;
+				}
 			}
 			else {
 				this.requestStatus = 5;
@@ -90,7 +102,7 @@ export class ProfileUserComponent implements OnInit {
 
 	// TODO better solution than window reload?
 	addFriend() {
-		this.friendService.sentFriendRequest(this.currentUser.id).subscribe(
+		this.friendService.sendFriendRequest(this.currentUser.id).subscribe(
 			() => {
 				this.requestStatus = 1;
 			}
@@ -104,7 +116,7 @@ export class ProfileUserComponent implements OnInit {
 				this.requestStatus = 5;
 			}
 		)
-		window.location.reload();
+		// window.location.reload();
 	}
 
 	responseToRequest(response: string) {
@@ -121,16 +133,23 @@ export class ProfileUserComponent implements OnInit {
 		window.location.reload();
 	}
 
-	isBlock(user: UserI) {
-		return false;
+	blockUser() {
+		this.friendService.blockUser(this.currentUser.id).subscribe(
+			() => {
+				this.requestStatus = 4;
+			}
+		)
+
+		// window.location.reload();
 	}
 
-	blockUser(user: UserI) {
+	unblockUser() {
+		this.friendService.unblockUser(this.currentUser.id).subscribe(
+			() => {
+				this.requestStatus = 5;
+			}
+		)
 
+		// window.location.reload();
 	}
-
-	unblockUser(user: UserI) {
-
-	}
-
 }
