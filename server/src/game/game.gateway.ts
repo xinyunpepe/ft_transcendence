@@ -1,5 +1,6 @@
 import { OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Mutex } from 'async-mutex';
+import { HistoryService } from './history/history.service';
 
 const canvasWidth: number = 600;
 const canvasHeight: number = 450;
@@ -111,7 +112,7 @@ export class GameGateway implements OnGatewayDisconnect {
   rooms: number;
   gameRooms: Map<number, GameRoom>;
 
-  constructor() {
+  constructor(public historyService: HistoryService) {
     this.rooms = 0;
     this.room_mutex = new Mutex();
     this.mutex = new Mutex();
@@ -132,6 +133,7 @@ export class GameGateway implements OnGatewayDisconnect {
     player1.socket.join(room_number);
     player2.socket.join(room_number);
     let response = new Response('Room', 'Matched');
+    this.historyService.GameStart(room_number, player1_id, player2_id);
     this.server.to(room_number).emit('RoomResponse',  JSON.stringify(response.getJSON()));
     // let roomHash = Math.random().toString(36).substring(7);
     // this.server.to(room_number).emit('RoomInfo', JSON.stringify((new Response('RoomHash',)).getJSON()));
@@ -191,6 +193,7 @@ export class GameGateway implements OnGatewayDisconnect {
             // this.gameRooms.delete(room_number);
             balls[0].destroy();
             this.server.to(room_number).emit('GameStatus', JSON.stringify((new Response('Game', {status: 'Finish'})).getJSON()));
+            this.historyService.GameUpdate(room_number, players[0].id, players[1].id, players[0].point, players[1].point, 'Finish');
           }
           else {
             players[0].init();
@@ -201,6 +204,7 @@ export class GameGateway implements OnGatewayDisconnect {
             this.server.to(room_number).emit('Player', JSON.stringify(players[1].getJSON()));
             this.server.to(room_number).emit('Ball', JSON.stringify(balls[0].getJSON()));
             this.server.to(room_number).emit('GameStatus', JSON.stringify((new Response('Game',  {status: 'Ready', room: room_number.toString(), ballCarrier: players[0].id})).getJSON()));
+            this.historyService.GameUpdate(room_number, players[0].id, players[1].id, players[0].point, players[1].point, 'In Game');
           }
           // console.log(interval);
           // GameIsMoving[room_number] = false;
@@ -221,6 +225,7 @@ export class GameGateway implements OnGatewayDisconnect {
             // this.gameRooms.delete(room_number);
             balls[0].destroy();
             this.server.to(room_number).emit('GameStatus', JSON.stringify((new Response('Game', {status: 'Finish'})).getJSON()));
+            this.historyService.GameUpdate(room_number, players[0].id, players[1].id, players[0].point, players[1].point, 'Finish');
           }
           else {
             players[0].init();
@@ -233,6 +238,8 @@ export class GameGateway implements OnGatewayDisconnect {
             this.server.to(room_number).emit('Player', JSON.stringify(players[1].getJSON()));
             this.server.to(room_number).emit('Ball', JSON.stringify(balls[0].getJSON()));
             this.server.to(room_number).emit('GameStatus', JSON.stringify((new Response('Game',  {status: 'Ready', room: room_number.toString(), ballCarrier: players[1].id})).getJSON()));
+            this.historyService.GameUpdate(room_number, players[0].id, players[1].id, players[0].point, players[1].point, 'In Game');
+
           }
           // GameIsMoving[room_number] = false;
           clearInterval(interval);
@@ -314,10 +321,12 @@ export class GameGateway implements OnGatewayDisconnect {
       if (player1.id == id) {
         player1.point = -42;
         this.server.to(parseInt(room_number)).emit('Player', JSON.stringify(player1.getJSON()));
+        this.historyService.GameUpdate(room_number, player1.id, player2.id, player1.point, player2.point, 'Finish');
       }
       else if (player2.id == id) {
         player2.point = -42;
         this.server.to(parseInt(room_number)).emit('Player', JSON.stringify(player2.getJSON()));
+        this.historyService.GameUpdate(room_number, player1.id, player2.id, player1.point, player2.point, 'Finish');
       }
       else return ;
       // this.gameRooms.delete(room_number);
