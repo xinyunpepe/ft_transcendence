@@ -3,20 +3,14 @@ import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 @Entity()
 export class History {
 	@PrimaryGeneratedColumn()
-	room_id: number;
+	login: string;
 
-	@Column()
-	player1: string;
+	@Column({default: 0})
+	total_wins: number;
 
-	@Column()
-	player2: string;
+	@Column({default: 0})
+	total_losts: number;
 
-	@Column()
-	player1_score: number;
-
-	@Column()
-	player2_score: number;
-
-	@Column()
-	status: string;
+	@Column({default: false})
+	isInGame: boolean;
 }
