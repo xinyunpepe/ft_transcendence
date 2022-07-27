@@ -6,20 +6,21 @@
 			<div class="profile">
 				<img src="{{ user.avatar }}" alt="avatar" style="width:90%">
 				<mat-card-title>{{ user.username }}</mat-card-title>
+				<h3>{{ user.status }}</h3>
 				<p>42 login: {{ user.login }}</p>
-				<p>{{ user.status }}</p>
 				<p>Total Wins: {{ user.totalWins }}</p>
 				<p>Total Loses: {{ user.totalLoses }}</p>
 				<p>Ladder Level: {{ user.ladderLevel }}</p>
 
-				<button mat-button (click)="editProfile(user)">
-					Edit Profile
-				</button>
-				<button mat-button (click)="editFriends(user)">
-					Edit Friends
-				</button>
+				<!-- <div style="display: flex; flex-direction: column;"> -->
+					<button mat-button routerLink="/private/profile-setting" routerLinkActive="active">
+						Edit Profile
+					</button>
+					<button mat-button (click)="editFriends(user)">
+						Edit Friends
+					</button>
+				<!-- </div> -->
 			</div>
-
 
 			<div class="match-history">
 				<h3>// TODO match history</h3>

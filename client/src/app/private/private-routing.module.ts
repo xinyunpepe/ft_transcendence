@@ -9,6 +9,7 @@ import { GameComponent } from './components/game/game.component';
 import { EditChannelComponent } from './components/edit-channel/edit-channel.component';
 import { ExploreChannelComponent } from './components/explore-channel/explore-channel.component';
 import { ProfileUserComponent } from './components/profile-user/profile-user.component';
+import { ProfileSettingComponent } from './components/profile-setting/profile-setting.component';
 
 const routes: Routes = [
 	{ path: 'profile',
@@ -21,6 +22,7 @@ const routes: Routes = [
 	{ path: 'explore-channel', component: ExploreChannelComponent },
 	{ path: 'create-channel', component: CreateChannelComponent },
 	{ path: 'edit-channel/:id', component: EditChannelComponent },
+	{ path: 'profile-setting', component: ProfileSettingComponent },
 	{ path: 'game', component: GameComponent },
 	{ path: 'logout', component: LogoutComponent },
 	{ path: '**', component: PageNotFoundComponent },

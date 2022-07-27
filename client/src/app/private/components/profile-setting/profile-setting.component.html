@@ -1,0 +1,43 @@
+<app-navbar></app-navbar>
+
+<div class="container">
+	<div>
+		<mat-card>
+			<mat-card-title>User Settings</mat-card-title>
+			<mat-card-content>
+				<div style="padding-top: 30px;">
+					<h3>Edit Username</h3>
+					<form class="form" [formGroup]="settingForm" (ngSubmit)="updateUsername()">
+						<mat-form-field appearance="standard">
+							<input matInput placeholder="New Username" formControlName="username">
+							<mat-error *ngIf="settingForm.controls.username.errors">
+								{{ getErrorMessageUser() }}
+							</mat-error>
+						</mat-form-field>
+						<button mat-button [disabled]="!settingForm.valid" type="submit"
+							id="username-button">Confirm</button>
+					</form>
+				</div>
+
+				<mat-divider></mat-divider>
+
+				<div style="padding-top: 30px;">
+					<h3>Edit Avatar</h3>
+					<input type="file" accept="image/x-png,image/gif,image/jpeg" (change)="onFileChange($event)">
+					<button mat-button (click)="onUpload()">
+						Upload
+					</button>
+				</div>
+
+				<mat-divider></mat-divider>
+
+				<div style="padding-top: 30px;">
+					<h3>Google Authenticator</h3>
+					<button mat-button (click)="getQrCode()">
+						{{ getStateAuth() }}
+					</button>
+				</div>
+			</mat-card-content>
+		</mat-card>
+	</div>
+</div>

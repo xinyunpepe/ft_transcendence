@@ -2,7 +2,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Like, Repository } from 'typeorm';
 import { FriendStatus } from './model/friend-request/friend-request.interface';
-import { UpdateUserDto } from './model/user/user.dto';
 import { FriendRequestEntity } from './model/friend-request/friend-request.entity';
 import { UserEntity } from './model/user/user.entity';
 import { MatchHistoryEntity } from './model/match-history/match-history.entity';
@@ -54,13 +53,6 @@ export class UserService {
 		return newUser;
 	}
 
-	async updateUser(id: number, userDto: UpdateUserDto) {
-		const user = await this.userRepository.findOne({ where: { id: id }});
-		if (user)
-			return this.userRepository.update(id, userDto);
-		throw new NotFoundException("User does not exist");
-	}
-
 	async deleteUser(id: number) {
 		const user = await this.userRepository.findOne({ where: { id: id }});
 		if (user)
@@ -68,17 +60,17 @@ export class UserService {
 		throw new NotFoundException("User does not exist");
 	}
 
-	async updateUserName(login: string, username: string) {
-		const user = await this.userRepository.findOne({ where: { login: login }});
+	async updateUsername(id: number, username: string) {
+		const user = await this.userRepository.findOne({ where: { id: id }});
 		if (user)
-			return this.userRepository.update({ login }, { username: username });
+			return this.userRepository.update({ id }, { username: username });
 		throw new NotFoundException("User does not exist");
 	}
 
-	async updateUserAvatar(login: string, avatar: string) {
-		const user = await this.userRepository.findOne({ where: { login: login }});
+	async updateAvatar(id: number, avatar: string) {
+		const user = await this.userRepository.findOne({ where: { id: id }});
 		if (user)
-			return this.userRepository.update({ login }, { avatar: avatar });
+			return this.userRepository.update({ id }, { avatar: avatar });
 		throw new NotFoundException("User does not exist");
 	}
 

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Params, Route, Router } from '@angular/router';
-import { map, Observable, switchMap, tap } from 'rxjs';
+import { ActivatedRoute, Params, Router } from '@angular/router';
+import { map, Observable, switchMap } from 'rxjs';
 import { FriendRequestI, FriendStatus } from 'src/app/model/friend-request.interface';
 import { UserI } from 'src/app/model/user.interface';
 import { AuthService } from 'src/app/public/services/auth/auth.service';

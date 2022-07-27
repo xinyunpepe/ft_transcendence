@@ -1,13 +1,27 @@
-import { Body, Param, Controller, Get, Post, Put, Delete, Req, UseGuards } from '@nestjs/common';
+import { Body, Param, Controller, Get, Post, Put, Delete, Req, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
-import { FriendStatus } from './model/friend-request/friend-request.interface';
-import { UpdateUserDto } from './model/user/user.dto';
 import { UserI } from './model/user/user.interface';
 import { UserService } from './user.service';
+import { diskStorage } from 'multer';
+// import { uuid } from 'uuidv4';
+import path = require('path');
+
+export const storage = {
+	storage: diskStorage({
+		destination: './src/uploads/avatar',
+		filename: (file, cb) => {
+			const filename: string = path.parse(file.originalname).name.replace(/\s/g, '');
+			const extension: string = path.parse(file.originalname).ext;
+
+			cb(null, `${filename}${extension}`)
+		}
+	})
+}
 
 @Controller('users')
 export class UserController {
-	constructor(private readonly userService: UserService) {}
+	constructor(private readonly userService: UserService) { }
 
 	/*
 	** ========== User info ==========
@@ -19,26 +33,17 @@ export class UserController {
 	}
 
 	@Get(':login')
-	// findOne(@Param() param: { id: number } ) Return the param as an object
 	findUserByLogin(
 		@Param('login') login: string
 	) {
 		return this.userService.findUserByLogin(login);
 	}
 
-	@Get('/id/:id')
+	@Get('id/:id')
 	findUserById(
 		@Param('id') id: number
 	) {
 		return this.userService.findUserById(id);
-	}
-
-	@Get('/username/:username')
-	// findOne(@Param() param: { id: number } ) Return the param as an object
-	findAllByUsername(
-		@Param('username') username: string
-	) {
-		return this.userService.findAllByUsername(username);
 	}
 
 	@Post()
@@ -48,28 +53,24 @@ export class UserController {
 		return this.userService.createUser(user);
 	}
 
-	@Put(':login')
-	updateUserName(
-		@Param('login') login: string,
-		@Body() { username }: UpdateUserDto
-	) {
-		return this.userService.updateUserName(login, username);
-	}
-
-	@Put(':login')
-	updateUserAvatar(
-		@Param('login') login: string,
-		@Body() { avatar }: UpdateUserDto
-	) {
-		return this.userService.updateUserName(login, avatar);
-	}
-
-	@Put(':id')
-	updateUser(
+	@UseGuards(JwtAuthGuard)
+	@Put('username/:id')
+	updateUsername(
 		@Param('id') id: number,
-		@Body() user: UpdateUserDto
+		@Body() { username }: UserI
 	) {
-		return this.userService.updateUser(id, user);
+		return this.userService.updateUsername(id, username);
+	}
+
+	@UseGuards(JwtAuthGuard)
+	@Post('avatar')
+	@UseInterceptors(FileInterceptor('file', storage))
+	uploadAvatae(
+		@UploadedFile() file,
+		@Req() req
+	) {
+		console.log("IN");
+		return this.userService.updateAvatar(req.user.id, file.filename)
 	}
 
 	@Delete(':id')
@@ -78,13 +79,6 @@ export class UserController {
 	) {
 		return this.userService.deleteUser(id);
 	}
-
-	// @Get('status/:login')
-	// getUserStatus(
-	// 	@Param('login') login: string,
-	// ) {
-	// 	return this.userService.getUserStatus(login);
-	// }
 
 	/*
 	** ========== Friend request ==========
@@ -173,7 +167,6 @@ export class UserController {
 	findFriends(
 		@Req() req
 	) {
-		// console.log(req.user);
 		return this.userService.findFriends(req.user.login);
 	}
 }

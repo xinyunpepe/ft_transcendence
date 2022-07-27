@@ -30,6 +30,7 @@ import { ExploreChannelComponent } from './components/explore-channel/explore-ch
 import { JoinChannelComponent } from './components/join-channel/join-channel.component';
 import { ProfileUserComponent } from './components/profile-user/profile-user.component';
 import { PageNotFoundComponent } from './components/page-not-found/page-not-found.component';
+import { ProfileSettingComponent } from './components/profile-setting/profile-setting.component';
 
 @NgModule({
 	declarations: [
@@ -46,7 +47,8 @@ import { PageNotFoundComponent } from './components/page-not-found/page-not-foun
 		ExploreChannelComponent,
 		JoinChannelComponent,
 		ProfileUserComponent,
-		PageNotFoundComponent
+		PageNotFoundComponent,
+		ProfileSettingComponent
 	],
 	imports: [
 		CommonModule,
