@@ -46,6 +46,14 @@ export class UserController {
 		return this.userService.findUserById(id);
 	}
 
+	@Get('/username/:username')
+	// findOne(@Param() param: { id: number } ) Return the param as an object
+	findAllByUsername(
+		@Param('username') username: string
+	) {
+		return this.userService.findAllByUsername(username);
+	}
+
 	@Post()
 	createUser(
 		@Body() user: UserI
