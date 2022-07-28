@@ -15,3 +15,7 @@ Game Invitation Protocol:
   A: Redirect to game component
   R: Do nothing
   
+
+History Database Protocol:
+  get<HistoryI>(`${environment.baseUrl}/history/${ id }`)
+  if invalid id : return null
