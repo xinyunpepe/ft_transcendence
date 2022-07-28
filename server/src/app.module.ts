@@ -32,6 +32,6 @@ import { GameGateway } from './game/game.gateway';
     GameModule
   ],
   controllers: [AppController],
-  providers: [AppService, GameGateway],
+  providers: [AppService],
 })
 export class AppModule {}

@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { CustomSocket } from '../../sockets/custom-sockets';
-// import { Socket } from 'ngx-socket-io';
 
 @Injectable({
   providedIn: 'root'
@@ -12,8 +11,12 @@ export class GameService {
   getRoomResponse() {
     return this.socket.fromEvent('RoomResponse');
   }
-  sendRoomRequest(from: string, to: string) {
-    this.socket.emit('RoomRequest', [from, to]);
+  sendRoomRequest(userLogin: string) {
+    this.socket.emit('RoomRequest', userLogin);
+  }
+
+  sendCancelRequest(userLogin: string) {
+    this.socket.emit('CancelRoom', userLogin);
   }
 
   getGameStatus() {
@@ -30,6 +33,30 @@ export class GameService {
 
   getBallInformation() {
     return this.socket.fromEvent('Ball');
+  }
+
+  sendSurrender(room: number, login: string) {
+    this.socket.emit('Special', [room, login, 'Surrender']);
+  }
+
+  sendWatchRequest(room: string, login: string) {
+    this.socket.emit('WatchRequest', [room, login]);
+  }
+
+  sendLeaveWatching(room: string, login: string) {
+    this.socket.emit('LeaveWatching', [room,login]);
+  }
+
+  getWatchResponse() {
+    return this.socket.fromEvent('WatchResponse');
+  }
+
+  sendNewConnectInfo(login: string) {
+    this.socket.emit('NewConnect', login);
+  }
+
+  getConnectInfo() {
+    return this.socket.fromEvent('ConnectInfo');
   }
 
 }

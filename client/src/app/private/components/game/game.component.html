@@ -1,22 +1,58 @@
 <app-navbar></app-navbar>
 
-<style>
+<style type="text/css">
 	div {text-align: center;}
+	span.red { color: #FF0000;font-size:25;}
+	span.blue { color: #0000FF;font-size:25;} 
 </style>
 
-<div [hidden]="hideMatchButton[0]">
-	My id is {{userLogin}}
-	<button (click)="RandomGame()">
+<div [hidden]="hideItem[0]">
+	<button [hidden]="!hideItem[2]" (click)="RandomGame()">
 	find a random opponent
 	</button>
+	<div [hidden]="hideItem[2]">
+		Waiting for opponent ...
+		<button (click)="Cancel()">
+			cancel
+		</button>
+	</div>
+	<div [hidden]="!hideItem[2]">
+		<form [formGroup]="watchForm" (ngSubmit)="onSubmit()">
+			Watch game in room number:
+			<input type="text" formControlName="number">
+			<button type="submit">submit</button>
+		</form>
+	</div>
 </div>
 
-<div>
-	<canvas #myCanvas width="{{canvasWidth}}" height="{{canvasHeight}}"></canvas>
+<div [hidden]="!hideItem[0]">
+		<div>Room Number: {{roomNumber[0]}}</div>
+		<canvas #myCanvas width="{{canvasWidth}}" height="{{canvasHeight}}" style="border: 1px solid black;"></canvas>
 </div>
 
+<div [hidden]="(!hideItem[0]) || (!hideItem[1]) || (!hideItem[3])">
+	<button (click)="LeaveWatchingMode()">leave watching mode</button>
+</div>
 
-<div [hidden]="hideScore[0]">
-	{{Points[0]}} : {{Points[1]}}
+<div [hidden]="(!hideItem[0]) || (!hideItem[1]) || hideItem[3]">
+	<button (click)="Surrender()">surrender</button>
+</div>
+
+<div [hidden]="hideItem[1]">
+	Game Result
+</div>
+
+<div [hidden]="hideItem[4]">
+	<span class="red">(Red) {{userLogin}} {{Points[0]}}</span> : <span class="blue">{{Points[1]}} (Blue) {{opponentLogin[0]}}</span>
+</div>
+
+<div [hidden]="hideItem[5]">
+	<span class="red">(Red) {{leftLogin[0]}} {{Points[0]}}</span> : <span class="blue">{{Points[1]}} (Blue) {{opponentLogin[0]}}</span>
+</div>
+
+<div [hidden]="hideItem[1]">
+	<button [hidden]="hideItem[1]" (click)="BackToMatch()">
+		next
+	</button>
 </div>
 
