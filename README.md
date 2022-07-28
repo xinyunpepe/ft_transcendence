@@ -6,3 +6,12 @@ Ref:
   - docker
   https://docs.docker.com/compose/compose-file/compose-file-v3/
   https://nodejs.org/fr/docs/guides/nodejs-docker-webapp/
+
+Game Invitation Protocol:
+  this.socket.emit('GameInvitation', [id0, id1] );
+
+  this.socket.fromEvent('GameInvitationResponse');
+  'Accepted' / 'Refused'
+  A: Redirect to game component
+  R: Do nothing
+  
