@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Put, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { UserI, UserStatus } from 'src/user/model/user/user.interface';
 import { UserService } from 'src/user/user.service';
 import { AuthService } from './auth.service';
@@ -55,7 +55,7 @@ export class AuthController {
 			res.redirect('http://localhost:4200/2fa/authenticate');
 			return ;
 		}
-		await this.userService.onlineStatus(user.login, UserStatus.ON);
+		await this.userService.onlineStatus(user.id, UserStatus.ON);
 		res.redirect(`http://localhost:4200/private/profile`);
 	}
 
@@ -78,7 +78,7 @@ export class AuthController {
 		const token = await this.authService.loginWithTwoFactorAuth(currentUser, true);
 		res.clearCookie('accessToken');
 		res.cookie('accessToken', token.access_token);
-		await this.userService.onlineStatus(currentUser.login, UserStatus.ON);
+		await this.userService.onlineStatus(currentUser.id, UserStatus.ON);
 		res.redirect(`http://localhost:4200/private/profile`);
 	}
 
@@ -136,14 +136,14 @@ export class AuthController {
 	** Redirect to frontend
 	*/
 	@UseGuards(JwtAuthGuard)
-	@Post('logout')
+	@Put('logout')
 	async logout(
-		@Req() req,
+		@Body() user: UserI,
 		@Res() res
 	) {
 		console.log('Start logging out');
-		await this.userService.offlineStatus(req.user.login, UserStatus.OFF);
+		await this.userService.offlineStatus(user.id, UserStatus.OFF);
 		res.clearCookie('accessToken');
-		res.redirect('http://localhost:4200/public/login');
+		// res.redirect('http://localhost:4200/public/login');
 	}
 }

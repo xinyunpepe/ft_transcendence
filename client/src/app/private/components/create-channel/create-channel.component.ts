@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { FormArray, FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatRadioChange } from '@angular/material/radio';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -10,7 +10,7 @@ import { ChatService } from '../../services/chat/chat.service';
 	templateUrl: './create-channel.component.html',
 	styleUrls: ['./create-channel.component.css']
 })
-export class CreateChannelComponent implements OnInit {
+export class CreateChannelComponent {
 
 	radiocheck: boolean = true;
 	beforeType: string = 'public';
@@ -29,9 +29,6 @@ export class CreateChannelComponent implements OnInit {
 		private router: Router,
 		private activatedRoute: ActivatedRoute
 	) {}
-
-	ngOnInit(): void {
-	}
 
 	create() {
 		if (this.form.valid) {

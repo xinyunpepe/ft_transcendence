@@ -1,31 +1,32 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { UserI, UserStatus } from 'src/app/model/user.interface';
 import { AuthService } from 'src/app/public/services/auth/auth.service';
+import { UserService } from '../../services/user/user.service';
 
 @Component({
   selector: 'app-logout',
   templateUrl: './logout.component.html',
   styleUrls: ['./logout.component.css']
 })
-export class LogoutComponent implements OnInit {
+export class LogoutComponent {
 
 	constructor(
 		private authService: AuthService,
+		private userService: UserService,
 		private router: Router
 	) {}
 
-	ngOnInit(): void {
-	}
-
 	logout() {
-		this.authService.logout().subscribe({
-			next: _ => {
-				this.router.navigate(['login']);
-			},
-			error: error => {
-				console.log(error);
+		this.userService.findById(this.authService.getLoggedInUser().id).subscribe(
+			(user: UserI) => {
+				user.status = UserStatus.OFF;
+				this.authService.logout(user).subscribe();
+				// TODO game logout?
 			}
-		});
-		// this.authService.logout();
+		)
+		setTimeout(() => {
+			this.router.navigate(['login']);
+		}, 1000);
 	}
 }

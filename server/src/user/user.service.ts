@@ -27,10 +27,6 @@ export class UserService {
 	}
 
 	async findUserByLogin(login: string) {
-		// const user = await this.userRepository.findOne({ login: login });
-		// if (user)
-		// 	return user;
-		// throw new NotFoundException('User does not exist');
 		return await this.userRepository.findOne({ where: { login: login }});
 	}
 
@@ -74,36 +70,14 @@ export class UserService {
 		throw new NotFoundException("User does not exist");
 	}
 
-	// async updateUserStatus(login: string, status: UserStatus.ON) {
-	// 	return this.userRepository.update({ login }, { status: status });
-	// }
-
-	async onlineStatus(login: string, status: UserStatus.ON) {
-		return this.userRepository.update({ login }, { status: status });
+	async onlineStatus(id: number, status: UserStatus.ON) {
+		return this.userRepository.update({ id }, { status: status });
 	}
 
-	async offlineStatus(login: string, status: UserStatus.OFF) {
-		return this.userRepository.update({ login }, { status: status });
+	async offlineStatus(id: number, status: UserStatus.OFF) {
+		return this.userRepository.update({ id }, { status: status });
 	}
-
-	// async getUserStatus(login: string) {
-	// 	const user = await this.userRepository.findOne({ where: { login: login }});
-	// 	if (user)
-	// 		return user.status as STATUS;
-	// }
-
-	//where AND or OR?
-	async getMatchHistory(login: string) {
-		const currentUser = await this.findUserByLogin(login);
-		return await this.matchHistoryRepository.find({
-			where: [
-				{ winner: currentUser },
-				{ loser: currentUser }
-			],
-			relations: ['winner', 'loser']
-		});
-	}
-
+	
 	/*
 	** ========== Two factor auth ==========
 	*/
@@ -243,8 +217,6 @@ export class UserService {
 			],
 			relations: ['creator', 'receiver']
 		});
-
-		// console.log(acceptedList);
 
 		let friendsList: number[] = [];
 

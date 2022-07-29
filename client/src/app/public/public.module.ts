@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PageNotFoundComponent } from './components/page-not-found/page-not-found.component';
 import { PublicRoutingModule } from './public-routing.module';
-import { LoginComponent } from './components/login/login.component';
+import { MatButtonModule } from '@angular/material/button';
 
 @NgModule({
 	declarations: [
@@ -10,7 +10,8 @@ import { LoginComponent } from './components/login/login.component';
 	],
 	imports: [
 		CommonModule,
-		PublicRoutingModule
+		PublicRoutingModule,
+		MatButtonModule
 	]
 })
 export class PublicModule { }

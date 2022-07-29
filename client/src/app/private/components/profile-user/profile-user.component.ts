@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
-import { map, Observable, switchMap } from 'rxjs';
+import { map, Observable, switchMap, tap } from 'rxjs';
 import { FriendRequestI, FriendStatus } from 'src/app/model/friend-request.interface';
 import { UserI } from 'src/app/model/user.interface';
 import { AuthService } from 'src/app/public/services/auth/auth.service';
@@ -50,15 +50,35 @@ export class ProfileUserComponent implements OnInit {
 	) {}
 
 	ngOnInit() {
-		this.currentUser$.subscribe(currentUser => {
-			this.currentUser = currentUser;
-			if (!this.currentUser) {
-				this.router.navigate(['../page-not-found'], { relativeTo: this.activatedRoute });
-			}
-			else if (this.currentUser.id == this.user.id) {
-				this.router.navigate(['../../profile'], { relativeTo: this.activatedRoute });
-			}
-		})
+		// this.currentUser$.subscribe(currentUser => {
+		// 	this.currentUser = currentUser;
+		// 	if (!this.currentUser) {
+		// 		this.router.navigate(['../../page-not-found'], { relativeTo: this.activatedRoute });
+		// 	}
+		// 	else if (this.currentUser.id == this.user.id) {
+		// 		this.router.navigate(['../../profile'], { relativeTo: this.activatedRoute });
+		// 	}
+		// })
+
+		this.authService.getUserId().pipe(
+			switchMap((id: number) => this.userService.findById(id).pipe(
+				tap((user) => {
+					this.currentUser$.subscribe(currentUser => {
+						//TODO || currentuser.ban?
+						if (!currentUser) {
+							this.router.navigate(['../../page-not-found'], { relativeTo: this.activatedRoute });
+						}
+						else if (currentUser.id == user.id) {
+							this.router.navigate(['../../profile'], { relativeTo: this.activatedRoute });
+						}
+						else {
+							this.currentUser = currentUser;
+						}
+					})
+				})
+			))
+		).subscribe();
+
 		this.friendRequest$.subscribe(friendRequest => {
 			this.friendRequest = friendRequest;
 			this.requestId = friendRequest.id;

@@ -3,7 +3,8 @@ import { environment } from 'src/environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { CookieService } from 'ngx-cookie-service';
 import { JwtHelperService } from "@auth0/angular-jwt";
-import { map, Observable, of, switchMap } from 'rxjs';
+import { map, Observable, of, switchMap, tap } from 'rxjs';
+import { UserI } from 'src/app/model/user.interface';
 
 @Injectable({
 	providedIn: 'root'
@@ -42,15 +43,17 @@ export class AuthService {
 		return !this.jwtService.isTokenExpired(token);
 	}
 
-	logout() {
-		return this.http.post(`${this.baseUrl}/auth/logout`, {}, {
-			// withCredentials: true
-		});
+	logout(user: UserI): Observable<UserI> {
+		return this.http.put(`${this.baseUrl}/auth/logout`, user).pipe(
+			tap(() => {
+				localStorage.removeItem('access_token');
+				// TODO remove two factor
+			})
+		)
 	}
 
 	generate2fa() {
 		return this.http.post(`${this.baseUrl}/auth/logout`, {}, {
-			withCredentials: true
 		})
 	}
 }

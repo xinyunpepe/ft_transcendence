@@ -106,13 +106,13 @@ export class ChannelService {
 
 	async deleteUser(userId: number, channelId: number) {
 		const channel = await this.getChannel(channelId);
-		const indexOfUser = channel.users.findIndex((user) => {
-			return user.id === userId;
-		});
-		if (indexOfUser !== -1) {
-			channel.users.splice(indexOfUser, 1);
+		if (channel.owner.id === userId) {
+			channel.owner = null;
 		}
-		return this.channelRepository.save(channel);
+		channel.admin = channel.admin.filter(user => user.id !== userId);
+		channel.users = channel.users.filter(user => user.id !== userId);
+		this.channelRepository.save(channel);
+		return channel;
 	}
 
 	async getChannelsForUser(userId: number, options: IPaginationOptions) {
