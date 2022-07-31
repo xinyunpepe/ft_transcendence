@@ -17,9 +17,9 @@ export class CreateChannelComponent {
 
 	form: FormGroup = new FormGroup({
 		name: new FormControl(null, [Validators.required]),
-		users: new FormArray([], [Validators.required]),
 		type: new FormControl({ value: 'public', disabled: false }, [Validators.required]),
 		password: new FormControl({ value: '', disabled: true }),
+		users: new FormArray([], [Validators.required]),
 		admin: new FormArray([]),
 		mute: new FormArray([]),
 	});
@@ -32,14 +32,11 @@ export class CreateChannelComponent {
 
 	create() {
 		if (this.form.valid) {
-			try {
-				if (this.form.get('type').value != 'protected' && this.form.get('type').value != 'private') {
-					this.form.get('type').setValue('public');
-				}
-				this.chatService.createChannel(this.form.getRawValue());
-				this.router.navigate(['../dashboard-channel'], { relativeTo: this.activatedRoute });
+			if (this.form.get('type').value != 'protected' && this.form.get('type').value != 'private') {
+				this.form.get('type').setValue('public');
 			}
-			catch (error) {}
+			this.chatService.createChannel(this.form.getRawValue());
+			this.router.navigate(['../dashboard-channel'], { relativeTo: this.activatedRoute });
 		}
 	}
 

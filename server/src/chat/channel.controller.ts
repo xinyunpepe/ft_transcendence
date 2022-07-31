@@ -1,5 +1,5 @@
 import { Controller, Get, Param, UseGuards } from "@nestjs/common";
-import { ChannelService } from "../services/channel.service";
+import { ChannelService } from "./services/channel.service";
 
 @Controller('channel')
 export class ChannelController {

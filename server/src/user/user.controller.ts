@@ -103,10 +103,10 @@ export class UserController {
 	@UseGuards(JwtAuthGuard)
 	@Get('friend-request/status/:receiverId')
 	findRequestByUser(
-		@Param('receiverId') receiverId: number,
+		@Param('userId') userId: number,
 		@Req() req
 	) {
-		return this.userService.findRequestByUser(req.user, receiverId);
+		return this.userService.findRequestByUser(req.user, userId);
 	}
 
 	@UseGuards(JwtAuthGuard)
@@ -119,10 +119,10 @@ export class UserController {
 
 	@UseGuards(JwtAuthGuard)
 	@Get('friend-request/creator/:creatorId')
-	findRequestByCreator(
+	findRequestsByCreator(
 		@Param('creatorId') creatorId: number
 	) {
-		return this.userService.findRequestByCreator(creatorId);
+		return this.userService.findRequestsByCreator(creatorId);
 	}
 
 	@UseGuards(JwtAuthGuard)

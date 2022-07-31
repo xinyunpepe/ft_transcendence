@@ -81,7 +81,6 @@ export class ProfileUserComponent implements OnInit {
 
 		this.friendRequest$.subscribe(friendRequest => {
 			this.friendRequest = friendRequest;
-			this.requestId = friendRequest.id;
 		})
 	}
 
@@ -91,6 +90,7 @@ export class ProfileUserComponent implements OnInit {
 
 	isFriend() {
 		if (this.friendRequest) {
+			this.requestId = this.friendRequest.id;
 			if (this.friendRequest.status === FriendStatus.PENDING) {
 				if (this.isCreator()) {
 					this.requestStatus = 0;
@@ -136,7 +136,7 @@ export class ProfileUserComponent implements OnInit {
 				this.requestStatus = 5;
 			}
 		)
-		// window.location.reload();
+		window.location.reload();
 	}
 
 	responseToRequest(response: string) {
@@ -159,8 +159,7 @@ export class ProfileUserComponent implements OnInit {
 				this.requestStatus = 4;
 			}
 		)
-
-		// window.location.reload();
+		window.location.reload();
 	}
 
 	unblockUser() {
@@ -169,7 +168,6 @@ export class ProfileUserComponent implements OnInit {
 				this.requestStatus = 5;
 			}
 		)
-
-		// window.location.reload();
+		window.location.reload();
 	}
 }

@@ -77,7 +77,7 @@ export class UserService {
 	async offlineStatus(id: number, status: UserStatus.OFF) {
 		return this.userRepository.update({ id }, { status: status });
 	}
-	
+
 	/*
 	** ========== Two factor auth ==========
 	*/
@@ -123,9 +123,9 @@ export class UserService {
 		});
 	}
 
-	async findRequestByCreator(creatorId: number) {
+	async findRequestsByCreator(creatorId: number) {
 		const creator = await this.findUserById(creatorId);
-		return await this.friendRequestRepository.findOne({
+		return await this.friendRequestRepository.find({
 			where: [{ creator: creator }],
 			relations: ['creator', 'receiver']
 		});
