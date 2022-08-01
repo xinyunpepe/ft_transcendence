@@ -31,6 +31,8 @@ import { JoinChannelComponent } from './components/join-channel/join-channel.com
 import { ProfileUserComponent } from './components/profile-user/profile-user.component';
 import { PageNotFoundComponent } from './components/page-not-found/page-not-found.component';
 import { ProfileSettingComponent } from './components/profile-setting/profile-setting.component';
+import { EnableTwoFactorComponent } from './components/enable-two-factor/enable-two-factor.component';
+import { DisableTwoFactorComponent } from './components/disable-two-factor/disable-two-factor.component';
 
 @NgModule({
 	declarations: [
@@ -48,7 +50,9 @@ import { ProfileSettingComponent } from './components/profile-setting/profile-se
 		JoinChannelComponent,
 		ProfileUserComponent,
 		PageNotFoundComponent,
-		ProfileSettingComponent
+		ProfileSettingComponent,
+		EnableTwoFactorComponent,
+		DisableTwoFactorComponent
 	],
 	imports: [
 		CommonModule,

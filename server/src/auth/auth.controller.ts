@@ -1,4 +1,6 @@
 import { Body, Controller, Get, Post, Put, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { join } from 'path';
+import { of } from 'rxjs';
 import { UserI, UserStatus } from 'src/user/model/user/user.interface';
 import { UserService } from 'src/user/user.service';
 import { AuthService } from './auth.service';
@@ -94,7 +96,14 @@ export class AuthController {
 	) {
 		console.log('Creating Qrcode');
 		const otpauthUrl = await this.authService.generateTwoFactorAuthSecret(req.user);
-		return this.authService.pipeQrCodeStream(res, otpauthUrl);
+		return this.authService.pipeQrCodeStream(otpauthUrl);
+	}
+
+	@Get('2fa/qrcode')
+	async getQrCode(
+		@Res() res
+	) {
+		return of(res.sendFile(join(process.cwd(), 'src/uploads/qrcode/qrcode.png')));
 	}
 
 	/*
@@ -105,27 +114,31 @@ export class AuthController {
 	@Post('2fa/turn-on')
 	async turnOnTwoFactorAuth(
 		@Req() req,
-		@Body() { twoFactorAuthCode }: TwoFactorAuthDto
 	){
 		console.log('Turning on 2FA');
-		const currentUser = await this.userService.findUserByLogin(req.user.login);
-		console.log(currentUser);
-		const isValid = this.authService.isTwoFactorAuthCodeValid(twoFactorAuthCode, currentUser);
-		console.log(isValid)
+		const user = await this.userService.findUserById(req.user.id);
+		const isValid = this.authService.isTwoFactorAuthCodeValid(req.body.code, req.body.user);
 		if (!isValid)
 			throw new UnauthorizedException('Wrong authentication code');
-		await this.userService.turnOnTwoFactorAuth(currentUser.login);
+		await this.userService.turnOnTwoFactorAuth(user.id);
 	}
 
 	/*
 	** POST /auth/2fa/turn-off
 	** Set isTwoFactorAuthEnabled to false
 	*/
-	@UseGuards(TwoFactorGuard)
+	// @UseGuards(TwoFactorGuard)
+	@UseGuards(JwtAuthGuard)
 	@Post('2fa/turn-off')
-	async turnOffTwoFactorAuth(@Req() req) {
+	async turnOffTwoFactorAuth(
+		@Req() req
+	) {
 		console.log('Turning off 2FA');
-		await this.userService.turnOffTwoFactorAuth(req.user.login);
+		const user = await this.userService.findUserById(req.user.id);
+		const isValid = this.authService.isTwoFactorAuthCodeValid(req.body.code, req.body.user);
+		if (!isValid)
+			throw new UnauthorizedException('Wrong authentication code');
+		await this.userService.turnOffTwoFactorAuth(user.id);
 	}
 
 	/*

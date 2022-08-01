@@ -3,8 +3,9 @@ import { environment } from 'src/environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { CookieService } from 'ngx-cookie-service';
 import { JwtHelperService } from "@auth0/angular-jwt";
-import { map, Observable, of, switchMap, tap } from 'rxjs';
+import { catchError, map, Observable, of, switchMap, tap, throwError } from 'rxjs';
 import { UserI } from 'src/app/model/user.interface';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Injectable({
 	providedIn: 'root'
@@ -15,7 +16,8 @@ export class AuthService {
 	constructor(
 		private http: HttpClient,
 		private cookie: CookieService,
-		private jwtService: JwtHelperService
+		private jwtService: JwtHelperService,
+		private snackbar: MatSnackBar
 	) { }
 
 	login() {
@@ -52,8 +54,34 @@ export class AuthService {
 		)
 	}
 
-	generate2fa() {
-		return this.http.post(`${this.baseUrl}/auth/logout`, {}, {
-		})
+	generate2fa(): Observable<string> {
+		return this.http.post<string>(`${this.baseUrl}/auth/2fa/generate`, {});
+	}
+
+	getQrImage(): Observable<Blob> {
+		return this.http.get(`${ environment.baseUrl }/auth/2fa/qrcode`, { responseType: 'blob' });
+	}
+
+	enable2fa(user: UserI, code: string) {
+		return this.http.post(`${ environment.baseUrl }/auth/2fa/turn-on`, { user, code }).pipe(
+			catchError(e => {
+				this.snackbar.open(`ERROR: wrong code`, 'Close', {
+					duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
+				});
+				return throwError(e);
+			})
+		)
+	}
+
+	disable2fa(user: UserI, code: string) {
+		console.log("IN");
+		return this.http.post(`${ environment.baseUrl }/auth/2fa/turn-off`, { user, code }).pipe(
+			catchError(e => {
+				this.snackbar.open(`ERROR: wrong code`, 'Close', {
+					duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
+				});
+				return throwError(e);
+			})
+		)
 	}
 }
