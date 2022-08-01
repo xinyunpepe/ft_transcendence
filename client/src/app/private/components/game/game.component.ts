@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { GameService } from '../../services/game/game.service';
 import { Subscription } from 'rxjs';
 import { HostListener } from '@angular/core';
@@ -40,7 +40,7 @@ var GameStatus: string = '';
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.css']
 })
-export class GameComponent implements OnInit {
+export class GameComponent implements OnInit, OnDestroy {
 
   public userLogin: string = '';
   public leftLogin: string[] = leftLogin;
@@ -66,6 +66,12 @@ export class GameComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    RoomSub = this.game.getRoomResponse().subscribe(this.DealWithRoomResponse);
+    GameSub = this.game.getGameStatus().subscribe(this.DealWithGameStatus);
+    PlayerSub = this.game.getPlayerInformation().subscribe(this.DealWithPlayerInformation);
+    BallSub = this.game.getBallInformation().subscribe(this.DealWithBallInformation);
+    WatchSub = this.game.getWatchResponse().subscribe(this.DealWithWatchResponse);
+
     userLogin = this.authService.getLoggedInUser().login;
     this.userLogin = userLogin;
     let tmp: any = this.canvas.nativeElement.getContext('2d');
@@ -90,6 +96,13 @@ export class GameComponent implements OnInit {
     }
   }
 
+  ngOnDestroy(): void {
+    RoomSub.unsubscribe();
+    GameSub.unsubscribe();
+    PlayerSub.unsubscribe();
+    BallSub.unsubscribe();
+    WatchSub.unsubscribe();
+  }
 
   @HostListener('document:keydown', ['$event'])
   handleKeyboardEvent(event: KeyboardEvent) {
@@ -143,7 +156,6 @@ export class GameComponent implements OnInit {
     }
     finally{
       if (result == 'Matched') {
-        RoomSub.unsubscribe();
         hideItem[0] = true;
         hideItem[4] = false;
       }
@@ -168,9 +180,6 @@ export class GameComponent implements OnInit {
           ballIsWith = data.content.ballIsWith;
           break ;
         case 'Refused':
-          GameSub.unsubscribe();
-          PlayerSub.unsubscribe();
-          BallSub.unsubscribe();
           alert('Error: Room Number Not Found');
           break ;
         default:
@@ -178,13 +187,9 @@ export class GameComponent implements OnInit {
       }
     }
     catch(err: any) {
-      GameSub.unsubscribe();
-      PlayerSub.unsubscribe();
-      BallSub.unsubscribe();
       alert(err);
     }
     finally{
-      WatchSub.unsubscribe();
     }
   }
 
@@ -245,9 +250,6 @@ export class GameComponent implements OnInit {
         ball.clean();
         ball.xPos = canvasWidth;
         ball.yPos = canvasHeight;
-        GameSub.unsubscribe();
-        PlayerSub.unsubscribe();
-        BallSub.unsubscribe();
         hideItem[1] = false;
         hideItem[3] = false;
         // hideItem[5] = true;
@@ -374,10 +376,6 @@ export class GameComponent implements OnInit {
       return ;
     }
     leftLogin[0] = userLogin;
-    RoomSub = this.game.getRoomResponse().subscribe(this.DealWithRoomResponse);
-    GameSub = this.game.getGameStatus().subscribe(this.DealWithGameStatus);
-    PlayerSub = this.game.getPlayerInformation().subscribe(this.DealWithPlayerInformation);
-    BallSub = this.game.getBallInformation().subscribe(this.DealWithBallInformation);
     // if (result != 'Waiting')
     this.game.sendRoomRequest(userLogin);
 
@@ -411,9 +409,6 @@ export class GameComponent implements OnInit {
 
   LeaveWatchingMode(): void {
     ball.clean2(0,0,canvasWidth,canvasHeight);
-    GameSub.unsubscribe();
-    PlayerSub.unsubscribe();
-    BallSub.unsubscribe();
     hideItem[3] = false;
     hideItem[0] = false;
     hideItem[4] = true;
@@ -428,18 +423,10 @@ export class GameComponent implements OnInit {
   Cancel(): void {
     hideItem[2] = true;
     result = '';
-    RoomSub.unsubscribe();
-    GameSub.unsubscribe();
-    PlayerSub.unsubscribe();
-    BallSub.unsubscribe();
     this.game.sendCancelRequest(userLogin);
   }
 
   onSubmit() {
-    WatchSub = this.game.getWatchResponse().subscribe(this.DealWithWatchResponse);
-    GameSub = this.game.getGameStatus().subscribe(this.DealWithGameStatus);
-    PlayerSub = this.game.getPlayerInformation().subscribe(this.DealWithPlayerInformation);
-    BallSub = this.game.getBallInformation().subscribe(this.DealWithBallInformation);
     room[0] = parseInt(this.watchForm.value.number);
     this.game.sendWatchRequest(this.watchForm.value.number, userLogin);
     this.watchForm.reset();
