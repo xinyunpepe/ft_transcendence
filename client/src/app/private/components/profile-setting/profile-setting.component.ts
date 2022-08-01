@@ -63,7 +63,7 @@ export class ProfileSettingComponent implements OnInit {
 				duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
 			})),
 			catchError(e => {
-				this.snackbar.open(`Error: Username already in use`, 'Close', {
+				this.snackbar.open(`ERROR: Username already in use`, 'Close', {
 					duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
 				})
 				return throwError(e);
@@ -83,17 +83,21 @@ export class ProfileSettingComponent implements OnInit {
 		this.selectedFile = event.target.files[0];
 	}
 
-	onUpload() {
+	uploadAvatar() {
 		if (this.selectedFile) {
-			let formData = new FormData();
+			const formData = new FormData();
 			formData.append('file', this.selectedFile);
-			this.userService.uploadFile(formData).subscribe(
-				() => {
-					this.snackbar.open(`Avatar updated`, 'Close', {
+			this.userService.uploadFile(formData).pipe(
+				tap(() => this.snackbar.open(`Avatar uploaded`, 'Close', {
+						duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
+				})),
+				catchError(e => {
+					this.snackbar.open(`ERROR: Upload failed`, 'Close', {
 						duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
 					})
-				}
-			);
+					return throwError(e);
+				})
+			).subscribe();
 		}
 	}
 }

@@ -4,7 +4,7 @@
 	<mat-card>
 		<div style="display: flex; flex-direction: row;">
 			<div class="profile">
-				<img src="{{ user.avatar }}" alt="avatar" style="width:90%">
+				<img [src]="avatar" alt="avatar" style="width:90%">
 				<mat-card-title>{{ user.username }}</mat-card-title>
 				<h3>{{ user.status }}</h3>
 				<p>42 login: {{ user.login }}</p>
@@ -16,7 +16,7 @@
 					<button mat-button routerLink="/private/profile-setting" routerLinkActive="active">
 						Edit Profile
 					</button>
-					<button mat-button (click)="editFriends(user)">
+					<button mat-button routerLink="/private/friends-setting" routerLinkActive="active">
 						Edit Friends
 					</button>
 				<!-- </div> -->
