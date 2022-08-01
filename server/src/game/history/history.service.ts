@@ -51,57 +51,57 @@ export class HistoryService {
 	// 	this.update(Game);
 	// }
 
-	async GameStart(player1: string, player2: string) {
-		let history1 = this.findOne(player1);
-		console.log(history1);
-		let history2 = this.findOne(player2);
-		if (history1) {
-			let history = new History;
-			history.login = player1;
-			history.total_losts = (await history1).total_losts;
-			history.total_wins = (await history1).total_wins;
-			history.isInGame = true;
-			this.update(history);
-		}
-		else {
-			let history = new History;
-			history.login = player1;
-			history.isInGame = true;
-			this.create(history);
-		}
-		if (history2) {
-			let history = new History;
-			history.login = player2;
-			history.total_losts = (await history2).total_losts;
-			history.total_wins = (await history2).total_wins;
-			history.isInGame = true;
-			this.update(history);
-		}
-		else {
-			let history = new History;
-			history.login = player2;
-			history.isInGame = true;
-			this.create(history);
-		}
+	async GameStart(player1Id: number, player2Id: number) {
+		// let history1 = this.findOne(player1);
+		// console.log(history1);
+		// let history2 = this.findOne(player2);
+		// if (history1) {
+		// 	let history = new History;
+		// 	history.login = player1;
+		// 	history.total_losts = (await history1).total_losts;
+		// 	history.total_wins = (await history1).total_wins;
+		// 	history.isInGame = true;
+		// 	this.update(history);
+		// }
+		// else {
+		// 	let history = new History;
+		// 	history.login = player1;
+		// 	history.isInGame = true;
+		// 	this.create(history);
+		// }
+		// if (history2) {
+		// 	let history = new History;
+		// 	history.login = player2;
+		// 	history.total_losts = (await history2).total_losts;
+		// 	history.total_wins = (await history2).total_wins;
+		// 	history.isInGame = true;
+		// 	this.update(history);
+		// }
+		// else {
+		// 	let history = new History;
+		// 	history.login = player2;
+		// 	history.isInGame = true;
+		// 	this.create(history);
+		// }
 	}
 
-	async GameFinish(winner: string, loser: string) {
-		let history1 = this.findOne(winner);
-		let history2 = this.findOne(loser);
+	async GameFinish(room_id: number, winner: string, loser: string) {
+		// let history1 = this.findOne(winner);
+		// let history2 = this.findOne(loser);
 
 		
-		let history = new History;
-		history.login = winner;
-		history.total_losts = (await history1).total_losts;
-		history.total_wins = (await history1).total_wins + 1;
-		history.isInGame = false;
-		this.update(history);
+		// let history = new History;
+		// history.login = winner;
+		// history.total_losts = (await history1).total_losts;
+		// history.total_wins = (await history1).total_wins + 1;
+		// history.isInGame = false;
+		// this.update(history);
 
-		history.login = loser;
-		history.total_losts = (await history2).total_losts + 1;
-		history.total_wins = (await history2).total_wins;
-		history.isInGame = false;
-		this.update(history);
+		// history.login = loser;
+		// history.total_losts = (await history2).total_losts + 1;
+		// history.total_wins = (await history2).total_wins;
+		// history.isInGame = false;
+		// this.update(history);
 
 
 	}

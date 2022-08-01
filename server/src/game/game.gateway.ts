@@ -1,105 +1,12 @@
-import { OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
+import { OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Mutex } from 'async-mutex';
-// import { HistoryService } from './history/history.service';
+import { Player } from './utils/player';
+import { ConstValues } from './utils/const-values';
+import { Response } from './utils/response';
+import { Ball } from './utils/ball';
+import { GameRoom } from './utils/game-room';
+import { HistoryService } from './history/history.service';
 
-const canvasWidth: number = 600;
-const canvasHeight: number = 450;
-const paddleWidth: number = 12;
-const paddleHeight: number = 30;
-const ballWidth: number = 10;
-const ballHeight: number = 10;
-const animationFrameRate = 30;
-const WinningPoint: number = 3;
-// var GameIsMoving: Map<number,boolean> = new Map<number,boolean>(); // GameIsMoving[room_number] = is_in_game
-
-class Response {
-  constructor (public type: string, public content?: any) {}
-
-  getJSON() {
-    if (this.content) {
-      return {type: this.type, content: this.content};
-    }
-    return {type: this.type};
-  }
-}
-
-class Player {
-  public height: number;
-  public point: number = 0;
-  constructor (public id: string, public socket: any, public carryBall: boolean) {
-    this.height = canvasHeight / 2 - paddleHeight / 2;
-    // this.point = 0;
-  }
-
-  init() {
-    this.height = canvasHeight / 2 - paddleHeight / 2;
-  }
-
-  getJSON() {
-    return {
-      type: "Player",
-      content: {
-        id: this.id,
-        height: this.height,
-        point: this.point
-      }
-    };
-  }
-}
-
-class Ball {
-  public x: number;
-  public y: number;
-  public vx: number;
-  public vy: number;
-  public isCarried: boolean;
-  public ballCarrierId: string;
-  constructor (public readonly player1Id: string) {
-    this.init(player1Id);
-  }
-
-  init(ballCarrierId: string) { // 1 or 2
-    this.ballCarrierId = ballCarrierId;
-    this.isCarried = true;
-    if (this.ballCarrierId == this.player1Id) {
-      this.x = paddleWidth;
-      this.y = canvasHeight / 2 - ballHeight / 2;
-      this.vx = 5;
-      this.vy = 5;
-    }
-    else {
-      this.x = canvasWidth - ballWidth - paddleWidth;
-      this.y = canvasHeight / 2 - ballHeight / 2;
-      this.vx = -5;
-      this.vy = -5;
-    }
-  }
-
-  destroy() {
-    this.isCarried = false;
-    this.x = canvasWidth;
-    this.y = canvasHeight;
-  }
-
-  getJSON() {
-    return {
-      type: "Ball",
-      content: {
-        id: this.player1Id,
-        x: this.x,
-        y: this.y
-      }
-    };
-  }
-}
-
-class GameRoom {
-  static readonly MoveDistance: number = 10;
-  public ball: Ball;
-  constructor (public player1: Player, public player2: Player) {
-    this.ball = new Ball(player1.id); // todo?
-  }
-}
 
 @WebSocketGateway({cors: { origin: ['http://localhost:3000', 'http://localhost:4200'] }})
 export class GameGateway implements OnGatewayDisconnect {
@@ -158,10 +65,10 @@ export class GameGateway implements OnGatewayDisconnect {
     let balls: Ball[] = [this.gameRooms[room_number].ball];
     let players: Player[] = [this.gameRooms[room_number].player1, this.gameRooms[room_number].player2];
     // let player1: Player = room.player1, player2: Player = room.player2;
-    const minX = paddleWidth;
-    const maxX = canvasWidth - ballWidth - paddleWidth;
+    const minX = ConstValues.paddleWidth;
+    const maxX = ConstValues.canvasWidth - ConstValues.ballWidth - ConstValues.paddleWidth;
     const minY = 0;
-    const maxY = canvasHeight - ballHeight;
+    const maxY = ConstValues.canvasHeight - ConstValues.ballHeight;
     const interval = setInterval(()=>{
       // if (GameIsMoving[room_number] == false) {
       //   clearInterval(interval);
@@ -182,14 +89,14 @@ export class GameGateway implements OnGatewayDisconnect {
         balls[0].vy *= -1;
       }
       if (balls[0].x < minX) {
-        if ((balls[0].y + ballHeight >= players[0].height) && (balls[0].y <= players[0].height + paddleHeight) ) {
+        if ((balls[0].y + ConstValues.ballHeight >= players[0].height) && (balls[0].y <= players[0].height + ConstValues.paddleHeight) ) {
           balls[0].x = 2 * minX - balls[0].x;
           balls[0].vx *= -1;
         } 
         else {
           ++(players[1].point);
           this.server.to(room_number).emit('Player', JSON.stringify(players[1].getJSON()));
-          if (players[1].point >= WinningPoint) {
+          if (players[1].point >= ConstValues.WinningPoint) {
             // this.gameRooms.delete(room_number);
             balls[0].destroy();
             this.server.to(room_number).emit('GameStatus', JSON.stringify((new Response('Game', {status: 'Finish'})).getJSON()));
@@ -214,7 +121,7 @@ export class GameGateway implements OnGatewayDisconnect {
         }
       }
       else if (balls[0].x > maxX) {
-        if ((balls[0].y + ballHeight >= players[1].height) && (balls[0].y <= players[1].height + paddleHeight) ) {
+        if ((balls[0].y + ConstValues.ballHeight >= players[1].height) && (balls[0].y <= players[1].height + ConstValues.paddleHeight) ) {
           balls[0].x = 2 * maxX - balls[0].x;
           balls[0].vx *= -1;
         }
@@ -222,7 +129,7 @@ export class GameGateway implements OnGatewayDisconnect {
           ++(players[0].point);
           // console.log(this.gameRooms[room_number].player1.point);
           this.server.to(room_number).emit('Player', JSON.stringify(players[0].getJSON()));
-          if (players[0].point >= WinningPoint) {
+          if (players[0].point >= ConstValues.WinningPoint) {
             // this.gameRooms.delete(room_number);
             balls[0].destroy();
             this.server.to(room_number).emit('GameStatus', JSON.stringify((new Response('Game', {status: 'Finish'})).getJSON()));
@@ -249,7 +156,7 @@ export class GameGateway implements OnGatewayDisconnect {
         }
       }
       this.server.to(room_number).emit('Ball', JSON.stringify(balls[0].getJSON()));
-    }, animationFrameRate);
+    }, ConstValues.animationFrameRate);
   }
 
   @SubscribeMessage('PlayerMove')
@@ -277,14 +184,14 @@ export class GameGateway implements OnGatewayDisconnect {
           break ;
         case 'down':
           this.gameRooms[room_number].player1.height += GameRoom.MoveDistance;
-          if (this.gameRooms[room_number].player1.height > canvasHeight - paddleHeight)
-            this.gameRooms[room_number].player1.height = canvasHeight - paddleHeight;
+          if (this.gameRooms[room_number].player1.height > ConstValues.canvasHeight - ConstValues.paddleHeight)
+            this.gameRooms[room_number].player1.height = ConstValues.canvasHeight - ConstValues.paddleHeight;
           break ;
         default:
           console.log('ClientError: Invalid PlayerMove direction ' + direction);
       }
       if (this.gameRooms[room_number].player1.carryBall) {
-        this.gameRooms[room_number].ball.y = this.gameRooms[room_number].player1.height + paddleHeight / 2 - ballHeight / 2;
+        this.gameRooms[room_number].ball.y = this.gameRooms[room_number].player1.height + ConstValues.paddleHeight / 2 - ConstValues.ballHeight / 2;
         // this.server.to(parseInt(room_number)).emit('Ball', JSON.stringify(this.gameRooms[room_number].ball.getJSON()));
       }
       // console.log(this.gameRooms[room_number].player1.point);
@@ -299,14 +206,14 @@ export class GameGateway implements OnGatewayDisconnect {
           break ;
         case 'down':
           this.gameRooms[room_number].player2.height += GameRoom.MoveDistance;
-          if (this.gameRooms[room_number].player2.height > canvasHeight - paddleHeight)
-            this.gameRooms[room_number].player2.height = canvasHeight - paddleHeight;
+          if (this.gameRooms[room_number].player2.height > ConstValues.canvasHeight - ConstValues.paddleHeight)
+            this.gameRooms[room_number].player2.height = ConstValues.canvasHeight - ConstValues.paddleHeight;
           break ;
         default:
           console.log('ClientError: Invalid PlayerMove direction ' + direction);
       }
       if (this.gameRooms[room_number].player2.carryBall) {
-        this.gameRooms[room_number].ball.y = this.gameRooms[room_number].player2.height + paddleHeight / 2 - ballHeight / 2;
+        this.gameRooms[room_number].ball.y = this.gameRooms[room_number].player2.height + ConstValues.paddleHeight / 2 - ConstValues.ballHeight / 2;
         // this.server.to(parseInt(room_number)).emit('Ball', JSON.stringify(this.gameRooms[room_number].ball.getJSON()));
       }
       this.server.to(parseInt(room_number)).emit('Player', JSON.stringify(this.gameRooms[room_number].player2.getJSON()));
@@ -439,32 +346,3 @@ export class GameGateway implements OnGatewayDisconnect {
   }
   
 }
-
-
-/*
-import { SubscribeMessage, WebSocketGateway, WebSocketServer, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
-
-@WebSocketGateway({cors: true})
-export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  @WebSocketServer() server;
-  users: number = 0;
-
-  async handleConnection() {
-    this.users++;
-    this.server.emit('users', this.users);
-  }
-
-  async handleDisconnect() {
-    this.users--;
-    this.server.emit('users', this.users);
-  }
-
-  @SubscribeMessage('chat')
-  async onChat(client, message) {
-
-    client.broadcast.emit('chat', message);
-  }
-
-}
-
-*/
