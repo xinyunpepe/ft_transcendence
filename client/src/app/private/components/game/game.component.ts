@@ -4,39 +4,16 @@ import { Subscription } from 'rxjs';
 import { HostListener } from '@angular/core';
 import { AuthService } from 'src/app/public/services/auth/auth.service';
 import { FormBuilder } from '@angular/forms';
+import { Rectangle } from './rectangle';
 
-export class Rectangle {
-	constructor(public ctx: CanvasRenderingContext2D, private width: number, private height: number, public xPos: number, public yPos: number) {}
-
-	draw(color: string) {
-		// if (this.xPos < 0 || this.yPos < 0)
-		// 	return ;
-		// console.log('draw: ' + this.yPos.toString() + ' ' + this.height.toString());
-    	this.ctx.fillStyle = color;
-		// console.log(this.xPos.toString() + ' ' + this.yPos.toString() + ' ' + this.width.toString() + ' ' + this.height.toString());
-    	this.ctx.fillRect(this.xPos, this.yPos, this.width, this.height);
-  	}
-
-	clean() {
-		// if (this.xPos < 0 || this.yPos < 0)
-		// 	return ;
-		// console.log('clean: ' + this.yPos.toString() + ' ' + this.height.toString());
-		this.ctx.clearRect(this.xPos, this.yPos, this.width, this.height);
-	}
-
-	clean2(x:number, y:number, w:number, h:number) {
-		this.ctx.clearRect(x, y, w, h);
-	}
-
-}
 
 var result: string = '';
-var sub: Subscription;
+var RoomSub: Subscription;
 var GameSub: Subscription;
 var PlayerSub: Subscription;
 var BallSub: Subscription;
 var WatchSub: Subscription;
-// var userSub: Subscription;
+
 var userLogin: string;
 var leftLogin: string[] = [''];
 var room: number[] = [-1];
@@ -50,7 +27,7 @@ const paddleHeight: number = 30;
 const ballWidth: number = 10;
 const ballHeight: number = 10;
 const ballColor: string = 'black';
-// const RoomWaitingTime: number = 42;
+
 var points: number[] = [0,0];
 var hideItem: boolean[] = [false, true, true, false, true, true];
 var opponentLogin: [string] = [''];
@@ -166,7 +143,7 @@ export class GameComponent implements OnInit {
     }
     finally{
       if (result == 'Matched') {
-        sub.unsubscribe();
+        RoomSub.unsubscribe();
         hideItem[0] = true;
         hideItem[4] = false;
       }
@@ -397,7 +374,7 @@ export class GameComponent implements OnInit {
       return ;
     }
     leftLogin[0] = userLogin;
-    sub = this.game.getRoomResponse().subscribe(this.DealWithRoomResponse);
+    RoomSub = this.game.getRoomResponse().subscribe(this.DealWithRoomResponse);
     GameSub = this.game.getGameStatus().subscribe(this.DealWithGameStatus);
     PlayerSub = this.game.getPlayerInformation().subscribe(this.DealWithPlayerInformation);
     BallSub = this.game.getBallInformation().subscribe(this.DealWithBallInformation);
@@ -451,7 +428,7 @@ export class GameComponent implements OnInit {
   Cancel(): void {
     hideItem[2] = true;
     result = '';
-    sub.unsubscribe();
+    RoomSub.unsubscribe();
     GameSub.unsubscribe();
     PlayerSub.unsubscribe();
     BallSub.unsubscribe();
