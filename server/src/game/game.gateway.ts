@@ -1,6 +1,6 @@
 import { OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Mutex } from 'async-mutex';
-import { HistoryService } from './history/history.service';
+// import { HistoryService } from './history/history.service';
 
 const canvasWidth: number = 600;
 const canvasHeight: number = 450;
@@ -112,7 +112,7 @@ export class GameGateway implements OnGatewayDisconnect {
   rooms: number;
   gameRooms: Map<number, GameRoom>;
 
-  constructor(public historyService: HistoryService) {
+  constructor(/*public historyService: HistoryService*/) {
     this.rooms = 0;
     this.room_mutex = new Mutex();
     this.mutex = new Mutex();
@@ -129,11 +129,11 @@ export class GameGateway implements OnGatewayDisconnect {
         player2 = new Player(player2_id, this.SocketOfClient[player2_id], false);
     const release = await this.room_mutex.acquire();
     let room_number = this.rooms++;
-    // release();
+    release();
     player1.socket.join(room_number);
     player2.socket.join(room_number);
     let response = new Response('Room', 'Matched');
-    this.historyService.GameStart(player1_id, player2_id);
+    // this.historyService.GameStart(player1_id, player2_id);
     this.server.to(room_number).emit('RoomResponse',  JSON.stringify(response.getJSON()));
     // let roomHash = Math.random().toString(36).substring(7);
     // this.server.to(room_number).emit('RoomInfo', JSON.stringify((new Response('RoomHash',)).getJSON()));
@@ -194,7 +194,7 @@ export class GameGateway implements OnGatewayDisconnect {
             balls[0].destroy();
             this.server.to(room_number).emit('GameStatus', JSON.stringify((new Response('Game', {status: 'Finish'})).getJSON()));
             // this.historyService.GameUpdate(room_number, players[0].id, players[1].id, players[0].point, players[1].point, 'Finish');
-            this.historyService.GameFinish(players[1].id, players[0].id);
+            // this.historyService.GameFinish(players[1].id, players[0].id);
           }
           else {
             players[0].init();
@@ -226,7 +226,7 @@ export class GameGateway implements OnGatewayDisconnect {
             // this.gameRooms.delete(room_number);
             balls[0].destroy();
             this.server.to(room_number).emit('GameStatus', JSON.stringify((new Response('Game', {status: 'Finish'})).getJSON()));
-            this.historyService.GameFinish(players[0].id, players[1].id);
+            // this.historyService.GameFinish(players[0].id, players[1].id);
               // this.historyService.GameUpdate(room_number, players[0].id, players[1].id, players[0].point, players[1].point, 'In Game');
           }
           else {
@@ -324,12 +324,12 @@ export class GameGateway implements OnGatewayDisconnect {
         player1.point = -42;
         this.server.to(parseInt(room_number)).emit('Player', JSON.stringify(player1.getJSON()));
         // this.historyService.GameUpdate(room_number, player1.id, player2.id, player1.point, player2.point, 'Finish');
-        this.historyService.GameFinish(player2.id, player1.id);
+        // this.historyService.GameFinish(player2.id, player1.id);
       }
       else if (player2.id == id) {
         player2.point = -42;
         this.server.to(parseInt(room_number)).emit('Player', JSON.stringify(player2.getJSON()));
-        this.historyService.GameFinish(player1.id, player2.id);
+        // this.historyService.GameFinish(player1.id, player2.id);
         // this.historyService.GameUpdate(room_number, player1.id, player2.id, player1.point, player2.point, 'Finish');
       }
       else return ;
@@ -345,6 +345,7 @@ export class GameGateway implements OnGatewayDisconnect {
 
   @SubscribeMessage('RoomRequest')
   async match(client, id) {
+    // console.log(id);
     let response = new Response('Room');
     this.SocketOfClient[id] = client;
     // if (to == '') { // random request
@@ -366,7 +367,7 @@ export class GameGateway implements OnGatewayDisconnect {
       }
     }
     release();
-
+    // console.log(response.getJSON());
     this.server.to(client.id).emit('RoomResponse', JSON.stringify(response.getJSON()));
   }
 

@@ -89,7 +89,7 @@ export class GameComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    userLogin = this.authService.getLoggedInUser();
+    userLogin = this.authService.getLoggedInUser().login;
     this.userLogin = userLogin;
     let tmp: any = this.canvas.nativeElement.getContext('2d');
     if (typeof tmp != 'undefined') {
@@ -318,20 +318,7 @@ export class GameComponent implements OnInit {
       alert(err);
     }
     finally {
-      if (ballIsWith == 1) {
-        ball.clean();
-        ball.yPos = paddles[0].yPos + paddleHeight / 2 - ballHeight / 2;
-        ball.xPos = paddleWidth;
-        ball.draw(ballColor);
-        // console.log(room[0].toString() + 'A');
-      }
-      if (ballIsWith == 2) {
-        ball.clean();
-        ball.xPos = canvasWidth - ballWidth - paddleWidth;
-        ball.yPos = paddles[1].yPos + paddleHeight / 2 - ballHeight / 2;
-        ball.draw(ballColor);
-        // console.log(room[0].toString() + 'B');
-      }
+      // console.log(room[0].toString() + 'B');
       paddles[0].yPos = leftHeight;
       paddles[1].yPos = rightHeight;
       // console.log(toRealHeight(canvasHeight, leftHeight).toString() + ' ' + rightHeight.toString());
@@ -339,7 +326,24 @@ export class GameComponent implements OnInit {
       paddles[0].draw('red');
       paddles[1].draw('blue');
       // console.log('My Position(left): ' + leftHeight.toString() + ' Opponent Position(right): ' + rightHeight.toString() + '\
-                //  \nMy Point(left)   : ' + this.Points[0].toString() +    ' Opponent Point(right)   : ' + this.Points[1].toString()) ;
+      //  \nMy Point(left)   : ' + this.Points[0].toString() +    ' Opponent Point(right)   : ' + this.Points[1].toString()) ;
+      if (ballIsWith == 1) {
+        ball.clean();
+        ball.yPos = paddles[0].yPos + paddleHeight / 2 - ballHeight / 2;
+        ball.xPos = paddleWidth;
+        ball.draw(ballColor);
+        // console.log(ball.xPos);
+        // console.log(paddles[0].yPos);
+        // console.log(ball.yPos);
+        // console.log(room[0].toString() + 'A');
+      }
+      if (ballIsWith == 2) {
+        ball.clean();
+        ball.xPos = canvasWidth - ballWidth - paddleWidth;
+        ball.yPos = paddles[1].yPos + paddleHeight / 2 - ballHeight / 2;
+        ball.draw(ballColor);
+        // c
+      }
     }
   }
 
