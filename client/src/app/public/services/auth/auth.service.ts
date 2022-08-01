@@ -24,6 +24,10 @@ export class AuthService {
 		window.location.href = `${this.baseUrl}/auth/login`;
 	}
 
+	getCallback(uri: string) {
+		return this.http.get(uri);
+	}
+
 	getAccessToken() {
 		return this.cookie.get('accessToken');
 	}
@@ -74,8 +78,22 @@ export class AuthService {
 	}
 
 	disable2fa(user: UserI, code: string) {
-		console.log("IN");
 		return this.http.post(`${ environment.baseUrl }/auth/2fa/turn-off`, { user, code }).pipe(
+			catchError(e => {
+				this.snackbar.open(`ERROR: wrong code`, 'Close', {
+					duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
+				});
+				return throwError(e);
+			})
+		)
+	}
+
+	authenticate(user: UserI, code: string) {
+		return this.http.post<any>(`${ environment.baseUrl }/auth/2fa/authenticate`, { user, code }).pipe(
+			tap(res => {
+				console.log(res);
+				localStorage.setItem('2fa_token', res.access_token)
+			}),
 			catchError(e => {
 				this.snackbar.open(`ERROR: wrong code`, 'Close', {
 					duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'

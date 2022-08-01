@@ -5,6 +5,7 @@ import { AuthGuard } from './guards/auth.guard';
 const routes: Routes = [
 	{
 		path: 'private',
+		// TODO add twofacorguard
 		canActivate: [AuthGuard],
 		loadChildren: () => import('./private/private.module').then(m => m.PrivateModule)
 	},

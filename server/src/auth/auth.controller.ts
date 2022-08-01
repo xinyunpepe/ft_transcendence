@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post, Put, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { join } from 'path';
-import { of } from 'rxjs';
+import { catchError, of } from 'rxjs';
 import { UserI, UserStatus } from 'src/user/model/user/user.interface';
 import { UserService } from 'src/user/user.service';
 import { AuthService } from './auth.service';
@@ -34,31 +34,32 @@ export class AuthController {
 	}
 
 	/*
-	** GET /auth/redirect
+	** GET /auth/call-back
 	** The redirect URL once 42auth is done
 	** Generate jwt token and save it to cookie
 	** If 2FA is disabled, set user status to 'online'(?) and redirect to frontend dashboard
 	** If 2FA is enabled, redirect to frontend 2fa/authenticate(?)
 	*/
 	@UseGuards(FtAuthGuard)
-	@Get('redirect')
+	@Get('redirect/call-back')
 	async redirect(
 		@Req() req,
 		@Res() res
 	) {
-		const user: UserI = req.user;
-		if (user) {
-			// console.log(`${ user.login } is ${ user.status } now`);
-			const token = await this.authService.login(user);
-			res.cookie('accessToken', token.access_token);
+		const login = await this.authService.login(req.user);
+		const user = await this.userService.findUserById(req.user.id);
+		res.cookie('accessToken', login.access_token);
+		const sendback = {
+			id: user.id,
+			isTwofactorAuthEnabled: user.isTwoFactorAuthEnabled,
+			token: login.access_token,
 		}
-		const currentUser = await this.userService.findUserByLogin(user.login);
-		if (currentUser.isTwoFactorAuthEnabled === true) {
-			res.redirect('http://localhost:4200/2fa/authenticate');
-			return ;
+		try {
+			res.send(JSON.stringify(sendback));
 		}
-		await this.userService.onlineStatus(user.id, UserStatus.ON);
-		res.redirect(`http://localhost:4200/private/profile`);
+		catch (err) {
+			res.redirect('http://localhost:4200');
+		}
 	}
 
 	/*
@@ -68,20 +69,18 @@ export class AuthController {
 	@UseGuards(JwtAuthGuard)
 	@Post('2fa/authenticate')
 	async authenticate(
-		@Req() req,
-		@Res() res,
-		@Body() { twoFactorAuthCode }: TwoFactorAuthDto
+		@Req() req
 	){
 		console.log('Authenticating 2FA');
-		const currentUser = await this.userService.findUserByLogin(req.user.login);
-		const isValid = this.authService.isTwoFactorAuthCodeValid(twoFactorAuthCode, currentUser);
+		const user = await this.userService.findUserById(req.user.id);
+		const isValid = this.authService.isTwoFactorAuthCodeValid(req.body.code, req.body.user);
 		if (!isValid)
 			throw new UnauthorizedException('Wrong authentication code');
-		const token = await this.authService.loginWithTwoFactorAuth(currentUser, true);
-		res.clearCookie('accessToken');
-		res.cookie('accessToken', token.access_token);
-		await this.userService.onlineStatus(currentUser.id, UserStatus.ON);
-		res.redirect(`http://localhost:4200/private/profile`);
+		const token = await this.authService.loginWithTwoFactorAuth(user, true);
+		// res.clearCookie('accessToken');
+		// res.cookie('accessToken', token.access_token);
+		await this.userService.onlineStatus(user.id, UserStatus.ON);
+		return JSON.stringify(token);
 	}
 
 	/*

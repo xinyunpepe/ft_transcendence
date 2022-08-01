@@ -5,10 +5,6 @@
 	min-width: 350px;
 }
 
-.container .dashboard {
-	margin-bottom: 20px;
-}
-
 .container mat-card mat-card-content form {
 	display: flex;
 	flex-direction: column;
