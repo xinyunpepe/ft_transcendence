@@ -1,10 +1,9 @@
 import { Body, Controller, Get, Post, Put, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { join } from 'path';
-import { catchError, of } from 'rxjs';
+import { of } from 'rxjs';
 import { UserI, UserStatus } from 'src/user/model/user/user.interface';
 import { UserService } from 'src/user/user.service';
 import { AuthService } from './auth.service';
-import { TwoFactorAuthDto } from './dto/2fa.dto';
 import { TwoFactorGuard } from './guards/2fa.guard';
 import { FtAuthGuard } from './guards/42auth.guard';
 import { JwtAuthGuard } from './guards/jwt.guard';
@@ -14,7 +13,7 @@ import { JwtAuthGuard } from './guards/jwt.guard';
 ** 	- if the 2FA is turned off, we give full access to the user,
 ** 	- if the 2FA is turned on, we provide the access just to the /2fa/authenticate endpoint,
 ** 	the user looks up Google Authenticator code and sends it to the /2fa/authenticate endpoint,
-** 	we respond with a new JWT token with full access.
+** 	we respond with a another JWT token with full access.
 */
 
 @Controller('auth')
@@ -36,9 +35,9 @@ export class AuthController {
 	/*
 	** GET /auth/call-back
 	** The redirect URL once 42auth is done
-	** Generate jwt token and save it to cookie
-	** If 2FA is disabled, set user status to 'online'(?) and redirect to frontend dashboard
-	** If 2FA is enabled, redirect to frontend 2fa/authenticate(?)
+	** Send user info and access token back to front and save token to local storage
+	** If 2FA is disabled, set user status to 'online' and redirect to profile page(front)
+	** If 2FA is enabled, redirect to 2fa auth page(front)
 	*/
 	@UseGuards(FtAuthGuard)
 	@Get('redirect/call-back')
@@ -48,7 +47,6 @@ export class AuthController {
 	) {
 		const login = await this.authService.login(req.user);
 		const user = await this.userService.findUserById(req.user.id);
-		res.cookie('accessToken', login.access_token);
 		const sendback = {
 			id: user.id,
 			isTwofactorAuthEnabled: user.isTwoFactorAuthEnabled,
@@ -77,8 +75,6 @@ export class AuthController {
 		if (!isValid)
 			throw new UnauthorizedException('Wrong authentication code');
 		const token = await this.authService.loginWithTwoFactorAuth(user, true);
-		// res.clearCookie('accessToken');
-		// res.cookie('accessToken', token.access_token);
 		await this.userService.onlineStatus(user.id, UserStatus.ON);
 		return JSON.stringify(token);
 	}
@@ -90,8 +86,7 @@ export class AuthController {
 	@UseGuards(JwtAuthGuard)
 	@Post('2fa/generate')
 	async generateTwoFactorAuthQrCode(
-		@Req() req,
-		@Res() res
+		@Req() req
 	) {
 		console.log('Creating Qrcode');
 		const otpauthUrl = await this.authService.generateTwoFactorAuthSecret(req.user);
@@ -144,18 +139,14 @@ export class AuthController {
 	** POST /auth/logout
 	** Log user out
 	** Set user status to 'offline'
-	** Clear accessToken cookie
-	** Redirect to frontend
+	** Clear tokens from localstorage(front)
 	*/
 	@UseGuards(JwtAuthGuard)
 	@Put('logout')
 	async logout(
-		@Body() user: UserI,
-		@Res() res
+		@Body() user: UserI
 	) {
 		console.log('Start logging out');
 		await this.userService.offlineStatus(user.id, UserStatus.OFF);
-		res.clearCookie('accessToken');
-		// res.redirect('http://localhost:4200/public/login');
 	}
 }

@@ -10,10 +10,7 @@ export class TwoFactorStrategy extends PassportStrategy(Strategy, 'two-factor') 
 		private readonly userService: UserService
 	) {
 		super({
-			// Retrieve and verify jwt cookie
-			jwtFromRequest: ExtractJwt.fromExtractors([(req: Request) => {
-				return req?.cookies?.accessToken;
-			}]),
+			jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
 			ignoreExpiration: false,
 			secretOrKey: 'secret' // need to hide later
 		})

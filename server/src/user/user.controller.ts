@@ -1,7 +1,7 @@
 import { Body, Param, Controller, Get, Post, Put, Delete, Req, UseGuards, UseInterceptors, UploadedFile, Res } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
-import { UserI } from './model/user/user.interface';
+import { UserI, UserStatus } from './model/user/user.interface';
 import { UserService } from './user.service';
 import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
@@ -70,6 +70,15 @@ export class UserController {
 		@Body() user: UserI
 	) {
 		return this.userService.createUser(user);
+	}
+
+	@UseGuards(JwtAuthGuard)
+	@Put('online/:id')
+	async putUserOnline(
+		@Param('id') id: number
+	) {
+		const user = await this.userService.findUserById(id);
+		await this.userService.onlineStatus(user.id, UserStatus.ON);
 	}
 
 	@UseGuards(JwtAuthGuard)

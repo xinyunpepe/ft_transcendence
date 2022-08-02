@@ -23,15 +23,15 @@ export class CallBackComponent implements OnInit {
 		}
 
 		let uri: string = window.location.href;
-		console.log(uri);
+		// console.log(uri);
 
 		let auth = "/api/auth/redirect";
 		uri = uri.replace('public/', '');
-		console.log(uri);
+		// console.log(uri);
 
 		let output = [uri.slice(0, 21), auth, uri.slice(21)].join('');
 		uri = output;
-		console.log(uri);
+		// console.log(uri);
 
 		this.authService.getCallback(uri).subscribe(
 			(res: any) => {
@@ -40,6 +40,7 @@ export class CallBackComponent implements OnInit {
 					this.router.navigate(['../../public/two-factor-auth']);
 				}
 				else {
+					this.authService.putUserOnline(res.id).subscribe();
 					this.router.navigate(['../../private/profile']);
 				}
 			},

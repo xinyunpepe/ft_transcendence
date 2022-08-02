@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment';
 import { HttpClient } from '@angular/common/http';
-import { CookieService } from 'ngx-cookie-service';
 import { JwtHelperService } from "@auth0/angular-jwt";
 import { catchError, map, Observable, of, switchMap, tap, throwError } from 'rxjs';
 import { UserI } from 'src/app/model/user.interface';
@@ -11,25 +10,18 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 	providedIn: 'root'
 })
 export class AuthService {
-	baseUrl: string = environment.baseUrl;
-
 	constructor(
 		private http: HttpClient,
-		private cookie: CookieService,
 		private jwtService: JwtHelperService,
 		private snackbar: MatSnackBar
 	) { }
 
 	login() {
-		window.location.href = `${this.baseUrl}/auth/login`;
+		window.location.href = `${ environment.baseUrl }/auth/login`;
 	}
 
 	getCallback(uri: string) {
 		return this.http.get(uri);
-	}
-
-	getAccessToken() {
-		return this.cookie.get('accessToken');
 	}
 
 	getLoggedInUser() {
@@ -44,22 +36,44 @@ export class AuthService {
 			)));
 	}
 
+	putUserOnline(id: number): Observable<UserI>  {
+		return this.http.put<UserI>(`${ environment.baseUrl }/users/online/${ id }`, {});
+	}
+
 	isAuthenticated(): boolean {
 		const token = localStorage.getItem('access_token');
 		return !this.jwtService.isTokenExpired(token);
 	}
 
+	isTwoFactorEnabled(): boolean {
+		const decodedToken = this.jwtService.decodeToken();
+		if (!decodedToken) {
+			return false;
+		}
+		return decodedToken.user.isTwoFactorEnabled;
+	}
+
+	isTwoFactorAuthed(): boolean {
+		if (!this.isTwoFactorEnabled()) {
+			return true;
+		}
+		const token = localStorage.getItem('2fa_token');
+		return !this.jwtService.isTokenExpired(token);
+	}
+
 	logout(user: UserI): Observable<UserI> {
-		return this.http.put(`${this.baseUrl}/auth/logout`, user).pipe(
+		return this.http.put(`${ environment.baseUrl }/auth/logout`, user).pipe(
 			tap(() => {
 				localStorage.removeItem('access_token');
-				// TODO remove two factor
+				if (this.isTwoFactorEnabled()) {
+					localStorage.removeItem('2fa_token');
+				}
 			})
-		)
+		);
 	}
 
 	generate2fa(): Observable<string> {
-		return this.http.post<string>(`${this.baseUrl}/auth/2fa/generate`, {});
+		return this.http.post<string>(`${ environment.baseUrl }/auth/2fa/generate`, {});
 	}
 
 	getQrImage(): Observable<Blob> {

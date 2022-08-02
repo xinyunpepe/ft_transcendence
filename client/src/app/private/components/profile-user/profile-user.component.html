@@ -5,7 +5,10 @@
 		<mat-card>
 			<div style="display: flex; flex-direction: row;">
 				<div class="profile">
-					<img src="{{ currentUser.avatar }}" alt="avatar" style="width:90%">
+					<img *ngIf="avatar; else default" [src]="avatar" alt="avatar" style="width:90%">
+					<ng-template #default>
+						<img src="{{ currentUser.avatar }}" alt="default-avatar" style="width:90%">
+					</ng-template>
 					<mat-card-title>{{ currentUser.username }}</mat-card-title>
 					<h3 *ngIf="requestStatus==2">{{ currentUser.status }}</h3>
 					<p>42 login: {{ currentUser.login }}</p>

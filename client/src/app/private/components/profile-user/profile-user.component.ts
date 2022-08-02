@@ -15,6 +15,7 @@ import { UserService } from '../../services/user/user.service';
 export class ProfileUserComponent implements OnInit {
 
 	user: UserI = this.authService.getLoggedInUser();
+	avatar: any;
 	currentUser: UserI = {};
 	friendRequest: FriendRequestI = {};
 
@@ -73,6 +74,7 @@ export class ProfileUserComponent implements OnInit {
 						}
 						else {
 							this.currentUser = currentUser;
+							this.getAvatar(this.currentUser.id);
 						}
 					})
 				})
@@ -169,5 +171,23 @@ export class ProfileUserComponent implements OnInit {
 			}
 		)
 		window.location.reload();
+	}
+
+	createAvatar(image: Blob) {
+		let reader = new FileReader();
+		reader.addEventListener("load", () => {
+			this.avatar = reader.result;
+		}, false);
+		if (image) {
+			reader.readAsDataURL(image);
+		}
+	}
+
+	getAvatar(userId: number) {
+		this.userService.getAvatar(userId).subscribe(
+			data => {
+				this.createAvatar(data);
+			}
+		);
 	}
 }

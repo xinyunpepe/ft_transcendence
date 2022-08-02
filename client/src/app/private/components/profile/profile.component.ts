@@ -1,9 +1,7 @@
-import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import { tap } from 'rxjs';
+import { Observable, switchMap, tap } from 'rxjs';
 import { UserI } from 'src/app/model/user.interface';
 import { AuthService } from 'src/app/public/services/auth/auth.service';
-import { environment } from 'src/environments/environment';
 import { UserService } from '../../services/user/user.service';
 
 @Component({
@@ -13,30 +11,37 @@ import { UserService } from '../../services/user/user.service';
 })
 export class ProfileComponent implements OnInit {
 
-	user: UserI = {};
+	user: Observable<UserI>;
 	avatar: any;
 
 	constructor(
-		private http: HttpClient,
 		private authService: AuthService,
 		private userService: UserService
 	) { }
 
 	ngOnInit() {
-		localStorage.setItem('access_token', this.authService.getAccessToken());
-		this.user = this.authService.getLoggedInUser(); //subscribe???
-		this.http.get(`${environment.baseUrl}/users/id/${this.user.id}`).subscribe({
-			next: data => {
-				if (!data) {
-					return;
-				}
-				this.user = data;
-				this.getAvatar(this.user.id);
-			},
-			error: error => {
-				console.log(error);
-			}
-		});
+		this.authService.getUserId().pipe(
+			switchMap((id: number) => this.userService.findById(id).pipe(
+				tap((user) => {
+					this.user = this.userService.findById(user.id);
+					this.getAvatar(user.id);
+				})
+			))
+		).subscribe();
+
+		// this.user = this.authService.getLoggedInUser(); //subscribe???
+		// this.http.get(`${environment.baseUrl}/users/id/${this.user.id}`).subscribe({
+		// 	next: data => {
+		// 		if (!data) {
+		// 			return;
+		// 		}
+		// 		this.user = data;
+		// 		this.getAvatar(this.user.id);
+		// 	},
+		// 	error: error => {
+		// 		console.log(error);
+		// 	}
+		// });
 	}
 
 	createAvatar(image: Blob) {
@@ -50,8 +55,10 @@ export class ProfileComponent implements OnInit {
 	}
 
 	getAvatar(userId: number) {
-		this.userService.getAvatar(userId).subscribe(data => {
-			this.createAvatar(data);
-		});
+		this.userService.getAvatar(userId).subscribe(
+			data => {
+				this.createAvatar(data);
+			}
+		);
 	}
 }

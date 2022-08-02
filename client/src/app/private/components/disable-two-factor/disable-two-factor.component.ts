@@ -68,7 +68,7 @@ export class DisableTwoFactorComponent implements OnInit {
 				});
 				this.stepper.next();
 				setTimeout(() => {
-					// TODO remove 2fa token
+					localStorage.removeItem('2fa_token');
 					this.router.navigate(['../../private/profile-setting']);
 				}, 3000);
 			},
