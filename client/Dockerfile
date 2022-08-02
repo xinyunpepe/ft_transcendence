@@ -6,10 +6,6 @@ COPY package*.json ./
 
 COPY . .
 
-RUN npm install
-
-RUN npm run build
-
 EXPOSE 4200
 
 # ENTRYPOINT ["npm", "start"]
