@@ -79,14 +79,16 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    userLogin = this.authService.getLoggedInUser().login;
+    userId = this.authService.getLoggedInUser().id;
+    
+    this.game.sendGameConnect(userId, userLogin);
+    
     RoomSub = this.game.getRoomResponse().subscribe(this.DealWithRoomResponse);
     GameSub = this.game.getGameStatus().subscribe(this.DealWithGameStatus);
     PlayerSub = this.game.getPlayerInformation().subscribe(this.DealWithPlayerInformation);
     BallSub = this.game.getBallInformation().subscribe(this.DealWithBallInformation);
     WatchSub = this.game.getWatchResponse().subscribe(this.DealWithWatchResponse);
-
-    userLogin = this.authService.getLoggedInUser().login;
-    userId = this.authService.getLoggedInUser().id;
 
     let tmp: any = this.canvas.nativeElement.getContext('2d');
     if (typeof tmp != 'undefined') {
@@ -112,6 +114,7 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.game.sendGameDisconnect(userId);
     RoomSub.unsubscribe();
     GameSub.unsubscribe();
     PlayerSub.unsubscribe();
@@ -121,7 +124,7 @@ export class GameComponent implements OnInit, OnDestroy {
 
   @HostListener('document:keydown', ['$event'])
   handleKeyboardEvent(event: KeyboardEvent) {
-    if (room[0] < 0 || userLogin == undefined || userLogin == '' )
+    if (room[0] < 0 )
       return ;
     if (event.key == 'ArrowUp') {
       this.game.sendPlayerMove(room[0], userLogin, 'up');
@@ -400,7 +403,7 @@ export class GameComponent implements OnInit, OnDestroy {
   // }
 
   Surrender(): void {
-    if (room[0] < 0 || userLogin == undefined || userLogin == '' )
+    if (room[0] < 0)
       return ;
     this.game.sendSurrender(room[0], userLogin);
   }

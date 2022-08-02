@@ -51,12 +51,12 @@ export class GameService {
     return this.socket.fromEvent('WatchResponse');
   }
 
-  sendNewConnectInfo(login: string) {
-    this.socket.emit('NewConnect', login);
+  sendGameConnect(userId: number, userLogin: string) {
+    this.socket.emit('GameConnect', [userId, userLogin]);
   }
 
-  getConnectInfo() {
-    return this.socket.fromEvent('ConnectInfo');
+  sendGameDisconnect(userId: number) {
+    this.socket.emit('GameDisconnect', userId);
   }
 
 }
