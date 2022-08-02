@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, UpdateResult, DeleteResult, LimitOnUpdateNotSupportedError } from 'typeorm';
 import { History } from '../entities/history.entity';
+import { Player } from '../utils/player';
 
 @Injectable()
 export class HistoryService {
@@ -85,7 +86,7 @@ export class HistoryService {
 		// }
 	}
 
-	async GameFinish(room_id: number, winner: string, loser: string) {
+	async GameFinish(room_id: number, winner: Player, loser: Player) {
 		// let history1 = this.findOne(winner);
 		// let history2 = this.findOne(loser);
 

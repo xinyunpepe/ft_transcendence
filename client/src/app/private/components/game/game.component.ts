@@ -6,20 +6,6 @@ import { AuthService } from 'src/app/public/services/auth/auth.service';
 import { FormBuilder } from '@angular/forms';
 import { Rectangle } from './rectangle';
 
-
-var result: string = '';
-var RoomSub: Subscription;
-var GameSub: Subscription;
-var PlayerSub: Subscription;
-var BallSub: Subscription;
-var WatchSub: Subscription;
-
-var userLogin: string;
-var leftLogin: string[] = [''];
-var room: number[] = [-1];
-var paddles: Rectangle[] = [];
-var ball: Rectangle;
-var ballIsWith: number = 0;
 const canvasWidth: number = 600;
 const canvasHeight: number = 450;
 const paddleWidth: number = 12;
@@ -28,11 +14,38 @@ const ballWidth: number = 10;
 const ballHeight: number = 10;
 const ballColor: string = 'black';
 
+// Subscription
+
+var RoomSub: Subscription;
+var GameSub: Subscription;
+var PlayerSub: Subscription;
+var BallSub: Subscription;
+var WatchSub: Subscription;
+
+// Game Display
+
+//     Sync with class
+var Logins: string[] = [''];
+var room: number[] = [-1];
+var paddles: Rectangle[] = []
 var points: number[] = [0,0];
 var hideItem: boolean[] = [false, true, true, false, true, true];
-var opponentLogin: [string] = [''];
+
+//      Used directly
+
+var ball: Rectangle;
+var ballIsWith: number = 0;
 var leftHeight: number = canvasHeight / 2 - paddleHeight / 2;
 var rightHeight: number = canvasHeight / 2 - paddleHeight / 2;
+
+//      User Info
+
+var userLogin: string;
+var userId: number;
+
+//      Other
+
+var result: string = '';
 var GameStatus: string = '';
 
 @Component({
@@ -42,17 +55,17 @@ var GameStatus: string = '';
 })
 export class GameComponent implements OnInit, OnDestroy {
 
-  public userLogin: string = '';
-  public leftLogin: string[] = leftLogin;
-  public opponentLogin: string[] = opponentLogin;
-  public gamePlayed : number = 0;
+
+  public readonly canvasHeight: number = canvasHeight;
+  public readonly canvasWidth: number = canvasWidth;
+
+  public Logins: string[] = Logins;
   public hideItem: boolean[] = hideItem;
   public Points: number[] = points;
-  @ViewChild('myCanvas', {static: true})canvas!: ElementRef<HTMLCanvasElement>;
-  public canvasHeight: number = canvasHeight;
-  public canvasWidth: number = canvasWidth;
-  public ctx!: CanvasRenderingContext2D;
   public roomNumber: number[] = room;
+  @ViewChild('myCanvas', {static: true})canvas!: ElementRef<HTMLCanvasElement>;
+  
+  public ctx!: CanvasRenderingContext2D;
   public watchForm = this.formBuilder.group({
     number: ''
   });
@@ -73,11 +86,13 @@ export class GameComponent implements OnInit, OnDestroy {
     WatchSub = this.game.getWatchResponse().subscribe(this.DealWithWatchResponse);
 
     userLogin = this.authService.getLoggedInUser().login;
-    this.userLogin = userLogin;
+    userId = this.authService.getLoggedInUser().id;
+
     let tmp: any = this.canvas.nativeElement.getContext('2d');
     if (typeof tmp != 'undefined') {
       this.ctx = tmp;
     }
+    
     if (paddles.length == 0) {
       paddles.push(new Rectangle(this.ctx, paddleWidth, paddleHeight, 0, leftHeight));
       paddles.push(new Rectangle(this.ctx, paddleWidth, paddleHeight ,canvasWidth - paddleWidth, rightHeight));
@@ -176,7 +191,7 @@ export class GameComponent implements OnInit, OnDestroy {
           hideItem[0] = true;
           hideItem[3] = true; //
           hideItem[5] = false;
-          leftLogin[0] = data.content.id;
+          Logins[0] = data.content.id;
           ballIsWith = data.content.ballIsWith;
           break ;
         case 'Refused':
@@ -211,7 +226,7 @@ export class GameComponent implements OnInit, OnDestroy {
         case 'Ready':
           GameStatus = 'Ready';
           room[0] = data.content.room;
-          if (leftLogin[0] == data.content.ballCarrier)
+          if (Logins[0] == data.content.ballCarrier)
             ballIsWith = 1;
           else
             ballIsWith = 2;
@@ -272,19 +287,16 @@ export class GameComponent implements OnInit, OnDestroy {
       if (!data.content) {
         throw('ServerError: Player No Content');
       }
-      // if (this.userLogin == undefined || this.userLogin == '')
-      //   this.userLogin = userLogin;
-      if (data.content.id == leftLogin[0]) {
+
+      if (data.content.id == Logins[0]) {
         leftHeight = data.content.height;
         points[0] = data.content.point;
 
         if (rightHeight == undefined)
           rightHeight = canvasHeight / 2 - paddleHeight / 2;
-        // if (!this.Points[1])
-        //   this.Points[1] = 0;
       }
       else {
-        opponentLogin[0] = data.content.id;
+        Logins[1] = data.content.id;
         rightHeight = data.content.height;
         points[1] = data.content.point;
         if (leftHeight == undefined)
@@ -341,9 +353,7 @@ export class GameComponent implements OnInit, OnDestroy {
       if (!data.content) {
         throw('ServerError: Ball No Content');
       }
-      // if (this.userLogin == undefined || this.userLogin == '')
-      //   this.userLogin = userLogin;
-      if (data.content.id == leftLogin[0]) { // player1
+      if (data.content.id == Logins[0]) { // player1
         ball.xPos = data.content.x;
         ball.yPos = data.content.y;
       }
@@ -352,7 +362,7 @@ export class GameComponent implements OnInit, OnDestroy {
         ball.yPos = data.content.y;
       }
       // console.log(data.content.id);
-      // console.log(leftLogin[0]);
+      // console.log(Logins[0]);
       // console.log(info);
     }
     catch(err: any) {
@@ -375,8 +385,7 @@ export class GameComponent implements OnInit, OnDestroy {
       alert('You\'re already in game');
       return ;
     }
-    leftLogin[0] = userLogin;
-    // if (result != 'Waiting')
+    Logins[0] = userLogin;
     this.game.sendRoomRequest(userLogin);
 
     hideItem[2] = false;
@@ -403,7 +412,7 @@ export class GameComponent implements OnInit, OnDestroy {
     hideItem[5] = true;
     hideItem[1] = true;
     hideItem[2] = true;
-    leftLogin[0] = userLogin;
+    Logins[0] = userLogin;
     room[0] = -1;
   }
 
@@ -415,7 +424,7 @@ export class GameComponent implements OnInit, OnDestroy {
     hideItem[5] = true;
     hideItem[1] = true;
     hideItem[2] = true;
-    leftLogin[0] = userLogin;
+    Logins[0] = userLogin;
     this.game.sendLeaveWatching(room[0].toString(), userLogin);
     room[0] = -1;
   }

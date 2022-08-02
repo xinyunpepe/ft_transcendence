@@ -7,4 +7,9 @@ export class ConstValues {
 	static readonly ballHeight: number = 10;
 	static readonly animationFrameRate = 30;
 	static readonly WinningPoint: number = 3;
+	static readonly RoomResponse: string = "RoomResponse";
+	static readonly Player: string = "Player";
+	static readonly Ball: string = "Ball";
+	static readonly GameStatus: string = "GameStatus";
+	static readonly WatchResponse: string = "WatchResponse";
 }

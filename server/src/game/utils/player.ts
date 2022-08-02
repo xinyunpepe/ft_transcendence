@@ -3,7 +3,7 @@ import { ConstValues } from "./const-values";
 export class Player {
 	public height: number;
 	public point: number = 0;
-	constructor (public id: string, public socket: any, public carryBall: boolean) {
+	constructor (public id: number, public login: string, public carryBall: boolean) {
 	  this.height = ConstValues.canvasHeight / 2 - ConstValues.paddleHeight / 2;
 	  // this.point = 0;
 	}
@@ -17,6 +17,7 @@ export class Player {
 		type: "Player",
 		content: {
 		  id: this.id,
+		  login: this.login,
 		  height: this.height,
 		  point: this.point
 		}

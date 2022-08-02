@@ -6,12 +6,12 @@ export class Ball {
 	public vx: number;
 	public vy: number;
 	public isCarried: boolean;
-	public ballCarrierId: string;
-	constructor (public readonly player1Id: string) {
+	public ballCarrierId: number;
+	constructor (public readonly player1Id: number) {
 		this.init(player1Id);
 	}
 
-	init(ballCarrierId: string) { // 1 or 2
+	init(ballCarrierId: number) { // 1 or 2
 		this.ballCarrierId = ballCarrierId;
 		this.isCarried = true;
 		if (this.ballCarrierId == this.player1Id) {
