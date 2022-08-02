@@ -27,10 +27,6 @@ export class UserService {
 	}
 
 	async findUserByLogin(login: string) {
-		// const user = await this.userRepository.findOne({ login: login });
-		// if (user)
-		// 	return user;
-		// throw new NotFoundException('User does not exist');
 		return await this.userRepository.findOne({ where: { login: login }});
 	}
 
@@ -74,50 +70,28 @@ export class UserService {
 		throw new NotFoundException("User does not exist");
 	}
 
-	// async updateUserStatus(login: string, status: UserStatus.ON) {
-	// 	return this.userRepository.update({ login }, { status: status });
-	// }
-
-	async onlineStatus(login: string, status: UserStatus.ON) {
-		return this.userRepository.update({ login }, { status: status });
+	async onlineStatus(id: number, status: UserStatus.ON) {
+		return this.userRepository.update({ id }, { status: status });
 	}
 
-	async offlineStatus(login: string, status: UserStatus.OFF) {
-		return this.userRepository.update({ login }, { status: status });
-	}
-
-	// async getUserStatus(login: string) {
-	// 	const user = await this.userRepository.findOne({ where: { login: login }});
-	// 	if (user)
-	// 		return user.status as STATUS;
-	// }
-
-	//where AND or OR?
-	async getMatchHistory(login: string) {
-		const currentUser = await this.findUserByLogin(login);
-		return await this.matchHistoryRepository.find({
-			where: [
-				{ winner: currentUser },
-				{ loser: currentUser }
-			],
-			relations: ['winner', 'loser']
-		});
+	async offlineStatus(id: number, status: UserStatus.OFF) {
+		return this.userRepository.update({ id }, { status: status });
 	}
 
 	/*
 	** ========== Two factor auth ==========
 	*/
 
-	async setTwoFactorAuthSecret(secret: string, login: string) {
-		return this.userRepository.update({ login }, { twoFactorAuthSecret: secret });
+	async setTwoFactorAuthSecret(secret: string, id: number) {
+		return this.userRepository.update({ id }, { twoFactorAuthSecret: secret });
 	}
 
-	async turnOnTwoFactorAuth(login: string) {
-		return this.userRepository.update({ login }, { isTwoFactorAuthEnabled: true });
+	async turnOnTwoFactorAuth(id: number) {
+		return this.userRepository.update({ id }, { isTwoFactorAuthEnabled: true });
 	}
 
-	async turnOffTwoFactorAuth(login: string) {
-		return this.userRepository.update({ login }, { isTwoFactorAuthEnabled: false });
+	async turnOffTwoFactorAuth(id: number) {
+		return this.userRepository.update({ id }, { isTwoFactorAuthEnabled: false });
 	}
 
 	/*
@@ -149,9 +123,9 @@ export class UserService {
 		});
 	}
 
-	async findRequestByCreator(creatorId: number) {
+	async findRequestsByCreator(creatorId: number) {
 		const creator = await this.findUserById(creatorId);
-		return await this.friendRequestRepository.findOne({
+		return await this.friendRequestRepository.find({
 			where: [{ creator: creator }],
 			relations: ['creator', 'receiver']
 		});
@@ -243,8 +217,6 @@ export class UserService {
 			],
 			relations: ['creator', 'receiver']
 		});
-
-		// console.log(acceptedList);
 
 		let friendsList: number[] = [];
 

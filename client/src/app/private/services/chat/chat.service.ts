@@ -29,6 +29,32 @@ export class ChatService {
 	}
 
 	createChannel(channel: ChannelI) {
+		// check adding self
+		let userId;
+		this.authService.getUserId().subscribe(id => {
+			userId = id;
+		})
+
+		if (channel.users.filter(user => { return user.id === userId; }).length > 0) {
+			this.snackbar.open('ERROR: You cannot add yourself to the channel', 'Close', {
+				duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
+			});
+		}
+
+		// check duplicate
+		const tempArr = channel.users.map(user => {
+			return user.id
+		});
+
+		const hasDuplicate = tempArr.some((user, index) => {
+			return tempArr.indexOf(user) !== index;
+		});
+
+		if (hasDuplicate) {
+			this.snackbar.open('ERROR: Duplicated user', 'Close', {
+				duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
+			});
+		}
 		this.socket.emit('createChannel', channel);
 	}
 

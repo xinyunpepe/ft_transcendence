@@ -1,0 +1,9 @@
+<div class="container">
+	<h1>Two Factor Authentication</h1>
+	<mat-form-field appearance="fill" [formGroup]="twofactorForm">
+		<input matInput maxlength="6" placeholder="Google Auth Code" formControlName="twoFactorAuthCode" required>
+		<mat-hint>Enter the 6 digit code from Google Authenticator</mat-hint>
+	</mat-form-field>
+	<button mat-button [disabled]="!twofactorForm.valid" (click)="onSubmit()">Continue</button>
+	<button mat-button (click)="cancel()" class="cancel">Cancel</button>
+</div>

@@ -1,7 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import { toFileStream } from 'qrcode';
-import { Response } from "express";
+import { toFile } from 'qrcode';
 import { authenticator } from "otplib";
 import { UserEntity } from "src/user/model/user/user.entity";
 import { UserService } from "src/user/user.service";
@@ -49,14 +48,17 @@ export class AuthService {
 	async generateTwoFactorAuthSecret(user: UserEntity) {
 		const secret = authenticator.generateSecret();
 		const otpauthUrl = authenticator.keyuri(user.login, process.env.TWO_FACTOR_AUTHENTICATION_APP_NAME, secret);
-		await this.userService.setTwoFactorAuthSecret(secret, user.login);
+		await this.userService.setTwoFactorAuthSecret(secret, user.id);
 		return otpauthUrl;
 	}
 
 	// Generate QRcode to serve the otpauth Url
-	async pipeQrCodeStream(stream: Response, otpauthUrl: string) {
-		stream.setHeader('Content-type', 'image/png');
-		return toFileStream(stream, otpauthUrl);
+	// Generate QRcode and save as local file
+	async pipeQrCodeStream(otpauthUrl: string) {
+		// stream.setHeader('Content-type', 'image/png');
+		// return toFileStream(stream, otpauthUrl);
+
+		toFile('src/uploads/qrcode/qrcode.png',otpauthUrl);
 	}
 
 	// Verify user's code against the secret saved in the database

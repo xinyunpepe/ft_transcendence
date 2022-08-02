@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
-import { map, Observable, switchMap } from 'rxjs';
+import { map, Observable, switchMap, tap } from 'rxjs';
 import { FriendRequestI, FriendStatus } from 'src/app/model/friend-request.interface';
 import { UserI } from 'src/app/model/user.interface';
 import { AuthService } from 'src/app/public/services/auth/auth.service';
@@ -15,6 +15,7 @@ import { UserService } from '../../services/user/user.service';
 export class ProfileUserComponent implements OnInit {
 
 	user: UserI = this.authService.getLoggedInUser();
+	avatar: any;
 	currentUser: UserI = {};
 	friendRequest: FriendRequestI = {};
 
@@ -50,18 +51,38 @@ export class ProfileUserComponent implements OnInit {
 	) {}
 
 	ngOnInit() {
-		this.currentUser$.subscribe(currentUser => {
-			this.currentUser = currentUser;
-			if (!this.currentUser) {
-				this.router.navigate(['../page-not-found'], { relativeTo: this.activatedRoute });
-			}
-			else if (this.currentUser.id == this.user.id) {
-				this.router.navigate(['../../profile'], { relativeTo: this.activatedRoute });
-			}
-		})
+		// this.currentUser$.subscribe(currentUser => {
+		// 	this.currentUser = currentUser;
+		// 	if (!this.currentUser) {
+		// 		this.router.navigate(['../../page-not-found'], { relativeTo: this.activatedRoute });
+		// 	}
+		// 	else if (this.currentUser.id == this.user.id) {
+		// 		this.router.navigate(['../../profile'], { relativeTo: this.activatedRoute });
+		// 	}
+		// })
+
+		this.authService.getUserId().pipe(
+			switchMap((id: number) => this.userService.findById(id).pipe(
+				tap((user) => {
+					this.currentUser$.subscribe(currentUser => {
+						//TODO || currentuser.ban?
+						if (!currentUser) {
+							this.router.navigate(['../../page-not-found'], { relativeTo: this.activatedRoute });
+						}
+						else if (currentUser.id == user.id) {
+							this.router.navigate(['../../profile'], { relativeTo: this.activatedRoute });
+						}
+						else {
+							this.currentUser = currentUser;
+							this.getAvatar(this.currentUser.id);
+						}
+					})
+				})
+			))
+		).subscribe();
+
 		this.friendRequest$.subscribe(friendRequest => {
 			this.friendRequest = friendRequest;
-			this.requestId = friendRequest.id;
 		})
 	}
 
@@ -71,6 +92,7 @@ export class ProfileUserComponent implements OnInit {
 
 	isFriend() {
 		if (this.friendRequest) {
+			this.requestId = this.friendRequest.id;
 			if (this.friendRequest.status === FriendStatus.PENDING) {
 				if (this.isCreator()) {
 					this.requestStatus = 0;
@@ -116,7 +138,7 @@ export class ProfileUserComponent implements OnInit {
 				this.requestStatus = 5;
 			}
 		)
-		// window.location.reload();
+		window.location.reload();
 	}
 
 	responseToRequest(response: string) {
@@ -139,8 +161,7 @@ export class ProfileUserComponent implements OnInit {
 				this.requestStatus = 4;
 			}
 		)
-
-		// window.location.reload();
+		window.location.reload();
 	}
 
 	unblockUser() {
@@ -149,7 +170,24 @@ export class ProfileUserComponent implements OnInit {
 				this.requestStatus = 5;
 			}
 		)
+		window.location.reload();
+	}
 
-		// window.location.reload();
+	createAvatar(image: Blob) {
+		let reader = new FileReader();
+		reader.addEventListener("load", () => {
+			this.avatar = reader.result;
+		}, false);
+		if (image) {
+			reader.readAsDataURL(image);
+		}
+	}
+
+	getAvatar(userId: number) {
+		this.userService.getAvatar(userId).subscribe(
+			data => {
+				this.createAvatar(data);
+			}
+		);
 	}
 }

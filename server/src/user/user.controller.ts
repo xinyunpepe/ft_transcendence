@@ -1,20 +1,22 @@
-import { Body, Param, Controller, Get, Post, Put, Delete, Req, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Body, Param, Controller, Get, Post, Put, Delete, Req, UseGuards, UseInterceptors, UploadedFile, Res } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
-import { UserI } from './model/user/user.interface';
+import { UserI, UserStatus } from './model/user/user.interface';
 import { UserService } from './user.service';
 import { diskStorage } from 'multer';
-// import { uuid } from 'uuidv4';
-import path = require('path');
+import { v4 as uuidv4 } from 'uuid';
+import { of } from 'rxjs';
+import { join } from 'path';
 
 export const storage = {
 	storage: diskStorage({
 		destination: './src/uploads/avatar',
-		filename: (file, cb) => {
-			const filename: string = path.parse(file.originalname).name.replace(/\s/g, '');
-			const extension: string = path.parse(file.originalname).ext;
+		filename: (req, file, cb) => {
 
-			cb(null, `${filename}${extension}`)
+			const filename: string = file.originalname.split('.')[0].replace(/\s/g, '') + uuidv4();
+			const extension: string = file.originalname.split('.')[1];
+
+			cb(null, `${filename}.${extension}`)
 		}
 	})
 }
@@ -46,11 +48,37 @@ export class UserController {
 		return this.userService.findUserById(id);
 	}
 
+	@Get('username/:username')
+	// findOne(@Param() param: { id: number } ) Return the param as an object
+	findAllByUsername(
+		@Param('username') username: string
+	) {
+		return this.userService.findAllByUsername(username);
+	}
+
+	@Get('avatar/:id')
+	async getAvatar(
+		@Param('id') id: number,
+		@Res() res
+	) {
+		const user = await this.userService.findUserById(id);
+		return of(res.sendFile(join(process.cwd(), 'src/uploads/avatar/' + user.avatar)));
+	}
+
 	@Post()
 	createUser(
 		@Body() user: UserI
 	) {
 		return this.userService.createUser(user);
+	}
+
+	@UseGuards(JwtAuthGuard)
+	@Put('online/:id')
+	async putUserOnline(
+		@Param('id') id: number
+	) {
+		const user = await this.userService.findUserById(id);
+		await this.userService.onlineStatus(user.id, UserStatus.ON);
 	}
 
 	@UseGuards(JwtAuthGuard)
@@ -65,11 +93,10 @@ export class UserController {
 	@UseGuards(JwtAuthGuard)
 	@Post('avatar')
 	@UseInterceptors(FileInterceptor('file', storage))
-	uploadAvatae(
+	uploadAvatar(
 		@UploadedFile() file,
 		@Req() req
 	) {
-		console.log("IN");
 		return this.userService.updateAvatar(req.user.id, file.filename)
 	}
 
@@ -95,10 +122,10 @@ export class UserController {
 	@UseGuards(JwtAuthGuard)
 	@Get('friend-request/status/:receiverId')
 	findRequestByUser(
-		@Param('receiverId') receiverId: number,
+		@Param('userId') userId: number,
 		@Req() req
 	) {
-		return this.userService.findRequestByUser(req.user, receiverId);
+		return this.userService.findRequestByUser(req.user, userId);
 	}
 
 	@UseGuards(JwtAuthGuard)
@@ -111,10 +138,10 @@ export class UserController {
 
 	@UseGuards(JwtAuthGuard)
 	@Get('friend-request/creator/:creatorId')
-	findRequestByCreator(
+	findRequestsByCreator(
 		@Param('creatorId') creatorId: number
 	) {
-		return this.userService.findRequestByCreator(creatorId);
+		return this.userService.findRequestsByCreator(creatorId);
 	}
 
 	@UseGuards(JwtAuthGuard)

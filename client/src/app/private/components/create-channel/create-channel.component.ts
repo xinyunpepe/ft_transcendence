@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { FormArray, FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatRadioChange } from '@angular/material/radio';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -10,16 +10,16 @@ import { ChatService } from '../../services/chat/chat.service';
 	templateUrl: './create-channel.component.html',
 	styleUrls: ['./create-channel.component.css']
 })
-export class CreateChannelComponent implements OnInit {
+export class CreateChannelComponent {
 
 	radiocheck: boolean = true;
 	beforeType: string = 'public';
 
 	form: FormGroup = new FormGroup({
 		name: new FormControl(null, [Validators.required]),
-		users: new FormArray([], [Validators.required]),
 		type: new FormControl({ value: 'public', disabled: false }, [Validators.required]),
 		password: new FormControl({ value: '', disabled: true }),
+		users: new FormArray([], [Validators.required]),
 		admin: new FormArray([]),
 		mute: new FormArray([]),
 	});
@@ -30,19 +30,13 @@ export class CreateChannelComponent implements OnInit {
 		private activatedRoute: ActivatedRoute
 	) {}
 
-	ngOnInit(): void {
-	}
-
 	create() {
 		if (this.form.valid) {
-			try {
-				if (this.form.get('type').value != 'protected' && this.form.get('type').value != 'private') {
-					this.form.get('type').setValue('public');
-				}
-				this.chatService.createChannel(this.form.getRawValue());
-				this.router.navigate(['../dashboard-channel'], { relativeTo: this.activatedRoute });
+			if (this.form.get('type').value != 'protected' && this.form.get('type').value != 'private') {
+				this.form.get('type').setValue('public');
 			}
-			catch (error) {}
+			this.chatService.createChannel(this.form.getRawValue());
+			this.router.navigate(['../dashboard-channel'], { relativeTo: this.activatedRoute });
 		}
 	}
 

@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { catchError, switchMap, tap, throwError } from 'rxjs';
 import { AuthService } from 'src/app/public/services/auth/auth.service';
 import { UserService } from '../../services/user/user.service';
@@ -19,6 +20,8 @@ export class ProfileSettingComponent implements OnInit {
 		private formBuilder: FormBuilder,
 		private authService: AuthService,
 		private userService: UserService,
+		private router: Router,
+		private activatedRoute: ActivatedRoute,
 		private snackbar: MatSnackBar
 	) { }
 
@@ -63,7 +66,7 @@ export class ProfileSettingComponent implements OnInit {
 				duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
 			})),
 			catchError(e => {
-				this.snackbar.open(`Error: Username already in use`, 'Close', {
+				this.snackbar.open(`ERROR: Username already in use`, 'Close', {
 					duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
 				})
 				return throwError(e);
@@ -71,29 +74,55 @@ export class ProfileSettingComponent implements OnInit {
 		).subscribe();
 	}
 
-	getStateAuth() { }
-
-	getQrCode() {
-
+	getAuthStatus() {
+		if (this.settingForm.value.isTwoFactorAuthEnabled) {
+			this.settingForm.controls['isTwoFactorAuthEnabled'].setValue(true);
+			return 'Disable';
+		}
+		else {
+			this.settingForm.controls['isTwoFactorAuthEnabled'].setValue(false);
+			return 'Enable';
+		}
 	}
 
-
+	getQrCode() {
+		if (this.settingForm.value.isTwoFactorAuthEnabled) {
+			this.router.navigate(['../disable-two-factor'], { relativeTo: this.activatedRoute });
+		}
+		else {
+			this.authService.generate2fa().subscribe(
+				data => {
+					this.settingForm.patchValue({
+						twoFactorAuthSecret: data
+					});
+					// update db?
+				}
+			)
+			setTimeout(() => {
+				this.router.navigate(['../enable-two-factor'], { relativeTo: this.activatedRoute })
+			}, 200);
+		}
+	}
 
 	onFileChange(event) {
 		this.selectedFile = event.target.files[0];
 	}
 
-	onUpload() {
+	uploadAvatar() {
 		if (this.selectedFile) {
-			let formData = new FormData();
+			const formData = new FormData();
 			formData.append('file', this.selectedFile);
-			this.userService.uploadFile(formData).subscribe(
-				() => {
-					this.snackbar.open(`Avatar updated`, 'Close', {
+			this.userService.uploadFile(formData).pipe(
+				tap(() => this.snackbar.open(`Avatar uploaded`, 'Close', {
+						duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
+				})),
+				catchError(e => {
+					this.snackbar.open(`ERROR: Upload failed`, 'Close', {
 						duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
 					})
-				}
-			);
+					return throwError(e);
+				})
+			).subscribe();
 		}
 	}
 }

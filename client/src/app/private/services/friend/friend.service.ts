@@ -19,6 +19,10 @@ export class FriendService {
 		);
 	}
 
+	findRequestsByCreator(userId: number): Observable<FriendRequestI[]> {
+		return this.http.get<FriendRequestI[]>(`${ environment.baseUrl }/users/friend-request/creator/${ userId }`);
+	}
+
 	sendFriendRequest(userId: number): Observable<FriendRequestI | { error: string }> {
 		return this.http.post<FriendRequestI | { error: string }>(`${ environment.baseUrl }/users/friend-request/send/${ userId }`, {});
 	}

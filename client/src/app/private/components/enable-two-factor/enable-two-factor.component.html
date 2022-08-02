@@ -1,0 +1,47 @@
+<app-navbar></app-navbar>
+
+<div class="container">
+	<h1>Enable Google Authenticator</h1>
+	<mat-stepper #stepper>
+		<mat-step>
+			<ng-template matStepLabel>Scan QR Code</ng-template>
+			<p>Scan this QR code in the Google Authenticator app</p>
+			<div>
+				<img [src]="qrCode" alt="qrCode">
+				<!-- <ng-template #noImageFound>
+					<img src="/assets/img/site/fallbackImage.png" alt="Fallbackimage">
+				</ng-template> -->
+			</div>
+			<strong>
+				{{ secret }}
+			</strong>
+			<p>If you are unable to scan the QR code, please enter this code manually into the app</p>
+			<div>
+				<button mat-button matStepperNext>Next</button>
+			</div>
+		</mat-step>
+
+		<mat-step [stepControl]="settingForm">
+			<form>
+				<ng-template matStepLabel>Enabled Google Authenticator</ng-template>
+				<p>Finish security verification to enable Google Authenticator</p>
+				<mat-form-field appearance="fill" [formGroup]="settingForm">
+					<input matInput maxlength="6" placeholder="Google Auth Code"
+						formControlName="twoFactorAuthCode" required>
+					<mat-hint>Enter the 6 digit code from Google Authenticator</mat-hint>
+				</mat-form-field>
+				<br>
+				<br>
+				<div>
+					<button mat-button matStepperPrevious>Back</button>
+					<button mat-button (click)="enable2fa()">Next</button>
+				</div>
+			</form>
+		</mat-step>
+
+		<mat-step>
+			<ng-template matStepLabel>Done</ng-template>
+			<p>You now have enabled Google Authenticator</p>
+		</mat-step>
+	</mat-stepper>
+</div>

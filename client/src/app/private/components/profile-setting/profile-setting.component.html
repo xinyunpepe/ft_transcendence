@@ -14,8 +14,7 @@
 								{{ getErrorMessageUser() }}
 							</mat-error>
 						</mat-form-field>
-						<button mat-button [disabled]="!settingForm.valid" type="submit"
-							id="username-button">Confirm</button>
+						<button mat-button [disabled]="!settingForm.valid" type="submit">Confirm</button>
 					</form>
 				</div>
 
@@ -24,7 +23,7 @@
 				<div style="padding-top: 30px;">
 					<h3>Edit Avatar</h3>
 					<input type="file" accept="image/x-png,image/gif,image/jpeg" (change)="onFileChange($event)">
-					<button mat-button (click)="onUpload()">
+					<button mat-button (click)="uploadAvatar()">
 						Upload
 					</button>
 				</div>
@@ -33,8 +32,11 @@
 
 				<div style="padding-top: 30px;">
 					<h3>Google Authenticator</h3>
-					<button mat-button (click)="getQrCode()">
-						{{ getStateAuth() }}
+					<mat-hint><small>Download and install Google Authenticator</small></mat-hint>
+					<br>
+					<br>
+					<button style="width: 100%;" mat-button (click)="getQrCode()">
+						{{ getAuthStatus() }}
 					</button>
 				</div>
 			</mat-card-content>
