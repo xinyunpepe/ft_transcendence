@@ -276,17 +276,8 @@ export class GameGateway {
 
     if (room_number != NaN && room_number < this.gameRooms.length) {
       let gameRoom = this.gameRooms[room_number];
-      if (gameRoom.ball.isCarried == false) {
-        response.content = { status: 'Accepted', id: gameRoom.player1.id, ballIsWith: 0};
-      }
-      else if (gameRoom.ball.ballCarrierId == gameRoom.player1.id) {
-        response.content = { status: 'Accepted', id: gameRoom.player1.id, ballIsWith: 1};
-      }
-      else {
-        response.content = { status: 'Accepted', id: gameRoom.player1.id, ballIsWith: 2};
-      }
-    
-      
+      response.content = { status: 'Accepted', id: gameRoom.player1.id};
+
       this.server.to(id).emit(ConstValues.Player, JSON.stringify(gameRoom.player1.getJSON()));
       this.server.to(id).emit(ConstValues.Player, JSON.stringify(gameRoom.player2.getJSON()));
       this.server.to(id).emit(ConstValues.Ball, JSON.stringify(gameRoom.ball.getJSON()));  
