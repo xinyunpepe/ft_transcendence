@@ -63,4 +63,7 @@ export class GameService {
     return this.socket.fromEvent('ClientInfo');
   }
 
+  sendLeaveGameRoom(userId: number) {
+    this.socket.emit('LeaveGameRoom', userId);
+  }
 }

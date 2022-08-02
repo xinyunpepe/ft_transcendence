@@ -35,7 +35,6 @@ var hideItem: boolean[] = [false, true, true, false, true, true];
 //      Used directly (send to server)
 
 var ball: Rectangle;
-var ballIsWith: number = 0;
 var leftHeight: number = canvasHeight / 2 - paddleHeight / 2;
 var rightHeight: number = canvasHeight / 2 - paddleHeight / 2;
 
@@ -148,6 +147,11 @@ export class GameComponent implements OnInit, OnDestroy {
       if (data.rightLogin === undefined)
         throw('ServerError: rightLogin not found in ClientInfo');
       Logins[1] = data.rightLogin;
+      if ( hideItem === undefined || hideItem.length != data.hideItem.length)
+        throw('ServerError: hideItem error in ClientInfo');
+      
+      for (let i = 0 ; i < hideItem.length ; ++i)
+        hideItem[i] = data.hideItem[i];
     }
     catch(err: any) {
       alert(err);
@@ -192,10 +196,6 @@ export class GameComponent implements OnInit, OnDestroy {
       alert(err);
     }
     finally{
-      if (result == 'Matched') {
-        hideItem[0] = true;
-        hideItem[4] = false;
-      }
     }
   }
 
@@ -210,11 +210,6 @@ export class GameComponent implements OnInit, OnDestroy {
         throw('ServerError: No Content');
       switch(data.content.status) {
         case 'Accepted':
-          hideItem[0] = true;
-          hideItem[3] = true; 
-          hideItem[5] = false;
-          Logins[0] = data.content.id;
-          ballIsWith = data.content.ballIsWith;
           break ;
         case 'Refused':
           alert('Error: Room Number Not Found');
@@ -248,10 +243,10 @@ export class GameComponent implements OnInit, OnDestroy {
         case 'Ready':
           GameStatus = 'Ready';
           room[0] = data.content.room;
-          if (Logins[0] == data.content.ballCarrier)
-            ballIsWith = 1;
-          else
-            ballIsWith = 2;
+          // if (Logins[0] == data.content.ballCarrier)
+          //   ballIsWith = 1;
+          // else
+          //   ballIsWith = 2;
           break ;
         case 'Start':
           GameStatus = 'Start';
@@ -280,16 +275,13 @@ export class GameComponent implements OnInit, OnDestroy {
       }
       if (GameStatus == 'Start') {
         // console.log('Start');
-        ballIsWith = 0;
+        // ballIsWith = 0;
         // todo: move ball
       }
       if (GameStatus == 'Finish') {
         ball.clean();
         ball.xPos = canvasWidth;
         ball.yPos = canvasHeight;
-        hideItem[1] = false;
-        hideItem[3] = false;
-        // hideItem[5] = true;
       }
     }
   }
@@ -310,7 +302,7 @@ export class GameComponent implements OnInit, OnDestroy {
         throw('ServerError: Player No Content');
       }
 
-      if (data.content.id == Logins[0]) {
+      if (data.content.login == Logins[0]) {
         leftHeight = data.content.height;
         points[0] = data.content.point;
 
@@ -318,13 +310,10 @@ export class GameComponent implements OnInit, OnDestroy {
           rightHeight = canvasHeight / 2 - paddleHeight / 2;
       }
       else {
-        Logins[1] = data.content.id;
         rightHeight = data.content.height;
         points[1] = data.content.point;
         if (leftHeight == undefined)
           leftHeight = canvasHeight / 2 - paddleHeight / 2;
-        // if (!this.Points[0])
-        //   this.Points[0] = 0;
       }
     }
     catch(err: any) {
@@ -340,29 +329,27 @@ export class GameComponent implements OnInit, OnDestroy {
       paddles[1].draw('blue');
       // console.log('My Position(left): ' + leftHeight.toString() + ' Opponent Position(right): ' + rightHeight.toString() + '\
       //  \nMy Point(left)   : ' + this.Points[0].toString() +    ' Opponent Point(right)   : ' + this.Points[1].toString()) ;
-      if (ballIsWith == 1) {
-        ball.clean();
-        ball.yPos = paddles[0].yPos + paddleHeight / 2 - ballHeight / 2;
-        ball.xPos = paddleWidth;
-        ball.draw(ballColor);
-        // console.log(ball.xPos);
-        // console.log(paddles[0].yPos);
-        // console.log(ball.yPos);
-        // console.log(room[0].toString() + 'A');
-      }
-      if (ballIsWith == 2) {
-        ball.clean();
-        ball.xPos = canvasWidth - ballWidth - paddleWidth;
-        ball.yPos = paddles[1].yPos + paddleHeight / 2 - ballHeight / 2;
-        ball.draw(ballColor);
-        // c
-      }
+      // if (ballIsWith == 1) {
+      //   ball.clean();
+      //   ball.yPos = paddles[0].yPos + paddleHeight / 2 - ballHeight / 2;
+      //   ball.xPos = paddleWidth;
+      //   ball.draw(ballColor);
+      //   // console.log(ball.xPos);
+      //   // console.log(paddles[0].yPos);
+      //   // console.log(ball.yPos);
+      //   // console.log(room[0].toString() + 'A');
+      // }
+      // if (ballIsWith == 2) {
+      //   ball.clean();
+      //   ball.xPos = canvasWidth - ballWidth - paddleWidth;
+      //   ball.yPos = paddles[1].yPos + paddleHeight / 2 - ballHeight / 2;
+      //   ball.draw(ballColor);
+      //   // c
+      // }
     }
   }
 
   DealWithBallInformation(info: any) {
-    if (ballIsWith != 0)
-      return ;
     try {
       ball.clean();
       if (typeof info != 'string') {
@@ -375,14 +362,9 @@ export class GameComponent implements OnInit, OnDestroy {
       if (!data.content) {
         throw('ServerError: Ball No Content');
       }
-      if (data.content.id == Logins[0]) { // player1
-        ball.xPos = data.content.x;
-        ball.yPos = data.content.y;
-      }
-      else { // player2
-        ball.xPos = canvasWidth - ballWidth - data.content.x;
-        ball.yPos = data.content.y;
-      }
+      ball.xPos = data.content.x;
+      ball.yPos = data.content.y;
+      
       // console.log(data.content.id);
       // console.log(Logins[0]);
       // console.log(info);
@@ -407,9 +389,7 @@ export class GameComponent implements OnInit, OnDestroy {
       alert('You\'re already in game');
       return ;
     }
-    Logins[0] = userLogin;
     this.game.sendRoomRequest(userId);
-    hideItem[2] = false;
   }
 
   // showCanvas() {
@@ -428,30 +408,17 @@ export class GameComponent implements OnInit, OnDestroy {
 
   BackToMatch(): void {
     ball.clean2(0,0,canvasWidth,canvasHeight);
-    hideItem[0] = false;
-    hideItem[4] = true;
-    hideItem[5] = true;
-    hideItem[1] = true;
-    hideItem[2] = true;
-    Logins[0] = userLogin;
+    this.game.sendLeaveGameRoom(userId);
     room[0] = -1;
   }
 
   LeaveWatchingMode(): void {
     ball.clean2(0,0,canvasWidth,canvasHeight);
-    hideItem[3] = false;
-    hideItem[0] = false;
-    hideItem[4] = true;
-    hideItem[5] = true;
-    hideItem[1] = true;
-    hideItem[2] = true;
-    Logins[0] = userLogin;
     this.game.sendLeaveWatching(room[0].toString(), userId);
     room[0] = -1;
   }
 
   Cancel(): void {
-    hideItem[2] = true;
     result = '';
     this.game.sendCancelRequest(userId);
   }
