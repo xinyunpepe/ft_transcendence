@@ -104,15 +104,16 @@ export class UserService {
 		});
 	}
 
-	async findRequestByUser(currentUser: UserEntity, receiverId: number) {
+	async findRequestByUser(creatorId: number, receiverId: number) {
+		const creator = await this.findUserById(creatorId);
 		const receiver = await this.findUserById(receiverId);
 		return await this.friendRequestRepository.findOne({
 			where: [
-				{ creator: currentUser, receiver: receiver },
-				{ creator: receiver, receiver: currentUser }
+				{ creator: creator, receiver: receiver },
+				{ creator: receiver, receiver: creator }
 			],
 			relations: ['creator', 'receiver']
-		})
+		});
 	}
 
 	async findRequestByReceiver(receiverId: number) {

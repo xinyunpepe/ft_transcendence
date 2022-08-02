@@ -33,7 +33,8 @@ export class AuthService {
 		return of(localStorage.getItem('access_token')).pipe(
 			switchMap((jwt: string) => of(this.jwtService.decodeToken(jwt)).pipe(
 				map((jwt: any) => jwt.user.id)
-			)));
+			))
+		);
 	}
 
 	putUserOnline(id: number): Observable<UserI>  {

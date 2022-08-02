@@ -33,6 +33,7 @@ import { PageNotFoundComponent } from './components/page-not-found/page-not-foun
 import { ProfileSettingComponent } from './components/profile-setting/profile-setting.component';
 import { EnableTwoFactorComponent } from './components/enable-two-factor/enable-two-factor.component';
 import { DisableTwoFactorComponent } from './components/disable-two-factor/disable-two-factor.component';
+import { FriendSettingComponent } from './components/friend-setting/friend-setting.component';
 
 @NgModule({
 	declarations: [
@@ -52,7 +53,8 @@ import { DisableTwoFactorComponent } from './components/disable-two-factor/disab
 		PageNotFoundComponent,
 		ProfileSettingComponent,
 		EnableTwoFactorComponent,
-		DisableTwoFactorComponent
+		DisableTwoFactorComponent,
+		FriendSettingComponent
 	],
 	imports: [
 		CommonModule,

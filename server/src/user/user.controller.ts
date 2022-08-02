@@ -120,12 +120,12 @@ export class UserController {
 	}
 
 	@UseGuards(JwtAuthGuard)
-	@Get('friend-request/status/:receiverId')
+	@Get('friend-request/status/:userId')
 	findRequestByUser(
 		@Param('userId') userId: number,
 		@Req() req
 	) {
-		return this.userService.findRequestByUser(req.user, userId);
+		return this.userService.findRequestByUser(req.user.id, userId);
 	}
 
 	@UseGuards(JwtAuthGuard)

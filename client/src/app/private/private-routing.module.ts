@@ -12,6 +12,7 @@ import { ProfileUserComponent } from './components/profile-user/profile-user.com
 import { ProfileSettingComponent } from './components/profile-setting/profile-setting.component';
 import { EnableTwoFactorComponent } from './components/enable-two-factor/enable-two-factor.component';
 import { DisableTwoFactorComponent } from './components/disable-two-factor/disable-two-factor.component';
+import { FriendSettingComponent } from './components/friend-setting/friend-setting.component';
 
 const routes: Routes = [
 	{ path: 'profile',
@@ -27,6 +28,7 @@ const routes: Routes = [
 	{ path: 'profile-setting', component: ProfileSettingComponent },
 	{ path: 'enable-two-factor', component: EnableTwoFactorComponent },
 	{ path: 'disable-two-factor', component: DisableTwoFactorComponent },
+	{ path: 'friend-setting', component: FriendSettingComponent },
 	{ path: 'game', component: GameComponent },
 	{ path: 'logout', component: LogoutComponent },
 	{ path: '**', component: PageNotFoundComponent },

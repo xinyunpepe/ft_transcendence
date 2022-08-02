@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { map, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { FriendRequestI } from 'src/app/model/friend-request.interface';
 import { environment } from 'src/environments/environment';
 
@@ -14,9 +14,7 @@ export class FriendService {
 	) {}
 
 	findRequestByUser(userId: number): Observable<FriendRequestI> {
-		return this.http.get<FriendRequestI>(`${ environment.baseUrl }/users/friend-request/status/${ userId }`).pipe(
-			map((friendRequest: FriendRequestI) => friendRequest)
-		);
+		return this.http.get<FriendRequestI>(`${ environment.baseUrl }/users/friend-request/status/${ userId }`);
 	}
 
 	findRequestsByCreator(userId: number): Observable<FriendRequestI[]> {

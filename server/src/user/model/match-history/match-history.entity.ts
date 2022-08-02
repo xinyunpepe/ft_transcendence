@@ -7,7 +7,7 @@ export class MatchHistoryEntity {
 	id: number;
 
 	@Column({ type: 'timestamp', default: () => "CURRENT_TIMESTAMP" })
-	time: string;
+	time: string; 
 
 	@ManyToOne(() => UserEntity, (userEntity) => userEntity.wonHistory)
 	winner: UserEntity;

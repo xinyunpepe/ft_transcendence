@@ -14,32 +14,18 @@ import { UserService } from '../../services/user/user.service';
 })
 export class ProfileUserComponent implements OnInit {
 
-	user: UserI = this.authService.getLoggedInUser();
+	userId: number;
+	currentUserId: number;
 	avatar: any;
-	currentUser: UserI = {};
-	friendRequest: FriendRequestI = {};
-
-	/*
-	** 0: pending
-	** 1: waiting-for-response
-	** 2: accepted
-	** 3: declined
-	** 4: blocked
-	** 5: not-sent
-	*/
 	requestStatus: number;
 	requestId: number;
 
-	private userId$: Observable<number> = this.activatedRoute.params.pipe(
+	private currentUserId$: Observable<number> = this.activatedRoute.params.pipe(
 		map((params: Params) => parseInt(params['id']))
 	)
 
-	currentUser$ = this.userId$.pipe(
+	currentUser$: Observable<UserI> = this.currentUserId$.pipe(
 		switchMap((userId: number) => this.userService.findById(userId))
-	)
-
-	friendRequest$ = this.userId$.pipe(
-		switchMap((userId: number) => this.friendService.findRequestByUser(userId))
 	)
 
 	constructor(
@@ -48,22 +34,13 @@ export class ProfileUserComponent implements OnInit {
 		private userService: UserService,
 		private friendService: FriendService,
 		private router: Router
-	) {}
+	) { }
 
 	ngOnInit() {
-		// this.currentUser$.subscribe(currentUser => {
-		// 	this.currentUser = currentUser;
-		// 	if (!this.currentUser) {
-		// 		this.router.navigate(['../../page-not-found'], { relativeTo: this.activatedRoute });
-		// 	}
-		// 	else if (this.currentUser.id == this.user.id) {
-		// 		this.router.navigate(['../../profile'], { relativeTo: this.activatedRoute });
-		// 	}
-		// })
-
 		this.authService.getUserId().pipe(
 			switchMap((id: number) => this.userService.findById(id).pipe(
 				tap((user) => {
+					this.userId = user.id;
 					this.currentUser$.subscribe(currentUser => {
 						//TODO || currentuser.ban?
 						if (!currentUser) {
@@ -73,104 +50,110 @@ export class ProfileUserComponent implements OnInit {
 							this.router.navigate(['../../profile'], { relativeTo: this.activatedRoute });
 						}
 						else {
-							this.currentUser = currentUser;
-							this.getAvatar(this.currentUser.id);
+							this.currentUserId = currentUser.id;
+							this.getRequestStatus();
+							this.getAvatar(this.currentUserId);
 						}
 					})
 				})
 			))
 		).subscribe();
-
-		this.friendRequest$.subscribe(friendRequest => {
-			this.friendRequest = friendRequest;
-		})
 	}
 
-	isCreator() {
-		return this.friendRequest.creator.id === this.user.id;
-	}
-
-	isFriend() {
-		if (this.friendRequest) {
-			this.requestId = this.friendRequest.id;
-			if (this.friendRequest.status === FriendStatus.PENDING) {
-				if (this.isCreator()) {
-					this.requestStatus = 0;
+	/*
+	** 0: not-sent
+	** 1: pending
+	** 2: waiting-for-response
+	** 3: accepted
+	** 4: declined
+	** 5: blocked
+	** 6: not-found
+	*/
+	getRequestStatus() {
+		this.requestStatus = 0;
+		this.friendService.findRequestByUser(this.currentUserId).pipe(
+			tap((request) => {
+				if (request) {
+					this.requestId = request.id;
+					if (request.status == FriendStatus.PENDING) {
+						if (request.creator.id === this.userId) {
+							this.requestStatus = 1;
+						}
+						else {
+							this.requestStatus = 2;
+						}
+					}
+					else if (request.status == FriendStatus.ACCEPTED) {
+						this.requestStatus = 3;
+					}
+					else if (request.status === FriendStatus.DECLIEND) {
+						this.requestStatus = 4;
+					}
+					else if (request.status === FriendStatus.WAITING) {
+						this.requestStatus = 4;
+					}
+					else if (request.status === FriendStatus.BLOCKED) {
+						if (request.creator.id === this.userId) {
+							this.requestStatus = 5;
+						}
+						else {
+							this.requestStatus = 6;
+						}
+					}
 				}
-				else {
-					this.requestStatus = 1;
-				}
-			}
-			else if (this.friendRequest.status === FriendStatus.ACCEPTED) {
-				this.requestStatus = 2;
-			}
-			else if (this.friendRequest.status === FriendStatus.DECLIEND) {
-				this.requestStatus = 3;
-			}
-			else if (this.friendRequest.status === FriendStatus.BLOCKED) {
-				if (this.isCreator()) {
-					this.requestStatus = 4;
-				}
-				else {
-					return false;
-				}
-			}
-			else {
-				this.requestStatus = 5;
-			}
-		}
-		return true;
+			})
+		).subscribe();
 	}
 
 	// TODO better solution than window reload?
 	addFriend() {
-		this.friendService.sendFriendRequest(this.currentUser.id).subscribe(
+		this.friendService.sendFriendRequest(this.currentUserId).subscribe(
 			() => {
 				this.requestStatus = 1;
 			}
 		)
-		window.location.reload();
+		// window.location.reload();
 	}
 
 	removeFriend() {
-		this.friendService.removeFriendRequest(this.currentUser.id).subscribe(
+		this.friendService.removeFriendRequest(this.currentUserId).subscribe(
 			() => {
-				this.requestStatus = 5;
+				this.requestStatus = 0;
 			}
 		)
-		window.location.reload();
+		// window.location.reload();
 	}
 
 	responseToRequest(response: string) {
 		this.friendService.responseToRequest(this.requestId, response).subscribe(
 			(response) => {
 				if (response.status == FriendStatus.ACCEPTED) {
-					this.requestStatus = 2;
+					this.requestStatus = 3;
 				}
 				if (response.status == FriendStatus.DECLIEND) {
-					this.requestStatus = 3;
+					this.requestStatus = 4;
 				}
 			}
 		)
-		window.location.reload();
+		// window.location.reload();
 	}
 
 	blockUser() {
-		this.friendService.blockUser(this.currentUser.id).subscribe(
-			() => {
-				this.requestStatus = 4;
-			}
-		)
-		window.location.reload();
-	}
-
-	unblockUser() {
-		this.friendService.unblockUser(this.currentUser.id).subscribe(
+		this.friendService.blockUser(this.currentUserId).subscribe(
 			() => {
 				this.requestStatus = 5;
 			}
 		)
-		window.location.reload();
+		// window.location.reload();
+	}
+
+	unblockUser() {
+		this.friendService.unblockUser(this.currentUserId).subscribe(
+			() => {
+				this.requestStatus = 5;
+			}
+		)
+		// window.location.reload();
 	}
 
 	createAvatar(image: Blob) {
@@ -187,6 +170,9 @@ export class ProfileUserComponent implements OnInit {
 		this.userService.getAvatar(userId).subscribe(
 			data => {
 				this.createAvatar(data);
+			},
+			err => {
+				console.log(err);
 			}
 		);
 	}
