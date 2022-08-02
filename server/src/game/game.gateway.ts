@@ -58,8 +58,7 @@ export class GameGateway {
     response.type = 'Game';
     response.content = {
       status: 'Ready',
-      room: room_number.toString(),
-      ballCarrier: player1_id
+      room: room_number.toString()
     };
 
     gameRoom.sendToAll(this.server, ConstValues.GameStatus, JSON.stringify(response.getJSON()));
@@ -112,7 +111,7 @@ export class GameGateway {
             gameRoom.sendToAll(this.server, ConstValues.Player, JSON.stringify(player1.getJSON()));
             gameRoom.sendToAll(this.server, ConstValues.Player, JSON.stringify(player2.getJSON()));
             gameRoom.sendToAll(this.server, ConstValues.Ball, JSON.stringify(ball.getJSON()));
-            gameRoom.sendToAll(this.server, ConstValues.GameStatus, JSON.stringify((new Response('Game',  {status: 'Ready', room: room_number.toString(), ballCarrier: player1.id})).getJSON()));
+            gameRoom.sendToAll(this.server, ConstValues.GameStatus, JSON.stringify((new Response('Game',  {status: 'Ready', room: room_number.toString()})).getJSON()));
           }
           clearInterval(interval);
           return ;
@@ -139,7 +138,7 @@ export class GameGateway {
             gameRoom.sendToAll(this.server, ConstValues.Player, JSON.stringify(player1.getJSON()));
             gameRoom.sendToAll(this.server, ConstValues.Player, JSON.stringify(player2.getJSON()));
             gameRoom.sendToAll(this.server, ConstValues.Ball, JSON.stringify(ball.getJSON()));
-            gameRoom.sendToAll(this.server, ConstValues.GameStatus, JSON.stringify((new Response('Game',  {status: 'Ready', room: room_number.toString(), ballCarrier: player2.id})).getJSON()));
+            gameRoom.sendToAll(this.server, ConstValues.GameStatus, JSON.stringify((new Response('Game',  {status: 'Ready', room: room_number.toString()})).getJSON()));
           }
           clearInterval(interval);
           return ;
@@ -186,6 +185,7 @@ export class GameGateway {
       }
       if (player1.carryBall) {
         ball.y = player1.height + ConstValues.paddleHeight / 2 - ConstValues.ballHeight / 2;
+        gameRoom.sendToAll(this.server, ConstValues.Ball, JSON.stringify(ball.getJSON()));
       }
 
       gameRoom.sendToAll(this.server, ConstValues.Player, JSON.stringify(player1.getJSON()));
@@ -207,6 +207,7 @@ export class GameGateway {
       }
       if (player2.carryBall) {
         ball.y = player2.height + ConstValues.paddleHeight / 2 - ConstValues.ballHeight / 2;
+        gameRoom.sendToAll(this.server, ConstValues.Ball, JSON.stringify(ball.getJSON()));
       }
 
       gameRoom.sendToAll(this.server, ConstValues.Player, JSON.stringify(player2.getJSON()));
