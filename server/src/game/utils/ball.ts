@@ -38,7 +38,6 @@ export class Ball {
 		return {
 		type: "Ball",
 		content: {
-			id: this.player1Id,
 			x: this.x,
 			y: this.y
 		}

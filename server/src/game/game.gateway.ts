@@ -39,7 +39,7 @@ export class GameGateway {
   }
 
   async setGameReady(player1_id: number, player2_id: number) { // ok
-
+    
     let player1 = new Player(player1_id, this.UserIdToLogin[player1_id], true),
         player2 = new Player(player2_id, this.UserIdToLogin[player2_id], false);
     
