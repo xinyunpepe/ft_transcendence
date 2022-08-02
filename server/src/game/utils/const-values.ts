@@ -12,4 +12,5 @@ export class ConstValues {
 	static readonly Ball: string = "Ball";
 	static readonly GameStatus: string = "GameStatus";
 	static readonly WatchResponse: string = "WatchResponse";
+	static readonly ClientInfo: string = 'ClientInfo';
 }

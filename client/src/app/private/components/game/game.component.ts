@@ -21,17 +21,18 @@ var GameSub: Subscription;
 var PlayerSub: Subscription;
 var BallSub: Subscription;
 var WatchSub: Subscription;
+var InfoSub: Subscription;
 
 // Game Display
 
-//     Sync with class
-var Logins: string[] = [''];
+//     Sync with class (send to server)
+var Logins: string[] = ['',''];
 var room: number[] = [-1];
 var paddles: Rectangle[] = []
 var points: number[] = [0,0];
 var hideItem: boolean[] = [false, true, true, false, true, true];
 
-//      Used directly
+//      Used directly (send to server)
 
 var ball: Rectangle;
 var ballIsWith: number = 0;
@@ -43,10 +44,9 @@ var rightHeight: number = canvasHeight / 2 - paddleHeight / 2;
 var userLogin: string;
 var userId: number;
 
-//      Other
+//      TODO
 
 var result: string = '';
-var GameStatus: string = '';
 
 @Component({
   selector: 'app-game',
@@ -74,11 +74,9 @@ export class GameComponent implements OnInit, OnDestroy {
 		private game: GameService,
 		private authService: AuthService,
     private formBuilder: FormBuilder
-	) {
-    
-  }
+	) {}
 
-  ngOnInit(): void {
+  ngOnInit(): void { // ok
     userLogin = this.authService.getLoggedInUser().login;
     userId = this.authService.getLoggedInUser().id;
     
@@ -89,6 +87,7 @@ export class GameComponent implements OnInit, OnDestroy {
     PlayerSub = this.game.getPlayerInformation().subscribe(this.DealWithPlayerInformation);
     BallSub = this.game.getBallInformation().subscribe(this.DealWithBallInformation);
     WatchSub = this.game.getWatchResponse().subscribe(this.DealWithWatchResponse);
+    InfoSub = this.game.getClientInfo().subscribe(this.DealWithClientInfo);
 
     let tmp: any = this.canvas.nativeElement.getContext('2d');
     if (typeof tmp != 'undefined') {
@@ -113,31 +112,51 @@ export class GameComponent implements OnInit, OnDestroy {
     }
   }
 
-  ngOnDestroy(): void {
+  ngOnDestroy(): void { // ok
     this.game.sendGameDisconnect(userId);
     RoomSub.unsubscribe();
     GameSub.unsubscribe();
     PlayerSub.unsubscribe();
     BallSub.unsubscribe();
     WatchSub.unsubscribe();
+    InfoSub.unsubscribe();
   }
 
   @HostListener('document:keydown', ['$event'])
-  handleKeyboardEvent(event: KeyboardEvent) {
+  handleKeyboardEvent(event: KeyboardEvent) { // ok
     if (room[0] < 0 )
       return ;
     if (event.key == 'ArrowUp') {
-      this.game.sendPlayerMove(room[0], userLogin, 'up');
+      this.game.sendPlayerMove(room[0], userId, 'up');
     }
     if (event.key == 'ArrowDown') {
-      this.game.sendPlayerMove(room[0], userLogin, 'down');
+      this.game.sendPlayerMove(room[0], userId, 'down');
     }
     if (event.key == ' ') {
-      this.game.sendPlayerMove(room[0], userLogin, 'space');
+      this.game.sendPlayerMove(room[0], userId, 'space');
     }
   }
 
-  DealWithRoomResponse(msg: any) {
+  DealWithClientInfo(msg: any) {
+    try {
+      if (typeof msg != 'string')
+        throw('ServerError: ClientInfo is not a string');
+      let data = JSON.parse(msg);
+      if (data.leftLogin === undefined)
+        throw('ServerError: leftLogin not found in ClientInfo');
+      Logins[0] = data.leftLogin;
+      if (data.rightLogin === undefined)
+        throw('ServerError: rightLogin not found in ClientInfo');
+      Logins[1] = data.rightLogin;
+    }
+    catch(err: any) {
+      alert(err);
+    }
+    finally {
+    }
+  }
+
+  DealWithRoomResponse(msg: any) { // oK?
     try {
       result = '';
       if (typeof msg != 'string')
@@ -192,7 +211,7 @@ export class GameComponent implements OnInit, OnDestroy {
       switch(data.content.status) {
         case 'Accepted':
           hideItem[0] = true;
-          hideItem[3] = true; //
+          hideItem[3] = true; 
           hideItem[5] = false;
           Logins[0] = data.content.id;
           ballIsWith = data.content.ballIsWith;
@@ -212,8 +231,8 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   DealWithGameStatus(info: any) {
+    let GameStatus = '';
     try {
-      GameStatus = '';
       if (typeof info != 'string') {
         throw('ServerError: Game Status is not a string');
       }
@@ -389,8 +408,7 @@ export class GameComponent implements OnInit, OnDestroy {
       return ;
     }
     Logins[0] = userLogin;
-    this.game.sendRoomRequest(userLogin);
-
+    this.game.sendRoomRequest(userId);
     hideItem[2] = false;
   }
 
@@ -405,7 +423,7 @@ export class GameComponent implements OnInit, OnDestroy {
   Surrender(): void {
     if (room[0] < 0)
       return ;
-    this.game.sendSurrender(room[0], userLogin);
+    this.game.sendSurrender(room[0], userId);
   }
 
   BackToMatch(): void {
@@ -428,19 +446,19 @@ export class GameComponent implements OnInit, OnDestroy {
     hideItem[1] = true;
     hideItem[2] = true;
     Logins[0] = userLogin;
-    this.game.sendLeaveWatching(room[0].toString(), userLogin);
+    this.game.sendLeaveWatching(room[0].toString(), userId);
     room[0] = -1;
   }
 
   Cancel(): void {
     hideItem[2] = true;
     result = '';
-    this.game.sendCancelRequest(userLogin);
+    this.game.sendCancelRequest(userId);
   }
 
   onSubmit() {
     room[0] = parseInt(this.watchForm.value.number);
-    this.game.sendWatchRequest(this.watchForm.value.number, userLogin);
+    this.game.sendWatchRequest(this.watchForm.value.number, userId);
     this.watchForm.reset();
   }
 }

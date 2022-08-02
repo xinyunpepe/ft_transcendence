@@ -11,12 +11,12 @@ export class GameService {
   getRoomResponse() {
     return this.socket.fromEvent('RoomResponse');
   }
-  sendRoomRequest(userLogin: string) {
-    this.socket.emit('RoomRequest', userLogin);
+  sendRoomRequest(userId: number) {
+    this.socket.emit('RoomRequest', userId);
   }
 
-  sendCancelRequest(userLogin: string) {
-    this.socket.emit('CancelRoom', userLogin);
+  sendCancelRequest(userId: number) {
+    this.socket.emit('CancelRoom', userId);
   }
 
   getGameStatus() {
@@ -27,24 +27,24 @@ export class GameService {
     return this.socket.fromEvent('Player');
   }
 
-  sendPlayerMove(room: number, login: string, direction: string) {
-    this.socket.emit('PlayerMove', [room, login, direction]);
+  sendPlayerMove(room: number, userId: number, direction: string) {
+    this.socket.emit('PlayerMove', [room, userId, direction]);
   }
 
   getBallInformation() {
     return this.socket.fromEvent('Ball');
   }
 
-  sendSurrender(room: number, login: string) {
-    this.socket.emit('Special', [room, login, 'Surrender']);
+  sendSurrender(room: number, userId: number) {
+    this.socket.emit('Special', [room, userId, 'Surrender']);
   }
 
-  sendWatchRequest(room: string, login: string) {
-    this.socket.emit('WatchRequest', [room, login]);
+  sendWatchRequest(room: string, userId: number) {
+    this.socket.emit('WatchRequest', [room, userId]);
   }
 
-  sendLeaveWatching(room: string, login: string) {
-    this.socket.emit('LeaveWatching', [room,login]);
+  sendLeaveWatching(room: string, userId: number) {
+    this.socket.emit('LeaveWatching', [room, userId]);
   }
 
   getWatchResponse() {
@@ -57,6 +57,10 @@ export class GameService {
 
   sendGameDisconnect(userId: number) {
     this.socket.emit('GameDisconnect', userId);
+  }
+
+  getClientInfo() {
+    return this.socket.fromEvent('ClientInfo');
   }
 
 }

@@ -6,7 +6,7 @@ import { Response } from './utils/response';
 import { Ball } from './utils/ball';
 import { GameRoom } from './utils/game-room';
 import { HistoryService } from './history/history.service';
-
+import { ClientInfo } from './utils/client-info';
 
 @WebSocketGateway({cors: { origin: ['http://localhost:3000', 'http://localhost:4200'] }})
 export class GameGateway {
@@ -16,12 +16,14 @@ export class GameGateway {
   mutex: Mutex;
   room_mutex: Mutex;
   UserIdToLogin: Map<number, string>;
+  UserIdToInfo: Map<number, ClientInfo>;
   gameRooms: GameRoom[];
 
   constructor(public historyService: HistoryService) {
     this.room_mutex = new Mutex();
     this.mutex = new Mutex();
     this.UserIdToLogin = new Map<number,string>();
+    this.UserIdToInfo = new Map<number,ClientInfo>();
     this.gameRooms = [];
   }
 
@@ -30,6 +32,11 @@ export class GameGateway {
     userId = parseInt(userId);
     client.join(userId);
     this.UserIdToLogin[userId] = userLogin;
+    if (!this.UserIdToInfo[userId]) {
+      this.UserIdToInfo[userId] = new ClientInfo(this.server, userId);
+    }
+    console.log(this.UserIdToInfo[userId].getJSON());
+    this.server.to(client.id).emit(ConstValues.ClientInfo, JSON.stringify(this.UserIdToInfo[userId].getJSON()));
   }
 
   @SubscribeMessage('GameDisconnect')
@@ -39,10 +46,25 @@ export class GameGateway {
   }
 
   async setGameReady(player1_id: number, player2_id: number) { // ok
-    
     let player1 = new Player(player1_id, this.UserIdToLogin[player1_id], true),
         player2 = new Player(player2_id, this.UserIdToLogin[player2_id], false);
     
+    if (!this.UserIdToInfo[player1_id]) {
+      this.UserIdToInfo[player1_id] = new ClientInfo(this.server, player1_id);
+    }
+    if (!this.UserIdToInfo[player2_id]) {
+      this.UserIdToInfo[player2_id] = new ClientInfo(this.server, player2_id);
+    }
+
+    let player1Info: ClientInfo = this.UserIdToInfo[player1_id];
+    let player2Info: ClientInfo = this.UserIdToInfo[player2_id];
+    player1Info.modify_leftLogin(player1.login);
+    player1Info.modify_rightLogin(player2.login);
+    player1Info.sendInfo();
+    player2Info.modify_leftLogin(player1.login);
+    player2Info.modify_rightLogin(player2.login);
+    player2Info.sendInfo();
+
     const release = await this.room_mutex.acquire();
     let gameRoom = new GameRoom(player1, player2);
     let room_number = this.gameRooms.length;
@@ -277,6 +299,10 @@ export class GameGateway {
 
     if (room_number != NaN && room_number < this.gameRooms.length) {
       let gameRoom = this.gameRooms[room_number];
+      let info: ClientInfo = this.UserIdToInfo[id];
+      info.modify_leftLogin(gameRoom.player1.login);
+      info.modify_rightLogin(gameRoom.player2.login);
+      info.sendInfo();
       response.content = { status: 'Accepted', id: gameRoom.player1.id};
 
       this.server.to(id).emit(ConstValues.Player, JSON.stringify(gameRoom.player1.getJSON()));
