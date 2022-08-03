@@ -166,6 +166,19 @@ export class GameGateway {
       }
       return ;
     }
+    if (direction == 'left') {
+      if ( (id == player1.id || id == player2.id ) && customizationEnumerator['speed'] == gameRoom.hashes[1] && !ball.isCarried) {
+        --ball.vx;
+      }
+      return ;
+    }
+    if (direction == 'right') {
+      if ( (id == player1.id || id == player2.id ) && customizationEnumerator['speed'] == gameRoom.hashes[1] && !ball.isCarried) {
+        ++ball.vx;
+      }
+      return ;
+    }
+
     if (id == player1.id) {
       switch (direction) {
         case 'up':

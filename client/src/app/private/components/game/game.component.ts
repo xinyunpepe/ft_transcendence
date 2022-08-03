@@ -118,6 +118,12 @@ export class GameComponent implements OnInit, OnDestroy {
     if (event.key == 'ArrowDown') {
       this.game.sendPlayerMove(room[0], userId, 'down');
     }
+    if (event.key == 'ArrowLeft') {
+      this.game.sendPlayerMove(room[0], userId, 'left');
+    }
+    if (event.key == 'ArrowRight') {
+      this.game.sendPlayerMove(room[0], userId, 'right');
+    }
     if (event.key == ' ') {
       this.game.sendPlayerMove(room[0], userId, 'space');
     }
