@@ -11,7 +11,7 @@ export class FtAuthStrategy extends PassportStrategy(Strategy) {
 		super({
 			clientID: process.env.FT_CLIENT_ID,
 			clientSecret: process.env.FT_CLIENT_SECRET,
-			callbackURL: process.env.FT_CALLBACK_URL
+			callbackURL: 'http://localhost:4200/public/call-back'
 		});
 	}
 

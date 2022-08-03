@@ -8,15 +8,19 @@ import { UserService } from 'src/user/user.service';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { TwoFactorStrategy } from './strategies/2fa.strategy';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
 	imports: [
 		UserModule,
-		JwtModule.register({
-			// secret: process.env.JWT_SECRET,
-			secret: 'secret', // need to hide later
-			signOptions: { expiresIn: '1d' },
-		}),
+		JwtModule.registerAsync({
+			imports: [ConfigModule],
+			inject: [ConfigService],
+			useFactory: async (configService: ConfigService) => ({
+				secret: configService.get('JWT_SECRET'),
+				signOptions: { expiresIn: '10000s' }
+			})
+		})
 	],
 	providers: [
 		AuthService,
