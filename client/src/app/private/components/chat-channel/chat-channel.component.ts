@@ -33,7 +33,7 @@ export class ChatChannelComponent implements OnChanges, OnDestroy, AfterViewInit
 
 			this.userService.findById(this.user.id).subscribe(user => {
 				this.user = user;
-				console.log(this.chatChannel);
+				// console.log(this.chatChannel);
 
 				// check if the current user is the channel owner
 				if (this.chatChannel.owner && this.chatChannel.owner.id === this.user.id) {

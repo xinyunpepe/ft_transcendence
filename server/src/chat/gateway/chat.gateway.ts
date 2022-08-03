@@ -20,7 +20,7 @@ import { JoinedChannelI } from '../model/joined-channel/joined-channel.interface
 */
 
 // For testing
-@WebSocketGateway({ cors: { origin: ['http://localhost:3000', 'http://localhost:4200'] }})
+@WebSocketGateway({ cors: { origin: ['http://localhost:3000', 'http://localhost:4200'] } })
 // @WebSocketGateway({ cors: true })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit {
 	/*
@@ -39,7 +39,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 		private userService: UserService,
 		private connectedUserService: ConnectedUserService,
 		private joinedChannelService: JoinedChannelService
-	) {}
+	) { }
 
 	async onModuleInit() {
 		await this.connectedUserService.deleteAll();
@@ -131,13 +131,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
 	@SubscribeMessage('joinChannel')
 	async onJoinChannel(socket: Socket, channel: ChannelI) {
-		const messages = await this.messageService.findMessageForChannel(channel, { page: 1, limit: 10 });
+		const messages = await this.messageService.findMessageForChannel(channel, socket.data.user, { page: 1, limit: 10 });
 		messages.meta.currentPage = messages.meta.currentPage - 1;
 
 		// save connections to Channel
 		await this.joinedChannelService.create({ socketId: socket.id, user: socket.data.user, userId: socket.data.user.id, channel });
 
-		// send last messages from Channel to User
+		// send last messages from Channel to User excepted the ones from blocked users
 		await this.server.to(socket.id).emit('messages', messages);
 	}
 
@@ -152,6 +152,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 		// remove user from Channel
 		await this.channelService.deleteUser(socket.data.user.id, channel.id);
 
+		// TODO cannot always find users[1], and what if its the last one in the channel
 		// asign the first user left in the channel as new owner & admin
 		await this.channelService.addAdmin(channel, channel.users[1]);
 		channel.owner = channel.users[1];

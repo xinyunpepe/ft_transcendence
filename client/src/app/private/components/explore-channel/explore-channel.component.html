@@ -12,11 +12,11 @@
 					</mat-list-option>
 				</mat-selection-list>
 				<mat-paginator
-				[length]="(channels$ | async)?.meta?.totalItems"
-				[pageIndex]="(channels$ | async)?.meta?.currentPage"
-				[pageSize]="(channels$ | async)?.meta?.itemsPerPage"
-				(page)="onPaginateChannels($event)"
-				[pageSizeOptions]="[10, 25, 50]"
+					[length]="(channels$ | async)?.meta?.totalItems"
+					[pageIndex]="(channels$ | async)?.meta?.currentPage"
+					[pageSize]="(channels$ | async)?.meta?.itemsPerPage"
+					(page)="onPaginateChannels($event)"
+					[pageSizeOptions]="[10, 25, 50]"
 				></mat-paginator>
 			</div>
 			<div class="chat">
