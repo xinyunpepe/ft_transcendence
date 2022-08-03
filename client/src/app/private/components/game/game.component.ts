@@ -35,16 +35,13 @@ var hideItem: boolean[] = [false, true, true, false, true, true];
 //      Used directly (send to server)
 
 var ball: Rectangle;
-var leftHeight: number = canvasHeight / 2 - paddleHeight / 2;
-var rightHeight: number = canvasHeight / 2 - paddleHeight / 2;
 
 //      User Info
 
 var userLogin: string;
 var userId: number;
 
-//      TODO
-
+var Interval;
 
 @Component({
   selector: 'app-game',
@@ -78,7 +75,32 @@ export class GameComponent implements OnInit, OnDestroy {
     userLogin = this.authService.getLoggedInUser().login;
     userId = this.authService.getLoggedInUser().id;
     
-    this.game.sendGameConnect(userId, userLogin);
+    let tmp: any = this.canvas.nativeElement.getContext('2d');
+    if (typeof tmp != 'undefined') {
+      this.ctx = tmp;
+    }
+
+    if (paddles.length == 0) {
+      paddles.push(new Rectangle(this.ctx, paddleWidth, paddleHeight, 0, canvasHeight / 2 - paddleHeight / 2));
+      paddles.push(new Rectangle(this.ctx, paddleWidth, paddleHeight ,canvasWidth - paddleWidth, canvasHeight / 2 - paddleHeight / 2));
+      ball = new Rectangle(this.ctx, ballWidth, ballHeight, -1, -1);
+    }
+    else {
+      paddles[0].ctx = this.ctx;
+      paddles[1].ctx = this.ctx;
+      ball.ctx = this.ctx;
+      // setTimeout(()=>{
+      //   paddles[0].draw('red');
+      //   paddles[1].draw('blue');
+      //   ball.draw(ballColor);
+      // },10);
+      
+    }
+
+    Interval = setInterval(()=>{
+      paddles[0].draw('Red');
+      paddles[1].draw('Blue');
+    },20);
     
     RoomSub = this.game.getRoomResponse().subscribe(this.DealWithRoomResponse);
     GameSub = this.game.getGameStatus().subscribe(this.DealWithGameStatus);
@@ -87,27 +109,7 @@ export class GameComponent implements OnInit, OnDestroy {
     WatchSub = this.game.getWatchResponse().subscribe(this.DealWithWatchResponse);
     InfoSub = this.game.getClientInfo().subscribe(this.DealWithClientInfo);
 
-    let tmp: any = this.canvas.nativeElement.getContext('2d');
-    if (typeof tmp != 'undefined') {
-      this.ctx = tmp;
-    }
-    
-    if (paddles.length == 0) {
-      paddles.push(new Rectangle(this.ctx, paddleWidth, paddleHeight, 0, leftHeight));
-      paddles.push(new Rectangle(this.ctx, paddleWidth, paddleHeight ,canvasWidth - paddleWidth, rightHeight));
-      ball = new Rectangle(this.ctx, ballWidth, ballHeight, -1, -1);
-    }
-    else {
-      paddles[0].ctx = this.ctx;
-      paddles[1].ctx = this.ctx;
-      ball.ctx = this.ctx;
-      setTimeout(()=>{
-        paddles[0].draw('red');
-        paddles[1].draw('blue');
-        ball.draw(ballColor);
-      },10);
-      
-    }
+    this.game.sendGameConnect(userId, userLogin);
   }
 
   ngOnDestroy(): void { // ok
@@ -118,6 +120,7 @@ export class GameComponent implements OnInit, OnDestroy {
     BallSub.unsubscribe();
     WatchSub.unsubscribe();
     InfoSub.unsubscribe();
+    clearInterval(Interval);
   }
 
   @HostListener('document:keydown', ['$event'])
@@ -158,6 +161,17 @@ export class GameComponent implements OnInit, OnDestroy {
         throw('ServerError: room error in ClientInfo');
 
       room[0] = data.room;
+
+      if ( data.Heights === undefined || data.Heights.length != 2 ) {
+        throw('ServerError: Heights error in ClientInfo');
+      }
+      paddles[0].clean();
+      paddles[1].clean();
+      paddles[0].yPos = data.Heights[0];
+      paddles[1].yPos = data.Heights[1];
+      paddles[0].draw('Red');
+      paddles[1].draw('Blue');
+    
     }
     catch(err: any) {
       alert(err);
@@ -272,15 +286,10 @@ export class GameComponent implements OnInit, OnDestroy {
     }
     finally {
       if (GameStatus == 'Ready') {
-        // other things dissapear
-        // todo
-        paddles[0].draw('red');
-        paddles[1].draw('blue');
+        // paddles[0].draw('red');
+        // paddles[1].draw('blue');
       }
       if (GameStatus == 'Start') {
-        // console.log('Start');
-        // ballIsWith = 0;
-        // todo: move ball
       }
       if (GameStatus == 'Finish') {
         ball.clean();
@@ -307,49 +316,18 @@ export class GameComponent implements OnInit, OnDestroy {
       }
 
       if (data.content.login == Logins[0]) {
-        leftHeight = data.content.height;
         points[0] = data.content.point;
-
-        if (rightHeight == undefined)
-          rightHeight = canvasHeight / 2 - paddleHeight / 2;
       }
       else {
-        rightHeight = data.content.height;
         points[1] = data.content.point;
-        if (leftHeight == undefined)
-          leftHeight = canvasHeight / 2 - paddleHeight / 2;
       }
     }
     catch(err: any) {
       alert(err);
     }
     finally {
-      // console.log(room[0].toString() + 'B');
-      paddles[0].yPos = leftHeight;
-      paddles[1].yPos = rightHeight;
-      // console.log(toRealHeight(canvasHeight, leftHeight).toString() + ' ' + rightHeight.toString());
-      // console.log(paddles[0].xPos.toString() + " " + paddles[0].yPos.toString());
-      paddles[0].draw('red');
-      paddles[1].draw('blue');
-      // console.log('My Position(left): ' + leftHeight.toString() + ' Opponent Position(right): ' + rightHeight.toString() + '\
-      //  \nMy Point(left)   : ' + this.Points[0].toString() +    ' Opponent Point(right)   : ' + this.Points[1].toString()) ;
-      // if (ballIsWith == 1) {
-      //   ball.clean();
-      //   ball.yPos = paddles[0].yPos + paddleHeight / 2 - ballHeight / 2;
-      //   ball.xPos = paddleWidth;
-      //   ball.draw(ballColor);
-      //   // console.log(ball.xPos);
-      //   // console.log(paddles[0].yPos);
-      //   // console.log(ball.yPos);
-      //   // console.log(room[0].toString() + 'A');
-      // }
-      // if (ballIsWith == 2) {
-      //   ball.clean();
-      //   ball.xPos = canvasWidth - ballWidth - paddleWidth;
-      //   ball.yPos = paddles[1].yPos + paddleHeight / 2 - ballHeight / 2;
-      //   ball.draw(ballColor);
-      //   // c
-      // }
+      // paddles[0].draw('red');
+      // paddles[1].draw('blue');
     }
   }
 

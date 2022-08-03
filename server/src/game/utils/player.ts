@@ -18,7 +18,6 @@ export class Player {
 		content: {
 		  id: this.id,
 		  login: this.login,
-		  height: this.height,
 		  point: this.point
 		}
 	  };

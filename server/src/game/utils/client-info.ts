@@ -1,15 +1,16 @@
-import { urlToHttpOptions } from "url";
 import { ConstValues } from "./const-values";
 
 export class ClientInfo {
 	public leftLogin: string;
 	public rightLogin: string;
+	public Heights: number[];
 	public hideItem: boolean[];
 	public room: number;
 
 	constructor(public server, public userId: number) {
 		this.leftLogin = '';
 		this.rightLogin = '';
+		this.Heights = [ConstValues.canvasHeight / 2 - ConstValues.paddleHeight / 2, ConstValues.canvasHeight / 2 - ConstValues.paddleHeight / 2];
 		this.hideItem = [false, true, true, false, true, true];
 		this.room = -1;
 	}
@@ -35,6 +36,16 @@ export class ClientInfo {
 		this.sendInfo();
 	}
 
+	modify_heights(idx: number[], val: number[]) {
+		if (idx.length != val.length) {
+			console.log('error in modify_hideItem');
+		}
+		for (let i = 0 ; i < idx.length ; ++i) {
+			this.Heights[idx[i]] = val[i];
+		}
+		this.sendInfo();
+	}
+
 	sendInfo() {
 		this.server.to(this.userId).emit(ConstValues.ClientInfo, JSON.stringify(this.getJSON()));
 	}
@@ -43,6 +54,7 @@ export class ClientInfo {
 		return {
 			leftLogin: this.leftLogin,
 			rightLogin: this.rightLogin,
+			Heights: this.Heights,
 			hideItem: this.hideItem,
 			room: this.room,
 		};
