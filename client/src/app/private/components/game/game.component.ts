@@ -3,7 +3,7 @@ import { GameService } from '../../services/game/game.service';
 import { Subscription } from 'rxjs';
 import { HostListener } from '@angular/core';
 import { AuthService } from 'src/app/public/services/auth/auth.service';
-import { FormBuilder } from '@angular/forms';
+import { FormBuilder, FormControl } from '@angular/forms';
 import { Rectangle } from './rectangle';
 
 const canvasWidth: number = 600;
@@ -57,6 +57,10 @@ export class GameComponent implements OnInit, OnDestroy {
   public ctx!: CanvasRenderingContext2D;
   public watchForm = this.formBuilder.group({
     number: ''
+  });
+  public gameForm = this.formBuilder.group({
+    competitionType: 'any',
+    gameCustomization: 'any'
   });
 
   constructor(
@@ -193,8 +197,14 @@ export class GameComponent implements OnInit, OnDestroy {
     }
   }
 
+  resetGameForm() {
+    this.gameForm.value.competitionType = 'any';
+    this.gameForm.value.gameCustomization = 'any';
+  }
+
   RandomGame(): void {
-    this.game.sendRoomRequest(userId);
+    this.game.sendRoomRequest(userId, this.gameForm.value.competitionType, this.gameForm.value.gameCustomization);
+    this.resetGameForm();
   }
 
   Surrender(): void {

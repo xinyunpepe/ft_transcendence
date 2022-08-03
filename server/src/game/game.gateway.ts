@@ -237,7 +237,7 @@ export class GameGateway {
   }
 
   @SubscribeMessage('RoomRequest')
-  async match(client, id) { // ok
+  async match(client, [id, competitionType, gameCustomization]) { // ok
     id = parseInt(id);
     if (!this.UserIdToInfo[id])
       this.UserIdToInfo[id] = new ClientInfo(this.server, id);

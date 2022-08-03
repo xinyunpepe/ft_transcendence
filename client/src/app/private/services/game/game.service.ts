@@ -8,8 +8,8 @@ export class GameService {
 
   constructor(public socket: CustomSocket) { }
 
-  sendRoomRequest(userId: number) {
-    this.socket.emit('RoomRequest', userId);
+  sendRoomRequest(userId: number, competitionType: string, gameCustomization: string) {
+    this.socket.emit('RoomRequest', [userId, competitionType, gameCustomization]);
   }
 
   sendCancelRequest(userId: number) {

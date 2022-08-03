@@ -7,9 +7,21 @@
 </style>
 
 <div [hidden]="hideItem[0]">
-	<button [hidden]="!hideItem[2]" (click)="RandomGame()">
-	find a random opponent
-	</button>
+	<div [hidden]="!hideItem[2]">
+		<form [formGroup]="gameForm" (ngSubmit)="RandomGame()">
+		Competition: 
+		<input type="radio" value="any" formControlName="competitionType" >any
+		<input type="radio" value="ladder" formControlName="competitionType" >ladder
+		<input type="radio" value="normal" formControlName="competitionType" >normal
+		<br />
+		Customization: 
+		<input type="radio" value="any" formControlName="gameCustomization" >any
+		<input type="radio" value="speed" formControlName="gameCustomization" >speed
+		<input type="radio" value="normal" formControlName="gameCustomization" >normal
+		<br />
+		<button type="submit">find a random opponent</button>
+		</form>
+	</div>
 	<div [hidden]="hideItem[2]">
 		Waiting for opponent ...
 		<button (click)="Cancel()">
@@ -19,7 +31,7 @@
 	<div [hidden]="!hideItem[2]">
 		<form [formGroup]="watchForm" (ngSubmit)="WatchRequest()">
 			Watch game in room number:
-			<input type="text" formControlName="number">
+			<input type="text" formControlName="number" />
 			<button type="submit">submit</button>
 		</form>
 	</div>
