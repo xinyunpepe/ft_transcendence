@@ -6,5 +6,6 @@ export interface HistoryI {
 	totalLoses?: number;
 	inGameRoom?: number; // -1 means not in a game, otherwise it'll show room number
 	ladderLevel? : number;
-	matches?: matchI[];
-} 
+	winMatches?: matchI[];
+	loseMatches?: matchI[];
+}

@@ -6,23 +6,10 @@ import { History } from '../entities/history.entity';
 export class HistoryController {
 	constructor ( private histroyService: HistoryService) {}
 
-	@Get(':login')
-	findHistoryByLogin(
-		@Param('login') login: string
+	@Get(':id')
+	findHistoryById(
+		@Param('id') id: number
 	) {
-		let history = this.histroyService.findOne(login);
-		
-		return history;
+		return this.histroyService.findOne(id);
 	}
-
-	/*
-	@Get(':login')
-	// findOne(@Param() param: { id: number } ) Return the param as an object
-	findUserByLogin(
-		@Param('login') login: string
-	) {
-		return this.userService.findUserByLogin(login);
-	}
-*/
-
 }

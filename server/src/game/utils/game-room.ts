@@ -16,7 +16,7 @@ export class GameRoom {
 	static readonly MoveDistance: number = 10;
 	public ball: Ball;
 	public WatcherIds: number[];
-	constructor (public server:any, public player1: Player, public player2: Player, public hashes: number[], public userIdToInfo: Map<number,ClientInfo>) {
+	constructor (public room_number: number, public server:any, public player1: Player, public player2: Player, public hashes: number[], public userIdToInfo: Map<number,ClientInfo>) {
 	  this.ball = new Ball(player1.id); // todo?
 	  this.WatcherIds = [];
 	  this.initClientInfos();

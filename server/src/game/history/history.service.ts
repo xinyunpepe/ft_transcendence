@@ -1,109 +1,75 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { max } from 'rxjs';
 import { Repository, UpdateResult, DeleteResult, LimitOnUpdateNotSupportedError } from 'typeorm';
 import { History } from '../entities/history.entity';
-import { Player } from '../utils/player';
+import { Match } from '../entities/match.entity';
+import { competitionEnumerator, customizationEnumerator } from '../utils/enumerators';
+import { GameRoom } from '../utils/game-room';
 
 @Injectable()
 export class HistoryService {
 	constructor(
 		@InjectRepository(History)
-		private HistoryRepository: Repository<History>
+		private HistoryRepository: Repository<History>,
+		@InjectRepository(Match)
+		private MatchRepository: Repository<Match>
 	) {}
 
 	async create (history: History): Promise<History> {
 		return await this.HistoryRepository.save(history);
 	}
 
-	// async findAll(): Promise<History[]> {
-	// 	return await this.HistoryRepository.find();
-	// }
+	async create_match(match: Match): Promise<Match> {
+		return await this.MatchRepository.save(match);
+	}
 
-	async findOne(login: string): Promise<History> {
-		return await this.HistoryRepository.findOne({ where: { login: login }});
+	async findOne(userId: number): Promise<History> {
+		return await this.HistoryRepository.findOne({ where: { userId: userId }});
 	}
 	async update(history: History): Promise<UpdateResult>{
-		return await this.HistoryRepository.update(history.login, history);
+		return await this.HistoryRepository.update(history.userId, history);
 	}
 
-	// async delete(room_id): Promise<DeleteResult> {
-	// 	return await this.HistoryRepository.delete(room_id);
-	// }
-
-	// async GameStart(room_number: number, player1_id: string, player2_id: string) {
-	// 	let newGame: History = new History;
-	// 	newGame.room_id = room_number;
-	// 	newGame.player1 = player1_id;
-	// 	newGame.player2 = player2_id;
-	// 	newGame.player1_score = 0;
-	// 	newGame.player2_score = 0;
-	// 	newGame.status = 'In Game';
-	// 	this.create(newGame);
-	// }
-
-	// async GameUpdate(room_number: number, player1_id: string, player2_id: string, player1_point: number, player2_point: number, status: string) {
-	// 	let Game: History = new History;
-	// 	Game.room_id = room_number;
-	// 	Game.player1 = player1_id;
-	// 	Game.player2 = player2_id;
-	// 	Game.player1_score = player1_point;
-	// 	Game.player2_score = player2_point;
-	// 	Game.status = status;
-	// 	this.update(Game);
-	// }
-
-	async GameStart(player1Id: number, player2Id: number) {
-		// let history1 = this.findOne(player1);
-		// console.log(history1);
-		// let history2 = this.findOne(player2);
-		// if (history1) {
-		// 	let history = new History;
-		// 	history.login = player1;
-		// 	history.total_losts = (await history1).total_losts;
-		// 	history.total_wins = (await history1).total_wins;
-		// 	history.isInGame = true;
-		// 	this.update(history);
-		// }
-		// else {
-		// 	let history = new History;
-		// 	history.login = player1;
-		// 	history.isInGame = true;
-		// 	this.create(history);
-		// }
-		// if (history2) {
-		// 	let history = new History;
-		// 	history.login = player2;
-		// 	history.total_losts = (await history2).total_losts;
-		// 	history.total_wins = (await history2).total_wins;
-		// 	history.isInGame = true;
-		// 	this.update(history);
-		// }
-		// else {
-		// 	let history = new History;
-		// 	history.login = player2;
-		// 	history.isInGame = true;
-		// 	this.create(history);
-		// }
+	async GameStart(gameRoom: GameRoom) {
+		let player1 = gameRoom.player1;
+		let player2 = gameRoom.player2;
+		let player1_history:any = await this.findOne(player1.id);
+		let player2_history:any = await this.findOne(player2.id);
+		if (player1_history == null) {
+			player1_history = new History(player1.id, gameRoom.room_number);
+		}
+		else {
+			player1_history.roomId = gameRoom.room_number;
+		}
+		if (player2_history == null) {
+			player2_history = new History(player2.id, gameRoom.room_number);
+		}
+		else {
+			player2_history.roomId = gameRoom.room_number;
+		}
+		this.create(player1_history);
+		this.create(player2_history);
 	}
 
-	async GameFinish(room_id: number, winner: Player, loser: Player) {
-		// let history1 = this.findOne(winner);
-		// let history2 = this.findOne(loser);
-
-		
-		// let history = new History;
-		// history.login = winner;
-		// history.total_losts = (await history1).total_losts;
-		// history.total_wins = (await history1).total_wins + 1;
-		// history.isInGame = false;
-		// this.update(history);
-
-		// history.login = loser;
-		// history.total_losts = (await history2).total_losts + 1;
-		// history.total_wins = (await history2).total_wins;
-		// history.isInGame = false;
-		// this.update(history);
-
-
+	async GameFinish(gameRoom: GameRoom) {
+		let player1 = gameRoom.player1;
+		let player2 = gameRoom.player2;
+		let player1_history = await this.findOne(player1.id);
+		let player2_history = await this.findOne(player2.id);
+		let match: Match;
+		if (player1.point > player2.point) {
+			match = new Match(gameRoom.room_number, gameRoom.hashes[0] == competitionEnumerator['ladder'], gameRoom.hashes[1] == customizationEnumerator['speed'], player1.point, player2.point, player1_history, player2_history);
+			player1_history.win(match);
+			player2_history.lose(match);
+		}
+		else {
+			match = new Match(gameRoom.room_number, gameRoom.hashes[0] == competitionEnumerator['ladder'], gameRoom.hashes[1] == customizationEnumerator['speed'], player2.point, player1.point, player2_history, player1_history);
+			player2_history.win(match);
+			player1_history.lose(match);
+		}
+		this.create(player1_history);
+		this.create(player2_history);
+		this.create_match(match);
 	}
 }

@@ -50,8 +50,8 @@ export class GameGateway {
         player2 = new Player(player2_id, this.UserIdToLogin[player2_id], false);
     
     const release = await this.room_mutex.acquire();
-    let gameRoom = new GameRoom(this.server, player1, player2, hashes,this.UserIdToInfo);
     let room_number = this.gameRooms.length;
+    let gameRoom = new GameRoom(room_number, this.server, player1, player2, hashes,this.UserIdToInfo);
     this.gameRooms.push(gameRoom);
     gameRoom.modifyPlayers(ModifyAttributes.Logins, [player1.login, player2.login]);
     gameRoom.modifyPlayers(ModifyAttributes.hideItem, [[0,4],[true,false]]);
@@ -63,7 +63,7 @@ export class GameGateway {
     gameRoom.modifyAll(ModifyAttributes.points, [[0,1],[player1.point, player2.point]]);
     gameRoom.modifyAll(ModifyAttributes.ball, [[0,1],[gameRoom.ball.x, gameRoom.ball.y]]);
 
-    this.historyService.GameStart(player1.id, player2.id);
+    this.historyService.GameStart(gameRoom);
 }
 
   async moveBall(room_number: number) { // ok
@@ -103,7 +103,7 @@ export class GameGateway {
             ball.destroy();
             gameRoom.modifyAll(ModifyAttributes.ball, [[0,1],[ConstValues.canvasWidth,ConstValues.canvasHeight]]);
             gameRoom.modifyAll(ModifyAttributes.hideItem,[[1,3],[false,false]]);
-            this.historyService.GameFinish(room_number, player2, player1);
+            this.historyService.GameFinish(gameRoom);
           }
           else {
             player1.init();
@@ -129,7 +129,7 @@ export class GameGateway {
             ball.destroy();
             gameRoom.modifyAll(ModifyAttributes.ball, [[0,1],[ConstValues.canvasWidth,ConstValues.canvasHeight]]);
             gameRoom.modifyAll(ModifyAttributes.hideItem, [[1,3],[false,false]]);
-            this.historyService.GameFinish(room_number, player1, player2);
+            this.historyService.GameFinish(gameRoom);
           }
           else {
             player1.init();
@@ -233,12 +233,12 @@ export class GameGateway {
       if (player1.id == id) {
         player1.point = -42;
         gameRoom.modifyAll(ModifyAttributes.points, [[0],[player1.point]]);
-        this.historyService.GameFinish(room_number, player2, player1);
+        this.historyService.GameFinish(gameRoom);
       }
       else if (player2.id == id) {
         player2.point = -42;
         gameRoom.modifyAll(ModifyAttributes.points, [[1],[player2.point]]);
-        this.historyService.GameFinish(room_number, player1, player2); 
+        this.historyService.GameFinish(gameRoom); 
       }
       else return ;
       
