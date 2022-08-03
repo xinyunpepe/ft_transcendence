@@ -17,7 +17,7 @@
 		</button>
 	</div>
 	<div [hidden]="!hideItem[2]">
-		<form [formGroup]="watchForm" (ngSubmit)="onSubmit()">
+		<form [formGroup]="watchForm" (ngSubmit)="WatchRequest()">
 			Watch game in room number:
 			<input type="text" formControlName="number">
 			<button type="submit">submit</button>

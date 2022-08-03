@@ -8,9 +8,6 @@ export class GameService {
 
   constructor(public socket: CustomSocket) { }
 
-  getRoomResponse() {
-    return this.socket.fromEvent('RoomResponse');
-  }
   sendRoomRequest(userId: number) {
     this.socket.emit('RoomRequest', userId);
   }
@@ -19,20 +16,9 @@ export class GameService {
     this.socket.emit('CancelRoom', userId);
   }
 
-  getGameStatus() {
-    return this.socket.fromEvent('GameStatus');
-  }
-
-  getPlayerInformation() {
-    return this.socket.fromEvent('Player');
-  }
 
   sendPlayerMove(room: number, userId: number, direction: string) {
     this.socket.emit('PlayerMove', [room, userId, direction]);
-  }
-
-  getBallInformation() {
-    return this.socket.fromEvent('Ball');
   }
 
   sendSurrender(room: number, userId: number) {

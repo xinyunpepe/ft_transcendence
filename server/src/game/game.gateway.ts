@@ -48,22 +48,6 @@ export class GameGateway {
     let player1 = new Player(player1_id, this.UserIdToLogin[player1_id], true),
         player2 = new Player(player2_id, this.UserIdToLogin[player2_id], false);
     
-    // if (!this.UserIdToInfo[player1_id]) {
-    //   this.UserIdToInfo[player1_id] = new ClientInfo(this.server, player1_id);
-    // }
-    // if (!this.UserIdToInfo[player2_id]) {
-    //   this.UserIdToInfo[player2_id] = new ClientInfo(this.server, player2_id);
-    // }
-
-    // let player1Info: ClientInfo = this.UserIdToInfo[player1_id];
-    // let player2Info: ClientInfo = this.UserIdToInfo[player2_id];
-    // player1Info.modify_Logins([player1.login, player2.login]);
-    // player1Info.modify_hideItem([0,4],[true,false]);
-    // player1Info.modify_heights([0,1],[player1.height,player2.height]);
-    // player2Info.modify_Logins([player1.login, player2.login]);
-    // player2Info.modify_hideItem([0,4],[true,false]);
-    // player2Info.modify_heights([0,1],[player1.height,player2.height]);
-    
     const release = await this.room_mutex.acquire();
     let gameRoom = new GameRoom(this.server, player1, player2, this.UserIdToInfo);
     let room_number = this.gameRooms.length;
@@ -73,14 +57,8 @@ export class GameGateway {
     gameRoom.modifyPlayers(ModifyAttributes.Heights, [[0,1],[player1.height,player2.height]]);
     gameRoom.modifyPlayers(ModifyAttributes.room,room_number);
     release();
-    // player1Info.modify_room(room_number);
-    // player2Info.modify_room(room_number);
 
     let response = new Response('Room', 'Matched');
-    gameRoom.sendToPlayers(ConstValues.RoomResponse,  JSON.stringify(response.getJSON()));
-    // gameRoom.sendToAll(ConstValues.Player, JSON.stringify(player1.getJSON()));
-    // gameRoom.sendToAll(ConstValues.Player, JSON.stringify(player2.getJSON()));
-    // gameRoom.sendToAll(ConstValues.Ball, JSON.stringify(gameRoom.ball.getJSON()));
     gameRoom.modifyAll(ModifyAttributes.points, [[0,1],[player1.point, player2.point]]);
     gameRoom.modifyAll(ModifyAttributes.ball, [[0,1],[gameRoom.ball.x, gameRoom.ball.y]]);
 
@@ -88,7 +66,6 @@ export class GameGateway {
     response.content = {
       status: 'Ready'    };
 
-    gameRoom.sendToAll(ConstValues.GameStatus, JSON.stringify(response.getJSON()));
     this.historyService.GameStart(player1.id, player2.id);
 }
 
@@ -125,20 +102,9 @@ export class GameGateway {
         else {
           ++(player2.point);
           gameRoom.modifyAll(ModifyAttributes.points, [[1],[player2.point]]);
-          // gameRoom.sendToAll(ConstValues.Player, JSON.stringify(player2.getJSON()));
           if (player2.point >= ConstValues.WinningPoint) {
             ball.destroy();
             gameRoom.modifyAll(ModifyAttributes.ball, [[0,1],[ConstValues.canvasWidth,ConstValues.canvasHeight]]);
-            gameRoom.sendToAll( ConstValues.GameStatus, JSON.stringify((new Response('Game', {status: 'Finish'})).getJSON()));
-            // if (!this.UserIdToInfo[player1.id])
-            //   this.UserIdToInfo[player1.id] = new ClientInfo(this.server, player1.id);
-            // if (!this.UserIdToInfo[player2.id])
-            //   this.UserIdToInfo[player2.id] = new ClientInfo(this.server, player2.id);
-
-            // let player1Info: ClientInfo = this.UserIdToInfo[player1.id];
-            // let player2Info: ClientInfo = this.UserIdToInfo[player2.id];
-            // player1Info.modify_hideItem([1,3],[false,false]);
-            // player2Info.modify_hideItem([1,3],[false,false]);
             gameRoom.modifyAll(ModifyAttributes.hideItem,[[1,3],[false,false]]);
             this.historyService.GameFinish(room_number, player2, player1);
           }
@@ -147,22 +113,8 @@ export class GameGateway {
             player2.init();
             ball.init(player1.id);
             player1.carryBall = true;
-            // if (!this.UserIdToInfo[player1.id])
-            //   this.UserIdToInfo[player1.id] = new ClientInfo(this.server, player1.id);
-            // if (!this.UserIdToInfo[player2.id])
-            //   this.UserIdToInfo[player2.id] = new ClientInfo(this.server, player2.id);
-
-            // let player1Info: ClientInfo = this.UserIdToInfo[player1.id];
-            // let player2Info: ClientInfo = this.UserIdToInfo[player2.id];
-            // player1Info.modify_heights([0,1],[player1.height,player2.height]);
-            // player2Info.modify_heights([0,1],[player1.height,player2.height]);
             gameRoom.modifyAll(ModifyAttributes.Heights, [[0,1],[player1.height, player2.height]]);
             gameRoom.modifyAll(ModifyAttributes.ball, [[0,1],[ball.x, ball.y]]);
-
-            // gameRoom.sendToAll(ConstValues.Player, JSON.stringify(player1.getJSON()));
-            // gameRoom.sendToAll(ConstValues.Player, JSON.stringify(player2.getJSON()));
-            // gameRoom.sendToAll(ConstValues.Ball, JSON.stringify(ball.getJSON()));
-            gameRoom.sendToAll(ConstValues.GameStatus, JSON.stringify((new Response('Game',  {status: 'Ready'})).getJSON()));
           }
           clearInterval(interval);
           return ;
@@ -176,20 +128,9 @@ export class GameGateway {
         else {
           ++(player1.point);
           gameRoom.modifyAll(ModifyAttributes.points, [[0],[player1.point]]);
-          // gameRoom.sendToAll( ConstValues.Player, JSON.stringify(player1.getJSON()));
           if (player1.point >= ConstValues.WinningPoint) {
             ball.destroy();
             gameRoom.modifyAll(ModifyAttributes.ball, [[0,1],[ConstValues.canvasWidth,ConstValues.canvasHeight]]);
-            gameRoom.sendToAll( ConstValues.GameStatus, JSON.stringify((new Response('Game', {status: 'Finish'})).getJSON()));
-            // if (!this.UserIdToInfo[player1.id])
-            //   this.UserIdToInfo[player1.id] = new ClientInfo(this.server, player1.id);
-            // if (!this.UserIdToInfo[player2.id])
-            //   this.UserIdToInfo[player2.id] = new ClientInfo(this.server, player2.id);
-
-            // let player1Info: ClientInfo = this.UserIdToInfo[player1.id];
-            // let player2Info: ClientInfo = this.UserIdToInfo[player2.id];
-            // player1Info.modify_hideItem([1,3],[false,false]);
-            // player2Info.modify_hideItem([1,3],[false,false]);
             gameRoom.modifyAll(ModifyAttributes.hideItem, [[1,3],[false,false]]);
             this.historyService.GameFinish(room_number, player1, player2);
           }
@@ -198,30 +139,14 @@ export class GameGateway {
             player2.init();
             ball.init(player2.id);
             player2.carryBall = true;
-            // if (!this.UserIdToInfo[player1.id])
-            //   this.UserIdToInfo[player1.id] = new ClientInfo(this.server, player1.id);
-            // if (!this.UserIdToInfo[player2.id])
-            //   this.UserIdToInfo[player2.id] = new ClientInfo(this.server, player2.id);
-
-            // let player1Info: ClientInfo = this.UserIdToInfo[player1.id];
-            // let player2Info: ClientInfo = this.UserIdToInfo[player2.id];
-            // player1Info.modify_heights([0,1],[player1.height,player2.height]);
-            // player2Info.modify_heights([0,1],[player1.height,player2.height]);
-            
             gameRoom.modifyAll(ModifyAttributes.Heights,[[0,1],[player1.height,player2.height]]);
             gameRoom.modifyAll(ModifyAttributes.ball, [[0,1],[ball.x, ball.y]]);
-
-            // gameRoom.sendToAll( ConstValues.Player, JSON.stringify(player1.getJSON()));
-            // gameRoom.sendToAll( ConstValues.Player, JSON.stringify(player2.getJSON()));
-            // gameRoom.sendToAll( ConstValues.Ball, JSON.stringify(ball.getJSON()));
-            gameRoom.sendToAll( ConstValues.GameStatus, JSON.stringify((new Response('Game',  {status: 'Ready'})).getJSON()));
           }
           clearInterval(interval);
           return ;
         }
       }
       gameRoom.modifyAll(ModifyAttributes.ball, [[0,1],[ball.x, ball.y]]);
-      // gameRoom.sendToAll( ConstValues.Ball, JSON.stringify(ball.getJSON()));
     }, ConstValues.animationFrameRate);
   }
 
@@ -237,7 +162,6 @@ export class GameGateway {
     
     if (direction == 'space') {
       if ( ball.isCarried && id == ball.ballCarrierId ) {
-        gameRoom.sendToAll( ConstValues.GameStatus, JSON.stringify((new Response('Game', {status: 'Start'}).getJSON())));
         player1.carryBall = false;
         player2.carryBall = false;
         ball.isCarried = false;
@@ -263,19 +187,8 @@ export class GameGateway {
       if (player1.carryBall) {
         ball.y = player1.height + ConstValues.paddleHeight / 2 - ConstValues.ballHeight / 2;
         gameRoom.modifyAll(ModifyAttributes.ball, [[0,1],[ball.x, ball.y]]);
-        // gameRoom.sendToAll( ConstValues.Ball, JSON.stringify(ball.getJSON()));
       }
-      // if (!this.UserIdToInfo[player1.id])
-      //   this.UserIdToInfo[player1.id] = new ClientInfo(this.server, player1.id);
-      // if (!this.UserIdToInfo[player2.id])
-      //   this.UserIdToInfo[player2.id] = new ClientInfo(this.server, player2.id);
-
-      // let player1Info: ClientInfo = this.UserIdToInfo[player1.id];
-      // let player2Info: ClientInfo = this.UserIdToInfo[player2.id];
-      // player1Info.modify_heights([0,1],[player1.height,player2.height]);
-      // player2Info.modify_heights([0,1],[player1.height,player2.height]);
       gameRoom.modifyAll(ModifyAttributes.Heights,[[0],[player1.height]]);
-      // gameRoom.sendToAll( ConstValues.Player, JSON.stringify(player1.getJSON()));
     }
     else if (id == player2.id) {
       switch (direction) {
@@ -295,20 +208,8 @@ export class GameGateway {
       if (player2.carryBall) {
         ball.y = player2.height + ConstValues.paddleHeight / 2 - ConstValues.ballHeight / 2;
         gameRoom.modifyAll(ModifyAttributes.ball, [[0,1],[ball.x, ball.y]]);
-        // gameRoom.sendToAll( ConstValues.Ball, JSON.stringify(ball.getJSON()));
       }
-
-      // if (!this.UserIdToInfo[player1.id])
-      //   this.UserIdToInfo[player1.id] = new ClientInfo(this.server, player1.id);
-      // if (!this.UserIdToInfo[player2.id])
-      //   this.UserIdToInfo[player2.id] = new ClientInfo(this.server, player2.id);
-
-      // let player1Info: ClientInfo = this.UserIdToInfo[player1.id];
-      // let player2Info: ClientInfo = this.UserIdToInfo[player2.id];
-      // player1Info.modify_heights([0,1],[player1.height,player2.height]);
-      // player2Info.modify_heights([0,1],[player1.height,player2.height]);
       gameRoom.modifyAll(ModifyAttributes.Heights,[[1],[player2.height]]);
-      // gameRoom.sendToAll( ConstValues.Player, JSON.stringify(player2.getJSON()));
     }
   }
 
@@ -322,31 +223,17 @@ export class GameGateway {
       if (player1.id == id) {
         player1.point = -42;
         gameRoom.modifyAll(ModifyAttributes.points, [[0],[player1.point]]);
-        // gameRoom.sendToAll( ConstValues.Player, JSON.stringify(player1.getJSON()));
         this.historyService.GameFinish(room_number, player2, player1);
       }
       else if (player2.id == id) {
         player2.point = -42;
         gameRoom.modifyAll(ModifyAttributes.points, [[1],[player2.point]]);
-        // gameRoom.sendToAll( ConstValues.Player, JSON.stringify(player2.getJSON()));
         this.historyService.GameFinish(room_number, player1, player2); 
       }
       else return ;
       
       gameRoom.ball.destroy();
       gameRoom.modifyAll(ModifyAttributes.ball, [[0,1],[ConstValues.canvasWidth,ConstValues.canvasHeight]]);
-      // gameRoom.sendToAll( ConstValues.Ball, JSON.stringify(gameRoom.ball.getJSON()));
-      gameRoom.sendToAll( ConstValues.GameStatus, JSON.stringify((new Response('Game', {status: 'Finish'})).getJSON()));
-      
-      // if (!this.UserIdToInfo[player1.id])
-      //   this.UserIdToInfo[player1.id] = new ClientInfo(this.server, player1.id);
-      // if (!this.UserIdToInfo[player2.id])
-      //   this.UserIdToInfo[player2.id] = new ClientInfo(this.server, player2.id);
-
-      // let player1Info: ClientInfo = this.UserIdToInfo[player1.id];
-      // let player2Info: ClientInfo = this.UserIdToInfo[player2.id];
-      // player1Info.modify_hideItem([1,3],[false,false]);
-      // player2Info.modify_hideItem([1,3],[false,false]);
       gameRoom.modifyAll(ModifyAttributes.hideItem,[[1,3],[false,false]]);
     }
     else {
@@ -380,7 +267,6 @@ export class GameGateway {
       }
     }
     release();
-    this.server.to(id).emit('RoomResponse', JSON.stringify(response.getJSON()));
   }
 
   @SubscribeMessage('WatchRequest')
@@ -402,11 +288,6 @@ export class GameGateway {
       info.modify_ball([0,1],[gameRoom.ball.x, gameRoom.ball.y]);
       info.modify_points([0,1],[gameRoom.player1.point,gameRoom.player2.point]);
       response.content = { status: 'Accepted' };
-      
-
-      // this.server.to(id).emit(ConstValues.Player, JSON.stringify(gameRoom.player1.getJSON()));
-      // this.server.to(id).emit(ConstValues.Player, JSON.stringify(gameRoom.player2.getJSON()));
-      // this.server.to(id).emit(ConstValues.Ball, JSON.stringify(gameRoom.ball.getJSON()));  
       gameRoom.WatcherIds.push(id);
     }
     else {

@@ -16,10 +16,6 @@ const ballColor: string = 'black';
 
 // Subscription
 
-var RoomSub: Subscription;
-var GameSub: Subscription;
-var PlayerSub: Subscription;
-var BallSub: Subscription;
 var WatchSub: Subscription;
 var InfoSub: Subscription;
 
@@ -40,8 +36,6 @@ var ball: Rectangle;
 
 var userLogin: string;
 var userId: number;
-
-// var Interval;
 
 @Component({
   selector: 'app-game',
@@ -90,17 +84,7 @@ export class GameComponent implements OnInit, OnDestroy {
       paddles[1].ctx = this.ctx;
       ball.ctx = this.ctx;
     }
-
-    // Interval = setInterval(()=>{
-    //   paddles[0].draw('Red');
-    //   paddles[1].draw('Blue');
-    //   ball.draw(ballColor);
-    // },20);
     
-    RoomSub = this.game.getRoomResponse().subscribe(this.DealWithRoomResponse);
-    GameSub = this.game.getGameStatus().subscribe(this.DealWithGameStatus);
-    PlayerSub = this.game.getPlayerInformation().subscribe(this.DealWithPlayerInformation);
-    BallSub = this.game.getBallInformation().subscribe(this.DealWithBallInformation);
     WatchSub = this.game.getWatchResponse().subscribe(this.DealWithWatchResponse);
     InfoSub = this.game.getClientInfo().subscribe(this.DealWithClientInfo);
 
@@ -109,13 +93,8 @@ export class GameComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void { // ok
     this.game.sendGameDisconnect(userId);
-    RoomSub.unsubscribe();
-    GameSub.unsubscribe();
-    PlayerSub.unsubscribe();
-    BallSub.unsubscribe();
     WatchSub.unsubscribe();
     InfoSub.unsubscribe();
-    // clearInterval(Interval);
   }
 
   @HostListener('document:keydown', ['$event'])
@@ -190,45 +169,6 @@ export class GameComponent implements OnInit, OnDestroy {
     }
   }
 
-  DealWithRoomResponse(msg: any) { // oK?
-    let result = '';
-    try {
-      if (typeof msg != 'string')
-        throw('ServerError: response is not a string');
-      let data = JSON.parse(msg);
-      if (!data.type || data.type != 'Room'){
-        throw('ServerError: response type is not Room');
-      }
-      if (!data.content) {
-        throw('ServerError: No Content');
-      }
-      if (typeof data.content != 'string') {
-        throw('ServerError: Content is not a string');
-      }
-      switch(data.content) {
-        case 'Duplicate':
-          result = 'Waiting';
-          throw('You were already in line, please be patient');
-        case 'Waiting':
-          // console.log('Waiting');
-          result = 'Waiting';
-          // add a popout window
-          break ;
-        case 'Matched':
-          // console.log('Matched');
-          result = 'Matched';
-          break ;
-        default:
-          throw('ServerError: Unknown Content\n' + data.content);
-      }
-    }
-    catch(err: any) {
-      alert(err);
-    }
-    finally{
-    }
-  }
-
   DealWithWatchResponse(msg: any) {
     try {
       if (typeof msg != 'string')
@@ -255,133 +195,9 @@ export class GameComponent implements OnInit, OnDestroy {
     }
   }
 
-  DealWithGameStatus(info: any) {
-    let GameStatus = '';
-    try {
-      if (typeof info != 'string') {
-        throw('ServerError: Game Status is not a string');
-      }
-      let data = JSON.parse(info);
-
-      if (!data.type || data.type != 'Game') {
-        throw('ServerError: Game Status type is not \'Game\'');
-      }
-      if (!data.content) {
-        throw('ServerError: Game Status No Content');
-      }
-      switch(data.content.status ) {
-        case 'Ready':
-          GameStatus = 'Ready';
-          break ;
-        case 'Start':
-          GameStatus = 'Start';
-          break ;
-        case 'Finish':
-          GameStatus = 'Finish';
-          break ;
-        default:
-          GameStatus = '';
-          throw('ServerError: Game Status Unknown Content\n' + data.content);
-      }
-    }
-    catch(err: any) {
-      alert(err);
-    }
-    finally {
-      if (GameStatus == 'Ready') {
-      }
-      if (GameStatus == 'Start') {
-      }
-      if (GameStatus == 'Finish') {
-        // ball.clean();
-        // ball.xPos = canvasWidth;
-        // ball.yPos = canvasHeight;
-      }
-    }
-  }
-
-  DealWithPlayerInformation(info: any) {
-    try {
-      paddles.forEach((paddle: Rectangle)=>{
-        paddle.clean();
-      });
-      if (typeof info != 'string') {
-        throw('ServerError: Player is not a string');
-      }
-      let data = JSON.parse(info);
-      if (!data.type || data.type != 'Player') {
-        throw('ServerError: Player type is not \'Player\'');
-      }
-      if (!data.content) {
-        throw('ServerError: Player No Content');
-      }
-
-      // if (data.content.login == Logins[0]) {
-      //   points[0] = data.content.point;
-      // }
-      // else {
-      //   points[1] = data.content.point;
-      // }
-    }
-    catch(err: any) {
-      alert(err);
-    }
-    finally {
-      // paddles[0].draw('red');
-      // paddles[1].draw('blue');
-    }
-  }
-
-  DealWithBallInformation(info: any) {
-    try {
-      // ball.clean();
-      if (typeof info != 'string') {
-        throw('ServerError: Ball is not a string');
-      }
-      let data = JSON.parse(info);
-      if (!data.type || data.type != 'Ball') {
-        throw('ServerError: Ball type is not \'Ball\'');
-      }
-      if (!data.content) {
-        throw('ServerError: Ball No Content');
-      }
-      // ball.xPos = data.content.x;
-      // ball.yPos = data.content.y;
-      
-      // console.log(data.content.id);
-      // console.log(Logins[0]);
-      // console.log(info);
-    }
-    catch(err: any) {
-      alert(err);
-    }
-    finally {
-      // ball.draw(ballColor);
-      // console.log(room[0].toString() + 'C');
-    }
-  }
-
-
   RandomGame(): void {
-    // console.log('A');
-    // if (result == 'Waiting') {
-    //   alert('You\'re already in line, please be patient.');
-    //   return ;
-    // }
-    // if (result == 'Matched') {
-    //   alert('You\'re already in game');
-    //   return ;
-    // }
     this.game.sendRoomRequest(userId);
   }
-
-  // showCanvas() {
-
-  // }
-
-  // hideCanvas() {
-
-  // }
 
   Surrender(): void {
     if (room[0] < 0)
@@ -392,22 +208,18 @@ export class GameComponent implements OnInit, OnDestroy {
   BackToMatch(): void {
     ball.clean2(0,0,canvasWidth,canvasHeight);
     this.game.sendLeaveGameRoom(userId);
-    // room[0] = -1;
   }
 
   LeaveWatchingMode(): void {
     ball.clean2(0,0,canvasWidth,canvasHeight);
     this.game.sendLeaveWatching(room[0].toString(), userId);
-    // room[0] = -1;
   }
 
   Cancel(): void {
-    // result = '';
     this.game.sendCancelRequest(userId);
   }
 
-  onSubmit() {
-    // room[0] = parseInt(this.watchForm.value.number);
+  WatchRequest() {
     this.game.sendWatchRequest(this.watchForm.value.number, userId);
     this.watchForm.reset();
   }

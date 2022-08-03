@@ -82,7 +82,7 @@ export class ClientInfo {
 			hideItem: this.hideItem,
 			room: this.room,
 			points: this.points,
-			ball: this.ball,
+			ball: this.ball
 		};
 	}
 }
