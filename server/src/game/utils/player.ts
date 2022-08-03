@@ -17,8 +17,7 @@ export class Player {
 		type: "Player",
 		content: {
 		  id: this.id,
-		  login: this.login,
-		  point: this.point
+		  login: this.login
 		}
 	  };
 	}

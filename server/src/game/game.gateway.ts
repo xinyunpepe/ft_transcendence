@@ -122,7 +122,8 @@ export class GameGateway {
         } 
         else {
           ++(player2.point);
-          gameRoom.sendToAll(ConstValues.Player, JSON.stringify(player2.getJSON()));
+          gameRoom.modifyAll(ModifyAttributes.points, [[1],[player2.point]]);
+          // gameRoom.sendToAll(ConstValues.Player, JSON.stringify(player2.getJSON()));
           if (player2.point >= ConstValues.WinningPoint) {
             ball.destroy();
             gameRoom.sendToAll( ConstValues.GameStatus, JSON.stringify((new Response('Game', {status: 'Finish'})).getJSON()));
@@ -170,7 +171,8 @@ export class GameGateway {
         }
         else {
           ++(player1.point);
-          gameRoom.sendToAll( ConstValues.Player, JSON.stringify(player1.getJSON()));
+          gameRoom.modifyAll(ModifyAttributes.points, [[0],[player1.point]]);
+          // gameRoom.sendToAll( ConstValues.Player, JSON.stringify(player1.getJSON()));
           if (player1.point >= ConstValues.WinningPoint) {
             ball.destroy();
             gameRoom.sendToAll( ConstValues.GameStatus, JSON.stringify((new Response('Game', {status: 'Finish'})).getJSON()));
@@ -310,12 +312,14 @@ export class GameGateway {
       let player1: Player = gameRoom.player1, player2: Player = gameRoom.player2;
       if (player1.id == id) {
         player1.point = -42;
-        gameRoom.sendToAll( ConstValues.Player, JSON.stringify(player1.getJSON()));
+        gameRoom.modifyAll(ModifyAttributes.points, [[0],[player1.point]]);
+        // gameRoom.sendToAll( ConstValues.Player, JSON.stringify(player1.getJSON()));
         this.historyService.GameFinish(room_number, player2, player1);
       }
       else if (player2.id == id) {
         player2.point = -42;
-        gameRoom.sendToAll( ConstValues.Player, JSON.stringify(player2.getJSON()));
+        gameRoom.modifyAll(ModifyAttributes.points, [[1],[player2.point]]);
+        // gameRoom.sendToAll( ConstValues.Player, JSON.stringify(player2.getJSON()));
         this.historyService.GameFinish(room_number, player1, player2); 
       }
       else return ;

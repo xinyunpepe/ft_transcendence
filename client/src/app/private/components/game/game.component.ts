@@ -172,6 +172,13 @@ export class GameComponent implements OnInit, OnDestroy {
       paddles[0].draw('Red');
       paddles[1].draw('Blue');
     
+      if ( data.points === undefined || data.points.length != 2) {
+        throw('ServerError: Points error in ClientInfo');
+      }
+
+      points[0] = data.points[0];
+      points[1] = data.points[1];
+
     }
     catch(err: any) {
       alert(err);
@@ -315,12 +322,12 @@ export class GameComponent implements OnInit, OnDestroy {
         throw('ServerError: Player No Content');
       }
 
-      if (data.content.login == Logins[0]) {
-        points[0] = data.content.point;
-      }
-      else {
-        points[1] = data.content.point;
-      }
+      // if (data.content.login == Logins[0]) {
+      //   points[0] = data.content.point;
+      // }
+      // else {
+      //   points[1] = data.content.point;
+      // }
     }
     catch(err: any) {
       alert(err);

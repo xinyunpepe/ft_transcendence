@@ -1,13 +1,13 @@
 import { Player } from "./player";
 import { Ball } from "./ball";
 import { ClientInfo } from "./client-info";
-import { emitKeypressEvents } from "readline";
 
 export class ModifyAttributes{
 	static readonly Logins = 'Logins';
 	static readonly Heights = 'Heights';
 	static readonly hideItem = 'hideItem';
 	static readonly room = 'room';
+	static readonly points = 'points';
 }
 
 export class GameRoom {
@@ -83,6 +83,15 @@ export class GameRoom {
 				player1Info.modify_room(info);
 				player2Info.modify_room(info);
 				break ;
+			case ModifyAttributes.points:
+				if (info.length != 2) {
+					console.log('Error: Wrong info length in ModifyAttributes.points');
+				}
+				else {
+					player1Info.modify_points(info[0],info[1]);
+					player2Info.modify_points(info[0],info[1]);
+				}
+				break ;
 			default:
 				console.log('Error: Unknown type in GameRoom.ModifyWatchers');
 		}
@@ -115,6 +124,13 @@ export class GameRoom {
 					break ;
 				case ModifyAttributes.room:
 					tmp.modify_room(info);
+					break ;
+				case ModifyAttributes.points:
+					if (info.length != 2) {
+						console.log('Error: Wrong info length in ModifyAttributes.points');
+					}
+					else
+						tmp.modify_points(info[0],info[1]);
 					break ;
 				default:
 					console.log('Error: Unknown type in GameRoom.ModifyWatchers');

@@ -6,6 +6,7 @@ export class ClientInfo {
 	public Heights: number[];
 	public hideItem: boolean[];
 	public room: number;
+	public points: number[];
 
 	constructor(public server, public userId: number) {
 		this.leftLogin = '';
@@ -13,6 +14,7 @@ export class ClientInfo {
 		this.Heights = [ConstValues.canvasHeight / 2 - ConstValues.paddleHeight / 2, ConstValues.canvasHeight / 2 - ConstValues.paddleHeight / 2];
 		this.hideItem = [false, true, true, false, true, true];
 		this.room = -1;
+		this.points = [0,0];
 	}
 
 	modify_Logins(logins: string[]) {
@@ -46,6 +48,16 @@ export class ClientInfo {
 		this.sendInfo();
 	}
 
+	modify_points(idx: number[], val: number[]) {
+		if (idx.length != val.length) {
+			console.log('error in modify_points');
+		}
+		for (let i = 0 ; i < idx.length ; ++i) {
+			this.points[idx[i]] = val[i];
+		}
+		this.sendInfo();
+	}
+
 	sendInfo() {
 		this.server.to(this.userId).emit(ConstValues.ClientInfo, JSON.stringify(this.getJSON()));
 	}
@@ -57,6 +69,7 @@ export class ClientInfo {
 			Heights: this.Heights,
 			hideItem: this.hideItem,
 			room: this.room,
+			points: this.points,
 		};
 	}
 }
