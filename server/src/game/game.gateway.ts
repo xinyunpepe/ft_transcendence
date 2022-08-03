@@ -45,18 +45,19 @@ export class GameGateway {
     client.leave(userId);
   }
 
-  async setGameReady(player1_id: number, player2_id: number) { // ok
+  async setGameReady(player1_id: number, player2_id: number, hashes: number[]) { // ok
     let player1 = new Player(player1_id, this.UserIdToLogin[player1_id], true),
         player2 = new Player(player2_id, this.UserIdToLogin[player2_id], false);
     
     const release = await this.room_mutex.acquire();
-    let gameRoom = new GameRoom(this.server, player1, player2, this.UserIdToInfo);
+    let gameRoom = new GameRoom(this.server, player1, player2, hashes,this.UserIdToInfo);
     let room_number = this.gameRooms.length;
     this.gameRooms.push(gameRoom);
     gameRoom.modifyPlayers(ModifyAttributes.Logins, [player1.login, player2.login]);
     gameRoom.modifyPlayers(ModifyAttributes.hideItem, [[0,4],[true,false]]);
     gameRoom.modifyPlayers(ModifyAttributes.Heights, [[0,1],[player1.height,player2.height]]);
     gameRoom.modifyPlayers(ModifyAttributes.room,room_number);
+    gameRoom.modifyPlayers(ModifyAttributes.hashes, [[0,1],hashes]);
     release();
 
     gameRoom.modifyAll(ModifyAttributes.points, [[0,1],[player1.point, player2.point]]);
@@ -311,9 +312,7 @@ export class GameGateway {
       let opponent = this.waiting_clients[i];
       this.waiting_clients.splice(i, 1);
       release();
-      console.log(opponent);
-      console.log(hashes);
-      this.setGameReady( opponent[0], id );
+      this.setGameReady( opponent[0], id , hashes);
       return ;
     }
 
@@ -338,6 +337,7 @@ export class GameGateway {
       info.modify_heights([0,1],[gameRoom.player1.height,gameRoom.player2.height]);
       info.modify_ball([0,1],[gameRoom.ball.x, gameRoom.ball.y]);
       info.modify_points([0,1],[gameRoom.player1.point,gameRoom.player2.point]);
+      info.modify_hashes([0,1],gameRoom.hashes);
       gameRoom.WatcherIds.push(id);
     }
     else {

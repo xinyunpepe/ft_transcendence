@@ -9,13 +9,14 @@ export class ModifyAttributes{
 	static readonly room = 'room';
 	static readonly points = 'points';
 	static readonly ball = 'ball';
+	static readonly hashes = 'hashes';
 }
 
 export class GameRoom {
 	static readonly MoveDistance: number = 10;
 	public ball: Ball;
 	public WatcherIds: number[];
-	constructor (public server:any, public player1: Player, public player2: Player, public userIdToInfo: Map<number,ClientInfo>) {
+	constructor (public server:any, public player1: Player, public player2: Player, public hashes: number[], public userIdToInfo: Map<number,ClientInfo>) {
 	  this.ball = new Ball(player1.id); // todo?
 	  this.WatcherIds = [];
 	  this.initClientInfos();
@@ -101,6 +102,14 @@ export class GameRoom {
 					player2Info.modify_ball(info[0],info[1]);
 				}
 				break ;
+			case ModifyAttributes.hashes:
+				if (info.length != 2)
+					console.log('Error: Wrong info length in ModifyAttributes.hashes');
+				else {
+					player1Info.modify_hashes(info[0],info[1]);
+					player2Info.modify_hashes(info[0],info[1]);
+				}
+				break ;
 			default:
 				console.log('Error: Unknown type in GameRoom.ModifyWatchers');
 		}
@@ -147,6 +156,14 @@ export class GameRoom {
 					}
 					else
 						tmp.modify_ball(info[0],info[1]);
+					break ;
+				case ModifyAttributes.hashes:
+					if (info.length != 2) {
+						console.log('Error: Wrong info length in ModifyAttributes.hashes');
+					}
+					else
+						tmp.modify_hashes(info[0],info[1]);
+					break ;
 				default:
 					console.log('Error: Unknown type in GameRoom.ModifyWatchers');
 			}

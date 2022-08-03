@@ -8,6 +8,7 @@ export class ClientInfo {
 	public room: number;
 	public points: number[];
 	public ball: number[];
+	public hashes: number[];
 
 	constructor(public server, public userId: number) {
 		this.leftLogin = '';
@@ -17,6 +18,7 @@ export class ClientInfo {
 		this.room = -1;
 		this.points = [0,0];
 		this.ball = [ConstValues.canvasWidth, ConstValues.canvasHeight];
+		this.hashes = [0,0];
 	}
 
 	modify_Logins(logins: string[]) {
@@ -70,6 +72,16 @@ export class ClientInfo {
 		this.sendInfo();
 	}
 
+	modify_hashes(idx: number[], val: number[]) {
+		if (idx.length != val.length) {
+			console.log('error in modify_points');
+		}
+		for (let i = 0 ; i < idx.length ; ++i) {
+			this.hashes[idx[i]] = val[i];
+		}
+		this.sendInfo();
+	}
+
 	sendInfo() {
 		this.server.to(this.userId).emit(ConstValues.ClientInfo, JSON.stringify(this.getJSON()));
 	}
@@ -82,7 +94,8 @@ export class ClientInfo {
 			hideItem: this.hideItem,
 			room: this.room,
 			points: this.points,
-			ball: this.ball
+			ball: this.ball,
+			hashes: this.hashes
 		};
 	}
 }

@@ -5,6 +5,7 @@ import { HostListener } from '@angular/core';
 import { AuthService } from 'src/app/public/services/auth/auth.service';
 import { FormBuilder, FormControl } from '@angular/forms';
 import { Rectangle } from './rectangle';
+import { competitionEnumerator, customizationEnumerator } from '../../services/game/enumerators';
 
 const canvasWidth: number = 600;
 const canvasHeight: number = 450;
@@ -13,6 +14,8 @@ const paddleHeight: number = 30;
 const ballWidth: number = 10;
 const ballHeight: number = 10;
 const ballColor: string = 'black';
+const paddle0Color: string = 'red';
+const paddle1Color: string = 'blue';
 
 // Subscription
 
@@ -27,6 +30,8 @@ var room: number[] = [-1];
 var paddles: Rectangle[] = []
 var points: number[] = [0,0];
 var hideItem: boolean[] = [false, true, true, false, true, true];
+var CompetitionType: string[] = [''];
+var GameCustomization: string[] = [''];
 
 //      Used directly (send to server)
 
@@ -52,6 +57,8 @@ export class GameComponent implements OnInit, OnDestroy {
   public hideItem: boolean[] = hideItem;
   public Points: number[] = points;
   public roomNumber: number[] = room;
+  public CompetitionType: string[] = CompetitionType;
+  public GameCustomization: string[] = GameCustomization;
   @ViewChild('myCanvas', {static: true})canvas!: ElementRef<HTMLCanvasElement>;
   
   public ctx!: CanvasRenderingContext2D;
@@ -149,8 +156,8 @@ export class GameComponent implements OnInit, OnDestroy {
       
       paddles[0].yPos = data.Heights[0];
       paddles[1].yPos = data.Heights[1];
-      paddles[0].draw('Red');
-      paddles[1].draw('Blue');
+      paddles[0].draw(paddle0Color);
+      paddles[1].draw(paddle1Color);
     
       if ( data.points === undefined || data.points.length != 2) {
         throw('ServerError: Points error in ClientInfo');
@@ -165,6 +172,12 @@ export class GameComponent implements OnInit, OnDestroy {
       ball.xPos = data.ball[0];
       ball.yPos = data.ball[1];
       ball.draw(ballColor);
+
+      if (data.hashes === undefined || data.hashes.length != 2) {
+        throw('ServerError: Hashes error in ClientInfo');
+      }
+      CompetitionType[0] = competitionEnumerator[data.hashes[0]];
+      GameCustomization[0] = customizationEnumerator[data.hashes[1]];
     }
     catch(err: any) {
       alert(err);
@@ -198,8 +211,12 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   resetGameForm() {
-    this.gameForm.value.competitionType = 'any';
-    this.gameForm.value.gameCustomization = 'any';
+    // this.gameForm.value.competitionType = 'any';
+    // this.gameForm.value.gameCustomization = 'any'; 
+    this.gameForm = this.formBuilder.group({
+      competitionType: 'any',
+      gameCustomization: 'any'
+    });
   }
 
   RandomGame(): void {
