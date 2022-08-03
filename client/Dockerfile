@@ -4,12 +4,10 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 
-COPY . .
-
 RUN npm install
+RUN npm install -g @angular/cli@12.0.0
 
-RUN npm run build
+COPY . .
 
 EXPOSE 4200
 
-# ENTRYPOINT ["npm", "start"]

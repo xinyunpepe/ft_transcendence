@@ -3,49 +3,52 @@ version: "3.8"
 # volumes:
 #   frontend:
 #     driver_opts:
-#       device: /home/leofu/Documents/42/ft_transcendence/client
+#       device: /Users/Pepe/Desktop/ft_transcendence/client
 #       o: bind
 #       type: none
 
 #   backend:
 #     driver_opts:
-#       device: /home/leofu/Documents/42/ft_transcendence/server
+#       device: /Users/Pepe/Desktop/ft_transcendence/server
 #       o: bind
 #       type: none
 
 services:
   server:
     build:
-      context: ./server
+      context: ./server/
     depends_on:
       - postgres
     environment:
       DATABASE_URL: postgres://user:password@postgres:5432/db
       NODE_ENV: development
       JWT_SECRET: super_secret_42
-      # SESSION_SECRET: super_session_secret_42
-      # FT_CLIENT_ID: 10b75fc47d1acac21a8e136dcc96a540cfe51c602b8b0a5722384aef92b01094
-      # FT_CLIENT_SECRET: 6b3f44ada7aa7934ec9b7f624ca7755db2de2a2aa45bc499032c5a36366a285d
+      SESSION_SECRET: super_session_secret_42
+      FT_CLIENT_ID: 10b75fc47d1acac21a8e136dcc96a540cfe51c602b8b0a5722384aef92b01094
+      FT_CLIENT_SECRET: 6b3f44ada7aa7934ec9b7f624ca7755db2de2a2aa45bc499032c5a36366a285d
       PORT: 3000
     restart: always
     ports:
       - "3000:3000"
     volumes:
+      # - backend:/usr/src/app
       - ./server/:/usr/src/app
       - /usr/src/app/node_modules
     command: npm run start:dev
-
+    # command: sh -c "npm install && npm run start:dev"
 
   # client:
   #   build:
-  #     context: ./client
+  #     context: ./client/
   #   restart: always
   #   ports:
   #     - 4200:4200
   #   volumes:
+  #     # - frontend:/usr/src/app
   #     - ./client:/transcendence/client/src/app
   #     - /transcendence/client/src/app/node_modules
-  #   command: npm run start --watch
+  #   command: npm run start
+  #   # command: sh -c "npm install && npm start --watch"
   #   links:
   #     - server
 

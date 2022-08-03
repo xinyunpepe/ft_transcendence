@@ -17,7 +17,7 @@ export class AuthService {
 	) { }
 
 	login() {
-		window.location.href = `${ environment.baseUrl }/auth/login`;
+		window.location.href = `api/auth/login`;
 	}
 
 	getCallback(uri: string) {
@@ -38,7 +38,7 @@ export class AuthService {
 	}
 
 	putUserOnline(id: number): Observable<UserI>  {
-		return this.http.put<UserI>(`${ environment.baseUrl }/users/online/${ id }`, {});
+		return this.http.put<UserI>(`api/users/online/${ id }`, {});
 	}
 
 	isAuthenticated(): boolean {
@@ -63,7 +63,7 @@ export class AuthService {
 	}
 
 	logout(user: UserI): Observable<UserI> {
-		return this.http.put(`${ environment.baseUrl }/auth/logout`, user).pipe(
+		return this.http.put(`api/auth/logout`, user).pipe(
 			tap(() => {
 				localStorage.removeItem('access_token');
 				if (this.isTwoFactorEnabled()) {
@@ -74,15 +74,15 @@ export class AuthService {
 	}
 
 	generate2fa(): Observable<string> {
-		return this.http.post<string>(`${ environment.baseUrl }/auth/2fa/generate`, {});
+		return this.http.post<string>(`api/auth/2fa/generate`, {});
 	}
 
 	getQrImage(): Observable<Blob> {
-		return this.http.get(`${ environment.baseUrl }/auth/2fa/qrcode`, { responseType: 'blob' });
+		return this.http.get(`api/auth/2fa/qrcode`, { responseType: 'blob' });
 	}
 
 	enable2fa(user: UserI, code: string) {
-		return this.http.post(`${ environment.baseUrl }/auth/2fa/turn-on`, { user, code }).pipe(
+		return this.http.post(`api/auth/2fa/turn-on`, { user, code }).pipe(
 			catchError(e => {
 				this.snackbar.open(`ERROR: wrong code`, 'Close', {
 					duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
@@ -93,7 +93,7 @@ export class AuthService {
 	}
 
 	disable2fa(user: UserI, code: string) {
-		return this.http.post(`${ environment.baseUrl }/auth/2fa/turn-off`, { user, code }).pipe(
+		return this.http.post(`api/auth/2fa/turn-off`, { user, code }).pipe(
 			catchError(e => {
 				this.snackbar.open(`ERROR: wrong code`, 'Close', {
 					duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
@@ -104,7 +104,7 @@ export class AuthService {
 	}
 
 	authenticate(user: UserI, code: string) {
-		return this.http.post<any>(`${ environment.baseUrl }/auth/2fa/authenticate`, { user, code }).pipe(
+		return this.http.post<any>(`api/auth/2fa/authenticate`, { user, code }).pipe(
 			tap(res => {
 				console.log(res);
 				localStorage.setItem('2fa_token', res.access_token)

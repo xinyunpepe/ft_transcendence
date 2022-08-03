@@ -14,30 +14,30 @@ export class FriendService {
 	) {}
 
 	findRequestByUser(userId: number): Observable<FriendRequestI> {
-		return this.http.get<FriendRequestI>(`${ environment.baseUrl }/users/friend-request/status/${ userId }`);
+		return this.http.get<FriendRequestI>(`api/users/friend-request/status/${ userId }`);
 	}
 
 	findRequestsByCreator(userId: number): Observable<FriendRequestI[]> {
-		return this.http.get<FriendRequestI[]>(`${ environment.baseUrl }/users/friend-request/creator/${ userId }`);
+		return this.http.get<FriendRequestI[]>(`api/users/friend-request/creator/${ userId }`);
 	}
 
 	sendFriendRequest(userId: number): Observable<FriendRequestI | { error: string }> {
-		return this.http.post<FriendRequestI | { error: string }>(`${ environment.baseUrl }/users/friend-request/send/${ userId }`, {});
+		return this.http.post<FriendRequestI | { error: string }>(`api/users/friend-request/send/${ userId }`, {});
 	}
 
 	removeFriendRequest(userId: number): Observable<FriendRequestI | { error: string }> {
-		return this.http.post<FriendRequestI | { error: string }>(`${ environment.baseUrl }/users/friend-request/remove/${ userId }`, {});
+		return this.http.post<FriendRequestI | { error: string }>(`api/users/friend-request/remove/${ userId }`, {});
 	}
 
 	responseToRequest(requestId: number, response: string): Observable<FriendRequestI> {
-		return this.http.put<FriendRequestI>(`${ environment.baseUrl }/users/friend-request/response/${ requestId }`, { response });
+		return this.http.put<FriendRequestI>(`api/users/friend-request/response/${ requestId }`, { response });
 	}
 
 	blockUser(userId: number): Observable<FriendRequestI | { error: string } | { success: string }> {
-		return this.http.post<FriendRequestI | { error: string } | { success: string }>(`${ environment.baseUrl }/users/friend-request/block/${ userId }`, {});
+		return this.http.post<FriendRequestI | { error: string } | { success: string }>(`api/users/friend-request/block/${ userId }`, {});
 	}
 
 	unblockUser(userId: number): Observable<FriendRequestI | { error: string } | { success: string }> {
-		return this.http.post<FriendRequestI | { error: string } | { success: string }>(`${ environment.baseUrl }/users/friend-request/unblock/${ userId }`, {});
+		return this.http.post<FriendRequestI | { error: string } | { success: string }>(`api/users/friend-request/unblock/${ userId }`, {});
 	}
 }

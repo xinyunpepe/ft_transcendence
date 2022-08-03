@@ -123,13 +123,13 @@ export class ChatService {
 	}
 
 	findChannelById(id: number): Observable<ChannelI> {
-		return this.http.get<ChannelI>(`${ environment.baseUrl }/channel/${ id }`).pipe(
+		return this.http.get<ChannelI>(`api/channel/${ id }`).pipe(
 			map((channel: ChannelI) => channel)
 		);
 	}
 
 	joinProtectedChannel(channelId: number, userId: number): Observable<number> {
-		return this.http.get<number>(`${ environment.baseUrl }/channel/${ channelId }/${ userId }`).pipe(
+		return this.http.get<number>(`api/channel/${ channelId }/${ userId }`).pipe(
 			tap(res => {
 				if (res < 1) {
 					this.snackbar.open('Password failed, try again', 'Close', {
