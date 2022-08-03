@@ -5,12 +5,14 @@ import { authenticator } from "otplib";
 import { UserEntity } from "src/user/model/user/user.entity";
 import { UserService } from "src/user/user.service";
 import { UserI } from "src/user/model/user/user.interface";
+import { ConfigService } from "@nestjs/config";
 
 @Injectable()
 export class AuthService {
 	constructor(
 		private readonly userService: UserService,
-		private readonly jwtService: JwtService
+		private readonly jwtService: JwtService,
+		private readonly configService: ConfigService
 	) {}
 
 	async validateUser(userI: UserI) {
@@ -40,7 +42,10 @@ export class AuthService {
 		console.log('Start creating 2FA token');
 		const payload = { login: user.login, isSecondFactorAuthenticated };
 		return {
-			access_token: this.jwtService.sign(payload)
+			access_token: this.jwtService.sign(payload, {
+				secret: this.configService.get('JWT_SECRET'),
+				expiresIn: '10000s'
+			})
 		};
 	}
 
@@ -74,9 +79,4 @@ export class AuthService {
 	verifyJwt(jwt: string) {
 		return this.jwtService.verifyAsync(jwt);
 	}
-
-	// logout(user: UserEntity) {
-	// 	console.log('Start logging out');
-	// 	this.userService.updateUserStatus(user.login, 'offline');
-	// }
 }
