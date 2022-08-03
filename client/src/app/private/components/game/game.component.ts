@@ -41,7 +41,7 @@ var ball: Rectangle;
 var userLogin: string;
 var userId: number;
 
-var Interval;
+// var Interval;
 
 @Component({
   selector: 'app-game',
@@ -83,24 +83,19 @@ export class GameComponent implements OnInit, OnDestroy {
     if (paddles.length == 0) {
       paddles.push(new Rectangle(this.ctx, paddleWidth, paddleHeight, 0, canvasHeight / 2 - paddleHeight / 2));
       paddles.push(new Rectangle(this.ctx, paddleWidth, paddleHeight ,canvasWidth - paddleWidth, canvasHeight / 2 - paddleHeight / 2));
-      ball = new Rectangle(this.ctx, ballWidth, ballHeight, -1, -1);
+      ball = new Rectangle(this.ctx, ballWidth, ballHeight, canvasWidth, canvasHeight);
     }
     else {
       paddles[0].ctx = this.ctx;
       paddles[1].ctx = this.ctx;
       ball.ctx = this.ctx;
-      // setTimeout(()=>{
-      //   paddles[0].draw('red');
-      //   paddles[1].draw('blue');
-      //   ball.draw(ballColor);
-      // },10);
-      
     }
 
-    Interval = setInterval(()=>{
-      paddles[0].draw('Red');
-      paddles[1].draw('Blue');
-    },20);
+    // Interval = setInterval(()=>{
+    //   paddles[0].draw('Red');
+    //   paddles[1].draw('Blue');
+    //   ball.draw(ballColor);
+    // },20);
     
     RoomSub = this.game.getRoomResponse().subscribe(this.DealWithRoomResponse);
     GameSub = this.game.getGameStatus().subscribe(this.DealWithGameStatus);
@@ -120,7 +115,7 @@ export class GameComponent implements OnInit, OnDestroy {
     BallSub.unsubscribe();
     WatchSub.unsubscribe();
     InfoSub.unsubscribe();
-    clearInterval(Interval);
+    // clearInterval(Interval);
   }
 
   @HostListener('document:keydown', ['$event'])
@@ -140,6 +135,9 @@ export class GameComponent implements OnInit, OnDestroy {
 
   DealWithClientInfo(msg: any) {
     try {
+      paddles[0].clean();
+      paddles[1].clean();
+      ball.clean();
       if (typeof msg != 'string')
         throw('ServerError: ClientInfo is not a string');
       let data = JSON.parse(msg);
@@ -165,8 +163,7 @@ export class GameComponent implements OnInit, OnDestroy {
       if ( data.Heights === undefined || data.Heights.length != 2 ) {
         throw('ServerError: Heights error in ClientInfo');
       }
-      paddles[0].clean();
-      paddles[1].clean();
+      
       paddles[0].yPos = data.Heights[0];
       paddles[1].yPos = data.Heights[1];
       paddles[0].draw('Red');
@@ -179,6 +176,12 @@ export class GameComponent implements OnInit, OnDestroy {
       points[0] = data.points[0];
       points[1] = data.points[1];
 
+      if (data.ball === undefined || data.ball.length != 2) {
+        throw('ServerError: Ball error in ClientInfo');
+      }
+      ball.xPos = data.ball[0];
+      ball.yPos = data.ball[1];
+      ball.draw(ballColor);
     }
     catch(err: any) {
       alert(err);
@@ -269,21 +272,14 @@ export class GameComponent implements OnInit, OnDestroy {
       switch(data.content.status ) {
         case 'Ready':
           GameStatus = 'Ready';
-          // room[0] = data.content.room;
-          // if (Logins[0] == data.content.ballCarrier)
-          //   ballIsWith = 1;
-          // else
-          //   ballIsWith = 2;
           break ;
         case 'Start':
           GameStatus = 'Start';
-          // ballIsWith = 0;
           break ;
         case 'Finish':
           GameStatus = 'Finish';
           break ;
         default:
-          // room[0] = -1;
           GameStatus = '';
           throw('ServerError: Game Status Unknown Content\n' + data.content);
       }
@@ -293,15 +289,13 @@ export class GameComponent implements OnInit, OnDestroy {
     }
     finally {
       if (GameStatus == 'Ready') {
-        // paddles[0].draw('red');
-        // paddles[1].draw('blue');
       }
       if (GameStatus == 'Start') {
       }
       if (GameStatus == 'Finish') {
-        ball.clean();
-        ball.xPos = canvasWidth;
-        ball.yPos = canvasHeight;
+        // ball.clean();
+        // ball.xPos = canvasWidth;
+        // ball.yPos = canvasHeight;
       }
     }
   }
@@ -340,7 +334,7 @@ export class GameComponent implements OnInit, OnDestroy {
 
   DealWithBallInformation(info: any) {
     try {
-      ball.clean();
+      // ball.clean();
       if (typeof info != 'string') {
         throw('ServerError: Ball is not a string');
       }
@@ -351,8 +345,8 @@ export class GameComponent implements OnInit, OnDestroy {
       if (!data.content) {
         throw('ServerError: Ball No Content');
       }
-      ball.xPos = data.content.x;
-      ball.yPos = data.content.y;
+      // ball.xPos = data.content.x;
+      // ball.yPos = data.content.y;
       
       // console.log(data.content.id);
       // console.log(Logins[0]);
@@ -362,7 +356,7 @@ export class GameComponent implements OnInit, OnDestroy {
       alert(err);
     }
     finally {
-      ball.draw(ballColor);
+      // ball.draw(ballColor);
       // console.log(room[0].toString() + 'C');
     }
   }

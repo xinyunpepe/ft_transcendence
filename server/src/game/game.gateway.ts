@@ -78,9 +78,11 @@ export class GameGateway {
 
     let response = new Response('Room', 'Matched');
     gameRoom.sendToPlayers(ConstValues.RoomResponse,  JSON.stringify(response.getJSON()));
-    gameRoom.sendToAll(ConstValues.Player, JSON.stringify(player1.getJSON()));
-    gameRoom.sendToAll(ConstValues.Player, JSON.stringify(player2.getJSON()));
-    gameRoom.sendToAll(ConstValues.Ball, JSON.stringify(gameRoom.ball.getJSON()));
+    // gameRoom.sendToAll(ConstValues.Player, JSON.stringify(player1.getJSON()));
+    // gameRoom.sendToAll(ConstValues.Player, JSON.stringify(player2.getJSON()));
+    // gameRoom.sendToAll(ConstValues.Ball, JSON.stringify(gameRoom.ball.getJSON()));
+    gameRoom.modifyAll(ModifyAttributes.points, [[0,1],[player1.point, player2.point]]);
+    gameRoom.modifyAll(ModifyAttributes.ball, [[0,1],[gameRoom.ball.x, gameRoom.ball.y]]);
 
     response.type = 'Game';
     response.content = {
@@ -126,6 +128,7 @@ export class GameGateway {
           // gameRoom.sendToAll(ConstValues.Player, JSON.stringify(player2.getJSON()));
           if (player2.point >= ConstValues.WinningPoint) {
             ball.destroy();
+            gameRoom.modifyAll(ModifyAttributes.ball, [[0,1],[ConstValues.canvasWidth,ConstValues.canvasHeight]]);
             gameRoom.sendToAll( ConstValues.GameStatus, JSON.stringify((new Response('Game', {status: 'Finish'})).getJSON()));
             // if (!this.UserIdToInfo[player1.id])
             //   this.UserIdToInfo[player1.id] = new ClientInfo(this.server, player1.id);
@@ -154,10 +157,11 @@ export class GameGateway {
             // player1Info.modify_heights([0,1],[player1.height,player2.height]);
             // player2Info.modify_heights([0,1],[player1.height,player2.height]);
             gameRoom.modifyAll(ModifyAttributes.Heights, [[0,1],[player1.height, player2.height]]);
+            gameRoom.modifyAll(ModifyAttributes.ball, [[0,1],[ball.x, ball.y]]);
 
-            gameRoom.sendToAll(ConstValues.Player, JSON.stringify(player1.getJSON()));
-            gameRoom.sendToAll(ConstValues.Player, JSON.stringify(player2.getJSON()));
-            gameRoom.sendToAll(ConstValues.Ball, JSON.stringify(ball.getJSON()));
+            // gameRoom.sendToAll(ConstValues.Player, JSON.stringify(player1.getJSON()));
+            // gameRoom.sendToAll(ConstValues.Player, JSON.stringify(player2.getJSON()));
+            // gameRoom.sendToAll(ConstValues.Ball, JSON.stringify(ball.getJSON()));
             gameRoom.sendToAll(ConstValues.GameStatus, JSON.stringify((new Response('Game',  {status: 'Ready'})).getJSON()));
           }
           clearInterval(interval);
@@ -175,6 +179,7 @@ export class GameGateway {
           // gameRoom.sendToAll( ConstValues.Player, JSON.stringify(player1.getJSON()));
           if (player1.point >= ConstValues.WinningPoint) {
             ball.destroy();
+            gameRoom.modifyAll(ModifyAttributes.ball, [[0,1],[ConstValues.canvasWidth,ConstValues.canvasHeight]]);
             gameRoom.sendToAll( ConstValues.GameStatus, JSON.stringify((new Response('Game', {status: 'Finish'})).getJSON()));
             // if (!this.UserIdToInfo[player1.id])
             //   this.UserIdToInfo[player1.id] = new ClientInfo(this.server, player1.id);
@@ -204,17 +209,19 @@ export class GameGateway {
             // player2Info.modify_heights([0,1],[player1.height,player2.height]);
             
             gameRoom.modifyAll(ModifyAttributes.Heights,[[0,1],[player1.height,player2.height]]);
+            gameRoom.modifyAll(ModifyAttributes.ball, [[0,1],[ball.x, ball.y]]);
 
-            gameRoom.sendToAll( ConstValues.Player, JSON.stringify(player1.getJSON()));
-            gameRoom.sendToAll( ConstValues.Player, JSON.stringify(player2.getJSON()));
-            gameRoom.sendToAll( ConstValues.Ball, JSON.stringify(ball.getJSON()));
+            // gameRoom.sendToAll( ConstValues.Player, JSON.stringify(player1.getJSON()));
+            // gameRoom.sendToAll( ConstValues.Player, JSON.stringify(player2.getJSON()));
+            // gameRoom.sendToAll( ConstValues.Ball, JSON.stringify(ball.getJSON()));
             gameRoom.sendToAll( ConstValues.GameStatus, JSON.stringify((new Response('Game',  {status: 'Ready'})).getJSON()));
           }
           clearInterval(interval);
           return ;
         }
       }
-      gameRoom.sendToAll( ConstValues.Ball, JSON.stringify(ball.getJSON()));
+      gameRoom.modifyAll(ModifyAttributes.ball, [[0,1],[ball.x, ball.y]]);
+      // gameRoom.sendToAll( ConstValues.Ball, JSON.stringify(ball.getJSON()));
     }, ConstValues.animationFrameRate);
   }
 
@@ -255,7 +262,8 @@ export class GameGateway {
       }
       if (player1.carryBall) {
         ball.y = player1.height + ConstValues.paddleHeight / 2 - ConstValues.ballHeight / 2;
-        gameRoom.sendToAll( ConstValues.Ball, JSON.stringify(ball.getJSON()));
+        gameRoom.modifyAll(ModifyAttributes.ball, [[0,1],[ball.x, ball.y]]);
+        // gameRoom.sendToAll( ConstValues.Ball, JSON.stringify(ball.getJSON()));
       }
       // if (!this.UserIdToInfo[player1.id])
       //   this.UserIdToInfo[player1.id] = new ClientInfo(this.server, player1.id);
@@ -267,7 +275,7 @@ export class GameGateway {
       // player1Info.modify_heights([0,1],[player1.height,player2.height]);
       // player2Info.modify_heights([0,1],[player1.height,player2.height]);
       gameRoom.modifyAll(ModifyAttributes.Heights,[[0],[player1.height]]);
-      gameRoom.sendToAll( ConstValues.Player, JSON.stringify(player1.getJSON()));
+      // gameRoom.sendToAll( ConstValues.Player, JSON.stringify(player1.getJSON()));
     }
     else if (id == player2.id) {
       switch (direction) {
@@ -286,7 +294,8 @@ export class GameGateway {
       }
       if (player2.carryBall) {
         ball.y = player2.height + ConstValues.paddleHeight / 2 - ConstValues.ballHeight / 2;
-        gameRoom.sendToAll( ConstValues.Ball, JSON.stringify(ball.getJSON()));
+        gameRoom.modifyAll(ModifyAttributes.ball, [[0,1],[ball.x, ball.y]]);
+        // gameRoom.sendToAll( ConstValues.Ball, JSON.stringify(ball.getJSON()));
       }
 
       // if (!this.UserIdToInfo[player1.id])
@@ -299,7 +308,7 @@ export class GameGateway {
       // player1Info.modify_heights([0,1],[player1.height,player2.height]);
       // player2Info.modify_heights([0,1],[player1.height,player2.height]);
       gameRoom.modifyAll(ModifyAttributes.Heights,[[1],[player2.height]]);
-      gameRoom.sendToAll( ConstValues.Player, JSON.stringify(player2.getJSON()));
+      // gameRoom.sendToAll( ConstValues.Player, JSON.stringify(player2.getJSON()));
     }
   }
 
@@ -325,7 +334,8 @@ export class GameGateway {
       else return ;
       
       gameRoom.ball.destroy();
-      gameRoom.sendToAll( ConstValues.Ball, JSON.stringify(gameRoom.ball.getJSON()));
+      gameRoom.modifyAll(ModifyAttributes.ball, [[0,1],[ConstValues.canvasWidth,ConstValues.canvasHeight]]);
+      // gameRoom.sendToAll( ConstValues.Ball, JSON.stringify(gameRoom.ball.getJSON()));
       gameRoom.sendToAll( ConstValues.GameStatus, JSON.stringify((new Response('Game', {status: 'Finish'})).getJSON()));
       
       // if (!this.UserIdToInfo[player1.id])
@@ -389,12 +399,14 @@ export class GameGateway {
       info.modify_hideItem([0,3,5],[true,true,false]);
       info.modify_room(room_number);
       info.modify_heights([0,1],[gameRoom.player1.height,gameRoom.player2.height]);
+      info.modify_ball([0,1],[gameRoom.ball.x, gameRoom.ball.y]);
+      info.modify_points([0,1],[gameRoom.player1.point,gameRoom.player2.point]);
       response.content = { status: 'Accepted' };
       
 
-      this.server.to(id).emit(ConstValues.Player, JSON.stringify(gameRoom.player1.getJSON()));
-      this.server.to(id).emit(ConstValues.Player, JSON.stringify(gameRoom.player2.getJSON()));
-      this.server.to(id).emit(ConstValues.Ball, JSON.stringify(gameRoom.ball.getJSON()));  
+      // this.server.to(id).emit(ConstValues.Player, JSON.stringify(gameRoom.player1.getJSON()));
+      // this.server.to(id).emit(ConstValues.Player, JSON.stringify(gameRoom.player2.getJSON()));
+      // this.server.to(id).emit(ConstValues.Ball, JSON.stringify(gameRoom.ball.getJSON()));  
       gameRoom.WatcherIds.push(id);
     }
     else {
