@@ -58,13 +58,8 @@ export class GameGateway {
     gameRoom.modifyPlayers(ModifyAttributes.room,room_number);
     release();
 
-    let response = new Response('Room', 'Matched');
     gameRoom.modifyAll(ModifyAttributes.points, [[0,1],[player1.point, player2.point]]);
     gameRoom.modifyAll(ModifyAttributes.ball, [[0,1],[gameRoom.ball.x, gameRoom.ball.y]]);
-
-    response.type = 'Game';
-    response.content = {
-      status: 'Ready'    };
 
     this.historyService.GameStart(player1.id, player2.id);
 }
@@ -244,14 +239,15 @@ export class GameGateway {
   @SubscribeMessage('RoomRequest')
   async match(client, id) { // ok
     id = parseInt(id);
-    let response = new Response('Room');
     if (!this.UserIdToInfo[id])
       this.UserIdToInfo[id] = new ClientInfo(this.server, id);
     this.UserIdToInfo[id].modify_hideItem([2],[false]);
 
     const release = await this.mutex.acquire();
     if (this.waiting_clients.indexOf(id) != -1) {
-      response.content = 'Duplicate';
+      console.log('ErrorInMatch');
+      console.log(this.waiting_clients);
+      console.log(id);
     }
     else {
       let len = this.waiting_clients.length;
@@ -263,7 +259,6 @@ export class GameGateway {
       }
       else {
         this.waiting_clients.push(id);
-        response.content = 'Waiting';
       }
     }
     release();
@@ -276,7 +271,6 @@ export class GameGateway {
     if (!this.UserIdToInfo[id])
       this.UserIdToInfo[id] = new ClientInfo(this.server, id);
 
-    let response = new Response('Watch');
 
     if (room_number != NaN && room_number < this.gameRooms.length) {
       let gameRoom = this.gameRooms[room_number];
@@ -287,13 +281,11 @@ export class GameGateway {
       info.modify_heights([0,1],[gameRoom.player1.height,gameRoom.player2.height]);
       info.modify_ball([0,1],[gameRoom.ball.x, gameRoom.ball.y]);
       info.modify_points([0,1],[gameRoom.player1.point,gameRoom.player2.point]);
-      response.content = { status: 'Accepted' };
       gameRoom.WatcherIds.push(id);
     }
     else {
-      response.content = { status: 'Refused' };
+      this.server.to(client.id).emit(ConstValues.WatchResponse, JSON.stringify(new Response('Watch', {status: 'Refused'}).getJSON()));
     }
-    this.server.to(id).emit(ConstValues.WatchResponse, JSON.stringify(response.getJSON()));
   }
 
   @SubscribeMessage('LeaveGameRoom')

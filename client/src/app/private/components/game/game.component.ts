@@ -179,8 +179,6 @@ export class GameComponent implements OnInit, OnDestroy {
       if (!data.content)
         throw('ServerError: No Content');
       switch(data.content.status) {
-        case 'Accepted':
-          break ;
         case 'Refused':
           alert('Error: Room Number Not Found');
           break ;

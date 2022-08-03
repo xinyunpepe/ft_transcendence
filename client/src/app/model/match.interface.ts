@@ -1,8 +1,12 @@
 export interface matchI {
-	room_id?: number;
+	roomId?: number;
 	winner?: string;
 	loser?: string;
-	winner_points?: number;
-	loser_points?: number;
-	time_stamp?: string;
-} 
+	isLadder?: boolean;
+	isPowerUp?: boolean;
+	winnerPoints?: number;
+	loserPoints?: number;
+	timeStamp?: string;
+}
+
+// if ladder game, maybe show before + after level?
