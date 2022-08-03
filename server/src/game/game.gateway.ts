@@ -7,12 +7,13 @@ import { Ball } from './utils/ball';
 import { GameRoom, ModifyAttributes } from './utils/game-room';
 import { HistoryService } from './history/history.service';
 import { ClientInfo } from './utils/client-info';
+import { competitionEnumerator, customizationEnumerator } from './utils/enumerators';
 
 @WebSocketGateway({cors: { origin: ['http://localhost:3000', 'http://localhost:4200'] }})
 export class GameGateway {
   @WebSocketServer() server;
 
-  waiting_clients = []
+  waiting_clients = [];
   mutex: Mutex;
   room_mutex: Mutex;
   UserIdToLogin: Map<number, string>;
@@ -236,9 +237,56 @@ export class GameGateway {
     }
   }
 
+  possibleHash( compHash: number[], custHash: number[] ) {
+    let ret:number[] = [-1,-1];
+    if (compHash.length != 2 || custHash.length != 2) {
+      return ret;
+    }
+    if (compHash[0] == competitionEnumerator['any'] && compHash[1] == competitionEnumerator['any']) {
+      ret[0] = competitionEnumerator['normal'];
+    }
+    else if (compHash[0] == competitionEnumerator['any']) {
+      ret[0] = compHash[1];
+    }
+    else if (compHash[1] == competitionEnumerator['any']) {
+      ret[0] = compHash[0];
+    }
+    else if (compHash[0] == compHash[1]) {
+      ret[0] = compHash[0];
+    }
+    else {
+      return ret;
+    }
+
+    if (custHash[0] == customizationEnumerator['any'] && custHash[1] == customizationEnumerator['any'] ) {
+      ret[1] = customizationEnumerator['normal'];
+    }
+    else if (custHash[0] == customizationEnumerator['any']) {
+      ret[1] = custHash[1];
+    }
+    else if (custHash[1] == customizationEnumerator['any']) {
+      ret[1] = custHash[0];
+    }
+    else if (custHash[0] == custHash[1]) {
+      ret[1] = custHash[0];
+    }
+
+    return ret;
+  }
+
   @SubscribeMessage('RoomRequest')
-  async match(client, [id, competitionType, gameCustomization]) { // ok
+  async match(client, [id, competitionHash, customizationHash]) { // ok
     id = parseInt(id);
+    competitionHash = parseInt(competitionHash);
+    customizationHash = parseInt(customizationHash);
+    if ( competitionEnumerator[competitionHash] === undefined || customizationEnumerator[customizationHash] === undefined) {
+      console.log('ErrorInMatch');
+      console.log(competitionHash);
+      console.log(customizationHash);
+      return ;
+    }
+
+    
     if (!this.UserIdToInfo[id])
       this.UserIdToInfo[id] = new ClientInfo(this.server, id);
     this.UserIdToInfo[id].modify_hideItem([2],[false]);

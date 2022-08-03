@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { CustomSocket } from '../../sockets/custom-sockets';
+import { competitionEnumerator, customizationEnumerator } from './enumerators';
 
 @Injectable({
   providedIn: 'root'
@@ -9,7 +10,7 @@ export class GameService {
   constructor(public socket: CustomSocket) { }
 
   sendRoomRequest(userId: number, competitionType: string, gameCustomization: string) {
-    this.socket.emit('RoomRequest', [userId, competitionType, gameCustomization]);
+    this.socket.emit('RoomRequest', [userId,competitionEnumerator[competitionType],customizationEnumerator[gameCustomization]]);
   }
 
   sendCancelRequest(userId: number) {
