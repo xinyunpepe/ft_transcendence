@@ -67,6 +67,8 @@ export class GameGateway {
     let room_number = this.gameRooms.length;
     this.gameRooms.push(gameRoom);
     release();
+    player1Info.modify_room(room_number);
+    player2Info.modify_room(room_number);
 
     let response = new Response('Room', 'Matched');
     gameRoom.sendToPlayers(this.server, ConstValues.RoomResponse,  JSON.stringify(response.getJSON()));
@@ -76,9 +78,7 @@ export class GameGateway {
 
     response.type = 'Game';
     response.content = {
-      status: 'Ready',
-      room: room_number.toString()
-    };
+      status: 'Ready'    };
 
     gameRoom.sendToAll(this.server, ConstValues.GameStatus, JSON.stringify(response.getJSON()));
     this.historyService.GameStart(player1.id, player2.id);
@@ -130,7 +130,7 @@ export class GameGateway {
             gameRoom.sendToAll(this.server, ConstValues.Player, JSON.stringify(player1.getJSON()));
             gameRoom.sendToAll(this.server, ConstValues.Player, JSON.stringify(player2.getJSON()));
             gameRoom.sendToAll(this.server, ConstValues.Ball, JSON.stringify(ball.getJSON()));
-            gameRoom.sendToAll(this.server, ConstValues.GameStatus, JSON.stringify((new Response('Game',  {status: 'Ready', room: room_number.toString()})).getJSON()));
+            gameRoom.sendToAll(this.server, ConstValues.GameStatus, JSON.stringify((new Response('Game',  {status: 'Ready'})).getJSON()));
           }
           clearInterval(interval);
           return ;
@@ -157,7 +157,7 @@ export class GameGateway {
             gameRoom.sendToAll(this.server, ConstValues.Player, JSON.stringify(player1.getJSON()));
             gameRoom.sendToAll(this.server, ConstValues.Player, JSON.stringify(player2.getJSON()));
             gameRoom.sendToAll(this.server, ConstValues.Ball, JSON.stringify(ball.getJSON()));
-            gameRoom.sendToAll(this.server, ConstValues.GameStatus, JSON.stringify((new Response('Game',  {status: 'Ready', room: room_number.toString()})).getJSON()));
+            gameRoom.sendToAll(this.server, ConstValues.GameStatus, JSON.stringify((new Response('Game',  {status: 'Ready'})).getJSON()));
           }
           clearInterval(interval);
           return ;
@@ -314,6 +314,7 @@ export class GameGateway {
       let info: ClientInfo = this.UserIdToInfo[id];
       info.modify_Logins([gameRoom.player1.login, gameRoom.player2.login]);
       info.modify_hideItem([0,3,5],[true,true,false]);
+      info.modify_room(room_number);
       response.content = { status: 'Accepted' };
       
 
@@ -334,6 +335,7 @@ export class GameGateway {
     if (!this.UserIdToInfo[userId])
       this.UserIdToInfo[userId] = new ClientInfo(this.server, userId);
     this.UserIdToInfo[userId].modify_hideItem([0,4,5,1,2],[false,true,true,true,true]);
+    this.UserIdToInfo[userId].modify_room(-1);
   }
 
   @SubscribeMessage('LeaveWatching')
@@ -351,6 +353,7 @@ export class GameGateway {
     if (!this.UserIdToInfo[id])
       this.UserIdToInfo[id] = new ClientInfo(this.server, id);
     this.UserIdToInfo[id].modify_hideItem([3,0,4,5,1,2],[false,false,true,true,true,true]);
+    this.UserIdToInfo[id].modify_room(-1);
 
   }
 

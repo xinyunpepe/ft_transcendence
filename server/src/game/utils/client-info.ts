@@ -1,14 +1,17 @@
+import { urlToHttpOptions } from "url";
 import { ConstValues } from "./const-values";
 
 export class ClientInfo {
 	public leftLogin: string;
 	public rightLogin: string;
 	public hideItem: boolean[];
+	public room: number;
 
 	constructor(public server, public userId: number) {
 		this.leftLogin = '';
 		this.rightLogin = '';
 		this.hideItem = [false, true, true, false, true, true];
+		this.room = -1;
 	}
 
 	modify_Logins(logins: string[]) {
@@ -27,6 +30,11 @@ export class ClientInfo {
 		this.sendInfo();
 	}
 
+	modify_room(room_id: number) {
+		this.room = room_id;
+		this.sendInfo();
+	}
+
 	sendInfo() {
 		this.server.to(this.userId).emit(ConstValues.ClientInfo, JSON.stringify(this.getJSON()));
 	}
@@ -35,7 +43,8 @@ export class ClientInfo {
 		return {
 			leftLogin: this.leftLogin,
 			rightLogin: this.rightLogin,
-			hideItem: this.hideItem
+			hideItem: this.hideItem,
+			room: this.room,
 		};
 	}
 }

@@ -45,7 +45,6 @@ var userId: number;
 
 //      TODO
 
-var result: string = '';
 
 @Component({
   selector: 'app-game',
@@ -141,17 +140,24 @@ export class GameComponent implements OnInit, OnDestroy {
       if (typeof msg != 'string')
         throw('ServerError: ClientInfo is not a string');
       let data = JSON.parse(msg);
+
       if (data.leftLogin === undefined)
         throw('ServerError: leftLogin not found in ClientInfo');
       Logins[0] = data.leftLogin;
       if (data.rightLogin === undefined)
         throw('ServerError: rightLogin not found in ClientInfo');
       Logins[1] = data.rightLogin;
-      if ( hideItem === undefined || hideItem.length != data.hideItem.length)
+
+      if ( data.hideItem === undefined || hideItem.length != data.hideItem.length)
         throw('ServerError: hideItem error in ClientInfo');
       
       for (let i = 0 ; i < hideItem.length ; ++i)
         hideItem[i] = data.hideItem[i];
+
+      if ( data.room === undefined )
+        throw('ServerError: room error in ClientInfo');
+
+      room[0] = data.room;
     }
     catch(err: any) {
       alert(err);
@@ -161,8 +167,8 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   DealWithRoomResponse(msg: any) { // oK?
+    let result = '';
     try {
-      result = '';
       if (typeof msg != 'string')
         throw('ServerError: response is not a string');
       let data = JSON.parse(msg);
@@ -242,7 +248,7 @@ export class GameComponent implements OnInit, OnDestroy {
       switch(data.content.status ) {
         case 'Ready':
           GameStatus = 'Ready';
-          room[0] = data.content.room;
+          // room[0] = data.content.room;
           // if (Logins[0] == data.content.ballCarrier)
           //   ballIsWith = 1;
           // else
@@ -253,12 +259,10 @@ export class GameComponent implements OnInit, OnDestroy {
           // ballIsWith = 0;
           break ;
         case 'Finish':
-          result = '';
           GameStatus = 'Finish';
           break ;
         default:
-          result = '';
-          room[0] = -1;
+          // room[0] = -1;
           GameStatus = '';
           throw('ServerError: Game Status Unknown Content\n' + data.content);
       }
@@ -381,14 +385,14 @@ export class GameComponent implements OnInit, OnDestroy {
 
   RandomGame(): void {
     // console.log('A');
-    if (result == 'Waiting') {
-      alert('You\'re already in line, please be patient.');
-      return ;
-    }
-    if (result == 'Matched') {
-      alert('You\'re already in game');
-      return ;
-    }
+    // if (result == 'Waiting') {
+    //   alert('You\'re already in line, please be patient.');
+    //   return ;
+    // }
+    // if (result == 'Matched') {
+    //   alert('You\'re already in game');
+    //   return ;
+    // }
     this.game.sendRoomRequest(userId);
   }
 
@@ -409,22 +413,22 @@ export class GameComponent implements OnInit, OnDestroy {
   BackToMatch(): void {
     ball.clean2(0,0,canvasWidth,canvasHeight);
     this.game.sendLeaveGameRoom(userId);
-    room[0] = -1;
+    // room[0] = -1;
   }
 
   LeaveWatchingMode(): void {
     ball.clean2(0,0,canvasWidth,canvasHeight);
     this.game.sendLeaveWatching(room[0].toString(), userId);
-    room[0] = -1;
+    // room[0] = -1;
   }
 
   Cancel(): void {
-    result = '';
+    // result = '';
     this.game.sendCancelRequest(userId);
   }
 
   onSubmit() {
-    room[0] = parseInt(this.watchForm.value.number);
+    // room[0] = parseInt(this.watchForm.value.number);
     this.game.sendWatchRequest(this.watchForm.value.number, userId);
     this.watchForm.reset();
   }
