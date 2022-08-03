@@ -120,6 +120,15 @@ export class GameGateway {
           if (player2.point >= ConstValues.WinningPoint) {
             ball.destroy();
             gameRoom.sendToAll(this.server, ConstValues.GameStatus, JSON.stringify((new Response('Game', {status: 'Finish'})).getJSON()));
+            if (!this.UserIdToInfo[player1.id])
+              this.UserIdToInfo[player1.id] = new ClientInfo(this.server, player1.id);
+            if (!this.UserIdToInfo[player2.id])
+              this.UserIdToInfo[player2.id] = new ClientInfo(this.server, player2.id);
+
+            let player1Info: ClientInfo = this.UserIdToInfo[player1.id];
+            let player2Info: ClientInfo = this.UserIdToInfo[player2.id];
+            player1Info.modify_hideItem([1,3],[false,false]);
+            player2Info.modify_hideItem([1,3],[false,false]);
             this.historyService.GameFinish(room_number, player2, player1);
           }
           else {
@@ -147,6 +156,15 @@ export class GameGateway {
           if (player1.point >= ConstValues.WinningPoint) {
             ball.destroy();
             gameRoom.sendToAll(this.server, ConstValues.GameStatus, JSON.stringify((new Response('Game', {status: 'Finish'})).getJSON()));
+            if (!this.UserIdToInfo[player1.id])
+              this.UserIdToInfo[player1.id] = new ClientInfo(this.server, player1.id);
+            if (!this.UserIdToInfo[player2.id])
+              this.UserIdToInfo[player2.id] = new ClientInfo(this.server, player2.id);
+
+            let player1Info: ClientInfo = this.UserIdToInfo[player1.id];
+            let player2Info: ClientInfo = this.UserIdToInfo[player2.id];
+            player1Info.modify_hideItem([1,3],[false,false]);
+            player2Info.modify_hideItem([1,3],[false,false]);
             this.historyService.GameFinish(room_number, player1, player2);
           }
           else {
