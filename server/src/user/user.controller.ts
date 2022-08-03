@@ -145,6 +145,23 @@ export class UserController {
 	}
 
 	@UseGuards(JwtAuthGuard)
+	@Get('friend-request/received/pending')
+	findPendingRequests(
+		@Req() req
+	) {
+		return this.userService.findPendingRequests(req.user.id);
+	}
+
+	@UseGuards(JwtAuthGuard)
+	@Get('friend-request/received/accepted')
+	findAcceptedRequests(
+		@Req() req
+	) {
+		return this.userService.findAcceptedRequests(req.user.id);
+	}
+
+
+	@UseGuards(JwtAuthGuard)
 	@Post('friend-request/send/:receiverId')
 	sendFriendRequest(
 		@Param('receiverId') receiverId: number,

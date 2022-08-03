@@ -132,6 +132,27 @@ export class UserService {
 		});
 	}
 
+	async findPendingRequests(receiverId: number) {
+		const receiver = await this.findUserById(receiverId);
+		return await this.friendRequestRepository.find({
+			where: [{ receiver: receiver, status: FriendStatus.PENDING }],
+			relations: ['creator', 'receiver']
+		});
+	}
+
+	async findAcceptedRequests(userId: number) {
+		const query = this.friendRequestRepository
+			.createQueryBuilder('request')
+			.leftJoinAndSelect('request.creator', 'creator')
+			.leftJoinAndSelect('request.receiver', 'receiver')
+			.where("creator.id = :id AND request.status = 'accepted'")
+			.orWhere("receiver.id = :id AND request.status = 'accepted'")
+			.setParameters({ id: userId })
+			.getMany()
+			
+		return query;
+	}
+
 	/*
 	** Check if the friend request is sending to oneself
 	** Check if the receiver exist
