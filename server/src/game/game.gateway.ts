@@ -240,6 +240,7 @@ export class GameGateway {
   possibleHash( compHash: number[], custHash: number[] ) {
     let ret:number[] = [-1,-1];
     if (compHash.length != 2 || custHash.length != 2) {
+      console.log('Error while hashing');
       return ret;
     }
     if (compHash[0] == competitionEnumerator['any'] && compHash[1] == competitionEnumerator['any']) {
@@ -292,23 +293,31 @@ export class GameGateway {
     this.UserIdToInfo[id].modify_hideItem([2],[false]);
 
     const release = await this.mutex.acquire();
-    if (this.waiting_clients.indexOf(id) != -1) {
-      console.log('ErrorInMatch');
-      console.log(this.waiting_clients);
-      console.log(id);
-    }
-    else {
-      let len = this.waiting_clients.length;
-      if (len > 0) {
-        let opponent = this.waiting_clients.pop();
+    let len = this.waiting_clients.length;
+    for (let i = 0 ; i  < len; ++i) {
+      if (this.waiting_clients[i][0] == id) {
+        console.log('ErrorInMatch');
+        console.log(this.waiting_clients);
+        console.log(id);
         release();
-        this.setGameReady( opponent, id );
         return ;
       }
-      else {
-        this.waiting_clients.push(id);
-      }
     }
+
+    for (let i = 0 ; i < len ; ++i) {
+      let hashes = this.possibleHash([competitionHash, this.waiting_clients[i][1]], [customizationHash, this.waiting_clients[i][2]]);
+      if (hashes[0] == -1 || hashes[1] == -1)
+        continue ;
+      let opponent = this.waiting_clients[i];
+      this.waiting_clients.splice(i, 1);
+      release();
+      console.log(opponent);
+      console.log(hashes);
+      this.setGameReady( opponent[0], id );
+      return ;
+    }
+
+    this.waiting_clients.push([id, competitionHash, customizationHash]);
     release();
   }
 
@@ -368,9 +377,10 @@ export class GameGateway {
   async cancelRoomRequest(client, id) { // ok
     id = parseInt(id);
     const release = await this.mutex.acquire();
-    let index = this.waiting_clients.indexOf(id);
-    if (index > -1) {
-      this.waiting_clients.splice(index, 1);
+    for (let i = 0 ; i < this.waiting_clients.length ; ++i) {
+      if (this.waiting_clients[i][0] == id) {
+        this.waiting_clients.splice(i, 1);
+      }
     }
     release();
     if (!this.UserIdToInfo[id])
