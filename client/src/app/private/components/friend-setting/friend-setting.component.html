@@ -20,7 +20,7 @@
 
 			<div class="flexbox">
 				<div class="flex-item">
-					<h3>Requests Received</h3>
+					<h2>Requests Received</h2>
 					<div *ngIf="(receivedRequests$ | async)?.length > 0; else no_sent_requests">
 						<mat-selection-list [multiple]="false" (selectionChange)="onSelectRequest($event)">
 							<mat-list-option *ngFor="let receivedRequests of (receivedRequests$ | async)" [value]="receivedRequests">
@@ -34,7 +34,7 @@
 				</div>
 
 				<div class="flex-item">
-					<h3>Requests Sent</h3>
+					<h2>Requests Sent</h2>
 					<div *ngIf="(sentRequests$ | async)?.length > 0; else no_sent_requests">
 						<mat-selection-list [multiple]="false" (selectionChange)="onSelectRequest($event)">
 							<mat-list-option *ngFor="let sentRequests of (sentRequests$ | async)" [value]="sentRequests">
@@ -52,7 +52,7 @@
 
 			<div class="flexbox">
 				<div class="flex-item">
-					<h3>Friends</h3>
+					<h2>Friends</h2>
 					<div *ngIf="(friends$ | async)?.length > 0; else no_friends">
 						<mat-selection-list [multiple]="false" (selectionChange)="onSelectFriend($event)">
 							<mat-list-option *ngFor="let friends of friendsList" [value]="friends">
@@ -66,7 +66,7 @@
 				</div>
 
 				<div class="flex-item">
-					<h3>Blocked Users</h3>
+					<h2>Blocked Users</h2>
 					<div *ngIf="(blocks$ | async)?.length > 0; else no_blocks">
 						<mat-selection-list [multiple]="false" (selectionChange)="onSelectRequest($event)">
 							<mat-list-option *ngFor="let blocks of (blocks$ | async)" [value]="blocks">

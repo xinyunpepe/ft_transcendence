@@ -10,41 +10,46 @@
 						<img src="{{ currentUser.avatar }}" alt="default-avatar" style="width:90%">
 					</ng-template>
 					<mat-card-title>{{ currentUser.username }}</mat-card-title>
-					<h3 *ngIf="requestStatus==3">{{ currentUser.status }}</h3>
+					<h2 *ngIf="requestStatus==3">{{ currentUser.status }}</h2>
 					<p>42 login: {{ currentUser.login }}</p>
 					<p>Total Wins: {{ currentUser.totalWins }}</p>
 					<p>Total Loses: {{ currentUser.totalLoses }}</p>
 					<p>Tadder Level: {{ currentUser.ladderLevel }}</p>
 
 					<div style="display: flex; flex-direction: column;">
+						<!-- send message -->
+						<button mat-button (click)="createDirectChannel()">
+							Send Message
+						</button>
+
 						<!-- friend request -->
 						<button mat-button *ngIf="requestStatus==0" (click)="addFriend()">
-							Send friend request
+							Send Friend Request
 						</button>
 						<button mat-button *ngIf="requestStatus==1;" (click)="removeFriend()">
-							Cancel friend request
+							Cancel Friend Request
 						</button>
 						<div *ngIf="requestStatus==2">
 							<button mat-button (click)="responseToRequest('accepted')">
-								Accept friend request
+								Accept Friend Request
 							</button>
 							<button mat-button (click)="responseToRequest('declined')">
-								Decline friend request
+								Decline Friend Request
 							</button>
 						</div>
 						<button mat-button *ngIf="requestStatus==3;" (click)="removeFriend()">
-							Remove friend
+							Remove Friend
 						</button>
 						<button mat-button *ngIf="requestStatus==4;">
-							Friend request declined
+							Friend Request Declined
 						</button>
 
 						<!-- block user -->
 						<button mat-button *ngIf="requestStatus!=5 && requestStatus!=6;" (click)="blockUser()">
-							Block user
+							Block User
 						</button>
 						<button mat-button *ngIf="requestStatus==5;" (click)="unblockUser()">
-							Unblock user
+							Unblock User
 						</button>
 					</div>
 				</div>
@@ -57,6 +62,6 @@
 	</div>
 
 	<div *ngIf="requestStatus==6;">
-		<h1>Opps! User not found!</h1>
+		<h1>Oops! User not found!</h1>
 	</div>
 </div>

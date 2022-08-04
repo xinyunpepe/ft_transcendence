@@ -1,9 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { map, Observable, switchMap, tap } from 'rxjs';
-import { FriendRequestI, FriendStatus } from 'src/app/model/friend-request.interface';
+import { ChannelI, ChannelType } from 'src/app/model/channel.interface';
+import { FriendStatus } from 'src/app/model/friend-request.interface';
 import { UserI } from 'src/app/model/user.interface';
 import { AuthService } from 'src/app/public/services/auth/auth.service';
+import { ChatService } from '../../services/chat/chat.service';
 import { FriendService } from '../../services/friend/friend.service';
 import { UserService } from '../../services/user/user.service';
 
@@ -14,11 +16,12 @@ import { UserService } from '../../services/user/user.service';
 })
 export class ProfileUserComponent implements OnInit {
 
-	userId: number;
+	user: UserI = null;
 	currentUserId: number;
 	avatar: any;
 	requestStatus: number;
 	requestId: number;
+	directChannel: ChannelI = {};
 
 	private currentUserId$: Observable<number> = this.activatedRoute.params.pipe(
 		map((params: Params) => parseInt(params['id']))
@@ -33,6 +36,7 @@ export class ProfileUserComponent implements OnInit {
 		private authService: AuthService,
 		private userService: UserService,
 		private friendService: FriendService,
+		private chatService: ChatService,
 		private router: Router
 	) { }
 
@@ -40,7 +44,7 @@ export class ProfileUserComponent implements OnInit {
 		this.authService.getUserId().pipe(
 			switchMap((id: number) => this.userService.findById(id).pipe(
 				tap((user) => {
-					this.userId = user.id;
+					this.user = user;
 					this.currentUser$.subscribe(currentUser => {
 						//TODO || currentuser.ban?
 						if (!currentUser) {
@@ -60,6 +64,29 @@ export class ProfileUserComponent implements OnInit {
 		).subscribe();
 	}
 
+	createDirectChannel() {
+		this.chatService.findDirectChannel(this.user.id, this.currentUserId).subscribe(
+			channel => {
+				if (channel) {
+					// TODO redirect to the channel if possible?
+					this.router.navigate(['../../dashboard-channel'], { relativeTo: this.activatedRoute });
+				}
+				else {
+					this.userService.findById(this.currentUserId).pipe(
+						tap((user: UserI) => {
+							this.directChannel.name = 'Direct Channel ' + user.username + ' & ' + this.user.username;
+							this.directChannel.users = [];
+							this.directChannel.users.push(user);
+							this.directChannel.type = ChannelType.PRIVATE;
+							this.chatService.createDirectChannel(this.directChannel);
+						})
+					).subscribe();
+					this.router.navigate(['../../dashboard-channel'], { relativeTo: this.activatedRoute });
+				}
+			}
+		)
+	}
+
 	/*
 	** 0: not-sent
 	** 1: pending
@@ -76,7 +103,7 @@ export class ProfileUserComponent implements OnInit {
 				if (request) {
 					this.requestId = request.id;
 					if (request.status == FriendStatus.PENDING) {
-						if (request.creator.id === this.userId) {
+						if (request.creator.id === this.user.id) {
 							this.requestStatus = 1;
 						}
 						else {
@@ -93,7 +120,7 @@ export class ProfileUserComponent implements OnInit {
 						this.requestStatus = 4;
 					}
 					else if (request.status === FriendStatus.BLOCKED) {
-						if (request.creator.id === this.userId) {
+						if (request.creator.id === this.user.id) {
 							this.requestStatus = 5;
 						}
 						else {
@@ -105,10 +132,9 @@ export class ProfileUserComponent implements OnInit {
 		).subscribe();
 	}
 
-	// TODO better solution than window reload?
 	addFriend() {
 		this.friendService.sendFriendRequest(this.currentUserId).subscribe(
-			() => {
+			(response) => {
 				this.requestStatus = 1;
 			}
 		)
@@ -117,7 +143,7 @@ export class ProfileUserComponent implements OnInit {
 
 	removeFriend() {
 		this.friendService.removeFriendRequest(this.currentUserId).subscribe(
-			() => {
+			(response) => {
 				this.requestStatus = 0;
 			}
 		)
@@ -140,7 +166,7 @@ export class ProfileUserComponent implements OnInit {
 
 	blockUser() {
 		this.friendService.blockUser(this.currentUserId).subscribe(
-			() => {
+			(response) => {
 				this.requestStatus = 5;
 			}
 		)
@@ -149,7 +175,7 @@ export class ProfileUserComponent implements OnInit {
 
 	unblockUser() {
 		this.friendService.unblockUser(this.currentUserId).subscribe(
-			() => {
+			(response) => {
 				this.requestStatus = 5;
 			}
 		)

@@ -110,6 +110,19 @@ export class EditChannelComponent implements OnInit {
 
 	// TODO not sure if nessasery
 	removeUser(user: UserI) {
+		this.unsetAdmin(user);
+		this.unmuteUser(user);
+		if (user.id === this.channel.owner.id) {
+			this.snackbar.open('You can\'t remove the owner', 'Close', {
+				duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
+			});
+		}
+		else {
+			this.chatService.removeUser(this.channel, user);
+			this.snackbar.open(`You have removed ${ user.username } from the channel`, 'Close', {
+				duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
+			});
+		}
 	}
 
 	setAdmin(user: UserI) {

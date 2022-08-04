@@ -15,7 +15,7 @@
 				<div *ngIf="(channels$ | async)?.items.length > 0" class="channels">
 					<mat-selection-list [multiple]="false" (selectionChange)="onSelectChannel($event)">
 						<mat-list-option *ngFor="let channel of (channels$ | async)?.items" [value]="channel">
-							Name: {{ channel.name }} ID: {{ channel.id }}
+							{{ channel.name }} (id: {{ channel.id }})
 							<mat-divider></mat-divider>
 						</mat-list-option>
 					</mat-selection-list>

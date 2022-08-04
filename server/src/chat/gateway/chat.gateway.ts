@@ -97,6 +97,23 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 		}
 	}
 
+	@SubscribeMessage('createDirectChannel')
+	async onCreateDirectChannel(socket: Socket, channel: ChannelI) {
+		const newChannel: ChannelI = await this.channelService.createDirectChannel(channel, socket.data.user);
+
+		for (const user of newChannel.users) {
+			const connections: ConnectedUserI[] = await this.connectedUserService.findByUser(user);
+			const channels = await this.channelService.getChannelsForUser(user.id, { page: 1, limit: 10 });
+
+			// substract page -1 to match the angular material paginator
+			channels.meta.currentPage = channels.meta.currentPage - 1;
+
+			for (const connection of connections) {
+				await this.server.to(connection.socketId).emit('channels', channels);
+			}
+		}
+	}
+
 	// get all the joined channels for user
 	@SubscribeMessage('paginateChannels')
 	async onPaginateChannel(socket: Socket, page: PageI) {
@@ -121,7 +138,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 		// add page +1 to match angular material paginator
 		page.page = page.page + 1;
 
-		const channels = await this.channelService.getAllChannelsForUser(page);
+		const channels = await this.channelService.getAllChannelsForUser(socket.data.user.id, page);
 
 		// substract page -1 to match the angular material paginator
 		channels.meta.currentPage = channels.meta.currentPage - 1;
@@ -154,9 +171,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
 		// TODO cannot always find users[1], and what if its the last one in the channel
 		// asign the first user left in the channel as new owner & admin
-		await this.channelService.addAdmin(channel, channel.users[1]);
-		channel.owner = channel.users[1];
-		this.channelService.saveChannel(channel);
+		// await this.channelService.addAdmin(channel, channel.users[1]);
+		// channel.owner = channel.users[1];
+		// this.channelService.saveChannel(channel);
 	}
 
 	// add user
@@ -186,7 +203,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 		let channel: ChannelI = data.channel;
 		let user: UserI = data.user;
 		const isAdmin: Number = await this.channelService.isUserAdmin(socket.data.user.id, channel);
-		if (isAdmin && user != channel.owner) {
+		if (isAdmin && user.id !== channel.owner.id) {
 			await this.channelService.addMute(channel, user);
 		}
 		this.channelService.saveChannel(channel);
@@ -199,7 +216,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 		let user: UserI = data.user;
 		// verify is current user is channel admin
 		const isAdmin: Number = await this.channelService.isUserAdmin(socket.data.user.id, channel);
-		if (isAdmin && user != channel.owner) {
+		if (isAdmin && user.id !== channel.owner.id) {
 			await this.channelService.removeAdmin(channel.id, user.id);
 		}
 	}
@@ -212,6 +229,27 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 		const isAdmin: Number = await this.channelService.isUserAdmin(socket.data.user.id, channel);
 		if (isAdmin) {
 			await this.channelService.removeMute(channel.id, user.id);
+		}
+	}
+
+	// remove user
+	@SubscribeMessage('removeUser')
+	async onRemoveUser(socket: Socket, data: any) {
+		let channel: ChannelI = data.channel;
+		let user: UserI = data.user;
+		const isAdmin: Number = await this.channelService.isUserAdmin(socket.data.user.id, channel);
+		if (isAdmin && user.id !== channel.owner.id) {
+			await this.channelService.deleteUser(user.id, channel.id);
+
+			const connections: ConnectedUserI[] = await this.connectedUserService.findByUser(user);
+			const channels = await this.channelService.getChannelsForUser(user.id, { page: 1, limit: 10 });
+
+			// substract page -1 to match the angular material paginator
+			channels.meta.currentPage = channels.meta.currentPage - 1;
+
+			for (const connection of connections) {
+				await this.server.to(connection.socketId).emit('channels', channels);
+			}
 		}
 	}
 

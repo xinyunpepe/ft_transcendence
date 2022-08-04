@@ -2,13 +2,13 @@
 	display: flex;
 	justify-content: center;
 	margin: 30px;
-	min-width: 350px;
 }
 
 .container mat-card {
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
+	min-width: 350px;
 }
 
 .container mat-card .channels {

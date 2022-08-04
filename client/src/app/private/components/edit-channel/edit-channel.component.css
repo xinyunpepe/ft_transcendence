@@ -2,7 +2,6 @@
 	display: flex;
 	justify-content: center;
 	margin: 30px;
-	min-width: 350px;
 }
 
 .container mat-card mat-card-content form {
@@ -13,12 +12,16 @@
 
 .container mat-card mat-card-content form mat-form-field {
 	width: 100%;
-	min-width: 300px;
 }
 
 .container mat-card mat-card-content form .button {
 	display: flex;
 	justify-content: flex-end;
+}
+
+.mat-radio-group {
+	display: flex;
+	justify-content: space-around;
 }
 
 .mat-radio-button {
@@ -27,4 +30,8 @@
 
 .firstbutton {
 	margin-left: 50px;
+}
+
+.names {
+	min-width: 50px;
 }

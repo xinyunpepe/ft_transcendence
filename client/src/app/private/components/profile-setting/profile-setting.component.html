@@ -5,7 +5,7 @@
 		<mat-card-title>User Settings</mat-card-title>
 		<mat-card-content>
 			<div style="padding-top: 30px;">
-				<h3>Edit Username</h3>
+				<h2>Edit Username</h2>
 				<form class="form" [formGroup]="settingForm" (ngSubmit)="updateUsername()">
 					<mat-form-field appearance="standard">
 						<input matInput placeholder="New Username" formControlName="username">
@@ -20,7 +20,7 @@
 			<mat-divider></mat-divider>
 
 			<div style="padding-top: 30px;">
-				<h3>Edit Avatar</h3>
+				<h2>Edit Avatar</h2>
 				<input type="file" accept="image/x-png,image/gif,image/jpeg" (change)="onFileChange($event)">
 				<button mat-button (click)="uploadAvatar()">
 					Upload
@@ -30,7 +30,7 @@
 			<mat-divider></mat-divider>
 
 			<div style="padding-top: 30px;">
-				<h3>Google Authenticator</h3>
+				<h2>Google Authenticator</h2>
 				<mat-hint><small>Download and install Google Authenticator</small></mat-hint>
 				<br>
 				<br>

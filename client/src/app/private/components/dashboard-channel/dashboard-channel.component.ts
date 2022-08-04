@@ -12,7 +12,6 @@ import { ChatService } from 'src/app/private/services/chat/chat.service';
 })
 export class DashboardChannelComponent implements OnInit, AfterViewInit {
 
-	// name$ convention for async value
 	channels$: Observable<ChannelPaginateI> = this.chatService.getChannels();
 	selectedChannel: ChannelI = null;
 
