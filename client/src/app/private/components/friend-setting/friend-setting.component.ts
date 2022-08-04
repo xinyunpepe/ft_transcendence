@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
+import { FormControl } from '@angular/forms';
 import { MatSelectionListChange } from '@angular/material/list';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable, switchMap, tap } from 'rxjs';
+import { debounceTime, distinctUntilChanged, Observable, switchMap, tap } from 'rxjs';
 import { FriendRequestI } from 'src/app/model/friend-request.interface';
 import { UserI } from 'src/app/model/user.interface';
 import { AuthService } from 'src/app/public/services/auth/auth.service';
@@ -15,10 +16,13 @@ import { UserService } from '../../services/user/user.service';
 })
 export class FriendSettingComponent implements OnInit {
 
+	searchUsername = new FormControl();
 	user: Observable<UserI>;
-	requests$: Observable<FriendRequestI[]> = this.friendService.findPendingRequests();
+	filteredUsers: UserI[] = [];
+	receivedRequests$: Observable<FriendRequestI[]> = this.friendService.findRequestsByReceiver()
+	sentRequests$: Observable<FriendRequestI[]> = this.friendService.findRequestsByCreator()
 	friends$: Observable<FriendRequestI[]> = this.friendService.findAcceptedRequests();
-
+	blocks$: Observable<FriendRequestI[]> = this.friendService.findBlockedRequests();
 	friendsList: UserI[] = [];
 
 	constructor(
@@ -49,24 +53,45 @@ export class FriendSettingComponent implements OnInit {
 				})
 			))
 		).subscribe();
+
+		this.searchUsername.valueChanges.pipe(
+			debounceTime(500),
+			distinctUntilChanged(),
+
+			switchMap((username: string) => this.userService.findByUsername(username).pipe(
+				tap((users: UserI[]) => this.filteredUsers = users)
+			))
+		).subscribe();
+	}
+
+	onSelectUser(user: UserI) {
+		this.router.navigate(['../profile/' + user.id], { relativeTo: this.activatedRoute });
 	}
 
 	onSelectRequest(event: MatSelectionListChange) {
-		this.router.navigate(['../profile/' + event.source.selectedOptions.selected[0].value.creator.id], { relativeTo: this.activatedRoute });
-		// this.user.pipe(
-		// 	tap((user) => {
-		// 		// if current user is receiver, go to creators page
-		// 		if (user.id == event.source.selectedOptions.selected[0].value.receiver.id) {
-		// 			this.router.navigate(['../profile/' + event.source.selectedOptions.selected[0].value.creator.id], { relativeTo: this.activatedRoute });
-		// 		}
-		// 		else {
-		// 			this.router.navigate(['../profile/' + event.source.selectedOptions.selected[0].value.receiver.id], { relativeTo: this.activatedRoute });
-		// 		}
-		// 	})
-		// )
+		this.user.pipe(
+			tap((user) => {
+				// if current user is receiver, go to creators page
+				if (user.id == event.source.selectedOptions.selected[0].value.receiver.id) {
+					this.router.navigate(['../profile/' + event.source.selectedOptions.selected[0].value.creator.id], { relativeTo: this.activatedRoute });
+				}
+				else {
+					this.router.navigate(['../profile/' + event.source.selectedOptions.selected[0].value.receiver.id], { relativeTo: this.activatedRoute });
+				}
+			})
+		).subscribe();
 	}
 
 	onSelectFriend(event: MatSelectionListChange) {
 		this.router.navigate(['../profile/' + event.source.selectedOptions.selected[0].value.id], { relativeTo: this.activatedRoute });
+	}
+
+	displayFn(user: UserI) {
+		if (user) {
+			return user.username;
+		}
+		else {
+			return '';
+		}
 	}
 }

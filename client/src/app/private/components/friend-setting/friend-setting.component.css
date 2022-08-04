@@ -1,17 +1,32 @@
 .container {
-	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
-	max-width: 800px;
-	margin: auto;
-	margin-top: 30px;
-	text-align: center;
-	font-family: arial;
+	display: flex;
+	justify-content: center;
+	margin: 30px;
 }
 
-.container-block {
-	padding-top: 10%;
-	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-	gap: 50px;
-	grid-auto-rows: minmax(50px, auto);
+.container mat-card {
+	min-width: 600px;
 }
 
+.container mat-list-option {
+	font-weight: 500;
+}
+
+.search {
+	padding-top: 30px;
+	margin-left: 10px;
+}
+
+.flexbox {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-around;
+	padding-top: 30px;
+	padding-bottom: 20px;
+}
+
+.flex-item {
+	flex: 1;
+	padding-left: 10px;
+	padding-right: 10px;
+}

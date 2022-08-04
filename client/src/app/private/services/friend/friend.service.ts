@@ -17,20 +17,20 @@ export class FriendService {
 		return this.http.get<FriendRequestI>(`api/users/friend-request/status/${ userId }`);
 	}
 
-	findRequestsByCreator(userId: number): Observable<FriendRequestI[]> {
-		return this.http.get<FriendRequestI[]>(`api/users/friend-request/creator/${ userId }`);
-	}
-
-	findRequestsByReceiver(userId: number): Observable<FriendRequestI[]> {
-		return this.http.get<FriendRequestI[]>(`api/users/friend-request/receiver/${ userId }`);
-	}
-
-	findPendingRequests(): Observable<FriendRequestI[]> {
+	findRequestsByReceiver(): Observable<FriendRequestI[]> {
 		return this.http.get<FriendRequestI[]>(`api/users/friend-request/received/pending`);
+	}
+
+	findRequestsByCreator(): Observable<FriendRequestI[]> {
+		return this.http.get<FriendRequestI[]>(`api/users/friend-request/created/pending`);
 	}
 
 	findAcceptedRequests(): Observable<FriendRequestI[]> | undefined {
 		return this.http.get<FriendRequestI[]>(`api/users/friend-request/received/accepted`);
+	}
+
+	findBlockedRequests(): Observable<FriendRequestI[]> | undefined {
+		return this.http.get<FriendRequestI[]>(`api/users/friend-request/created/blocked`);
 	}
 
 	sendFriendRequest(userId: number): Observable<FriendRequestI | { error: string }> {

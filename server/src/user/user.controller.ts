@@ -129,27 +129,19 @@ export class UserController {
 	}
 
 	@UseGuards(JwtAuthGuard)
-	@Get('friend-request/receiver/:receiverId')
-	findRequestByReceiver(
-		@Param('receiverId') receiverId: number
-	) {
-		return this.userService.findRequestByReceiver(receiverId);
-	}
-
-	@UseGuards(JwtAuthGuard)
-	@Get('friend-request/creator/:creatorId')
-	findRequestsByCreator(
-		@Param('creatorId') creatorId: number
-	) {
-		return this.userService.findRequestsByCreator(creatorId);
-	}
-
-	@UseGuards(JwtAuthGuard)
 	@Get('friend-request/received/pending')
-	findPendingRequests(
+	findRequestByReceiver(
 		@Req() req
 	) {
-		return this.userService.findPendingRequests(req.user.id);
+		return this.userService.findRequestByReceiver(req.user.id);
+	}
+
+	@UseGuards(JwtAuthGuard)
+	@Get('friend-request/created/pending')
+	findRequestsByCreator(
+		@Req() req
+	) {
+		return this.userService.findRequestsByCreator(req.user.id);
 	}
 
 	@UseGuards(JwtAuthGuard)
@@ -160,6 +152,13 @@ export class UserController {
 		return this.userService.findAcceptedRequests(req.user.id);
 	}
 
+	@UseGuards(JwtAuthGuard)
+	@Get('friend-request/created/blocked')
+	findBlockedRequests(
+		@Req() req
+	) {
+		return this.userService.findBlockedRequests(req.user.id);
+	}
 
 	@UseGuards(JwtAuthGuard)
 	@Post('friend-request/send/:receiverId')
