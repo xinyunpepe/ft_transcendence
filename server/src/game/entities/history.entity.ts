@@ -1,4 +1,4 @@
-import { Column, Entity, JoinTable, ManyToMany, OneToMany, PrimaryColumn } from "typeorm";
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, OneToMany, PrimaryColumn } from "typeorm";
 import { Match } from "./match.entity";
 
 @Entity()
@@ -18,10 +18,10 @@ export class History {
 	@Column({default: 0})
 	ladderLevel: number;
 
-	@OneToMany(()=>Match, match=>match.winner)
+	@OneToMany(()=>Match, match=>match.winner, {eager: true})
 	winMatches: Match[];
 
-	@OneToMany(()=>Match, match=>match.loser)
+	@OneToMany(()=>Match, match=>match.loser, {eager: true})
 	loseMatches: Match[];
 
 	constructor(userId: number, inGameRoom?: number) {
@@ -34,7 +34,7 @@ export class History {
 
 	win(match: Match) {
 		if (this.winMatches == null) {
-			this.winMatches = new Array<Match>();
+			this.winMatches = [];
 		}
 		this.winMatches.push(match);
 		this.totalWins += 1;
@@ -46,7 +46,7 @@ export class History {
 
 	lose(match: Match) {
 		if (this.loseMatches == null) {
-			this.loseMatches = new Array<Match>();
+			this.loseMatches = [];
 		}
 		this.loseMatches.push(match);
 		this.totalLoses += 1;

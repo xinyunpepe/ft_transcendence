@@ -254,4 +254,35 @@ export class GameComponent implements OnInit, OnDestroy {
     this.game.sendWatchRequest(this.watchForm.value.number, userId);
     this.watchForm.reset();
   }
+
+  /*TestHistory() {
+    this.game.getHitory(userId).subscribe((result)=>{
+      console.log(result);
+    });
+  }
+
+  TestWin() {
+    this.game.getWinMatches(userId).subscribe((result)=>{
+      console.log(result);
+    });
+  }
+
+  TestLose() {
+    this.game.getLoseMatches(userId).subscribe((result)=>{
+      console.log(result);
+    });
+  }
+
+  TestMatches() {
+    this.game.getMatches().subscribe((result)=>{
+      console.log(result);
+    });
+  }
+
+  TestHistories() {
+    this.game.getHistories().subscribe((result)=>{
+      console.log(result);
+    });
+  }*/
+
 }

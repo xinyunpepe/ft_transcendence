@@ -1,14 +1,14 @@
 import { HistoryI } from "./history.interface";
 
-export interface matchI {
+export interface MatchI {
 	roomId?: number;
 	isLadder?: boolean;
 	isSpeed?: boolean;
 	winnerPoints?: number;
 	loserPoints?: number;
 	timeStamp?: string;
-	winner?: HistoryI;
-	loser?: HistoryI;
+	winnerLogin?: string;
+	loserLogin?: string;
 }
 
 // if ladder game, maybe show before + after level?

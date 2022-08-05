@@ -48,8 +48,8 @@ export class HistoryService {
 		else {
 			player2_history.roomId = gameRoom.room_number;
 		}
-		this.create(player1_history);
-		this.create(player2_history);
+		await this.create(player1_history);
+		await this.create(player2_history);
 	}
 
 	async GameFinish(gameRoom: GameRoom) {
@@ -59,17 +59,43 @@ export class HistoryService {
 		let player2_history = await this.findOne(player2.id);
 		let match: Match;
 		if (player1.point > player2.point) {
-			match = new Match(gameRoom.room_number, gameRoom.hashes[0] == competitionEnumerator['ladder'], gameRoom.hashes[1] == customizationEnumerator['speed'], player1.point, player2.point, player1_history, player2_history);
+			match = new Match(gameRoom.room_number, gameRoom.hashes[0] == competitionEnumerator['ladder'], gameRoom.hashes[1] == customizationEnumerator['speed'], player1.point, player2.point, player1.login, player2.login,player1_history, player2_history);
 			player1_history.win(match);
 			player2_history.lose(match);
 		}
 		else {
-			match = new Match(gameRoom.room_number, gameRoom.hashes[0] == competitionEnumerator['ladder'], gameRoom.hashes[1] == customizationEnumerator['speed'], player2.point, player1.point, player2_history, player1_history);
+			match = new Match(gameRoom.room_number, gameRoom.hashes[0] == competitionEnumerator['ladder'], gameRoom.hashes[1] == customizationEnumerator['speed'], player2.point, player1.point, player2.login, player1.login, player2_history, player1_history);
 			player2_history.win(match);
 			player1_history.lose(match);
 		}
-		this.create(player1_history);
-		this.create(player2_history);
-		this.create_match(match);
+		await this.create_match(match);
+		await this.create(player1_history);
+		await this.create(player2_history);
+		// console.log((await this.findOne(player1.id)).totalWins);
 	}
+
+	/*async getWinMatches(userId: number) {
+		let history = await this.findOne(userId);
+		if (history == null)
+			return [];
+		return history.winMatches;
+	}
+
+	async getLoseMatches(userId: number) {
+		let history = await this.findOne(userId);
+		if (history == null) {
+			return [];
+		}
+		// console.log(history);
+		return history.loseMatches;
+	}
+
+	async getMatches() {
+		console.log('aaa');
+		return await this.MatchRepository.find();
+	}
+
+	async getAll() {
+		return await this.HistoryRepository.find();
+	}*/
 }

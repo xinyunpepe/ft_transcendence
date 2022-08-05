@@ -1,4 +1,4 @@
-import { OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
+import { OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Mutex } from 'async-mutex';
 import { Player } from './utils/player';
 import { ConstValues } from './utils/const-values';
@@ -10,7 +10,7 @@ import { ClientInfo } from './utils/client-info';
 import { competitionEnumerator, customizationEnumerator } from './utils/enumerators';
 
 @WebSocketGateway({cors: { origin: ['http://localhost:3000', 'http://localhost:4200'] }})
-export class GameGateway {
+export class GameGateway implements OnGatewayConnection {
   @WebSocketServer() server;
 
   waiting_clients = [];
@@ -26,6 +26,9 @@ export class GameGateway {
     this.UserIdToLogin = new Map<number,string>();
     this.UserIdToInfo = new Map<number,ClientInfo>();
     this.gameRooms = [];
+  }
+
+  handleConnection(client: any, ...args: any[]) {
   }
 
   @SubscribeMessage('GameConnect')

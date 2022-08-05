@@ -1,4 +1,4 @@
-import { matchI } from "./match.interface";
+import { MatchI } from "./match.interface";
 
 export interface HistoryI {
 	userId?: number;
@@ -6,6 +6,6 @@ export interface HistoryI {
 	totalLoses?: number;
 	inGameRoom?: number; // -1 means not in a game, otherwise it'll show room number
 	ladderLevel? : number;
-	winMatches?: matchI[];
-	loseMatches?: matchI[];
+	winMatches?: MatchI[];
+	loseMatches?: MatchI[];
 }

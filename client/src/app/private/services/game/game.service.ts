@@ -1,4 +1,9 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { map } from 'rxjs';
+import { HistoryI } from 'src/app/model/history.interface';
+import { MatchI } from 'src/app/model/match.interface';
+import { environment } from 'src/environments/environment';
 import { CustomSocket } from '../../sockets/custom-sockets';
 import { competitionEnumerator, customizationEnumerator } from './enumerators';
 
@@ -7,7 +12,28 @@ import { competitionEnumerator, customizationEnumerator } from './enumerators';
 })
 export class GameService {
 
-  constructor(public socket: CustomSocket) { }
+  constructor(public socket: CustomSocket/*, private http: HttpClient*/) { }
+/*
+  getHitory(userId: number) {
+    return this.http.get<HistoryI>(`${ environment.baseUrl }/history/${ userId }`);
+  }
+
+  getWinMatches(userId: number) {
+    return this.http.get<MatchI[]>(`${ environment.baseUrl }/history/WinMatches/${ userId }`);
+  }
+
+  getLoseMatches(userId: number) {
+    return this.http.get<MatchI[]>(` ${ environment.baseUrl }/history/LoseMatches/${ userId }`);
+  }
+
+  getMatches() {
+    return this.http.get<MatchI[]>(` ${ environment.baseUrl }/history/matches/5`);
+  }
+
+  getHistories() {
+    return this.http.get<HistoryI[]>(` ${environment.baseUrl}/history/lol/5`);
+  }
+*/
 
   sendRoomRequest(userId: number, competitionType: string, gameCustomization: string) {
     this.socket.emit('RoomRequest', [userId,competitionEnumerator[competitionType],customizationEnumerator[gameCustomization]]);
