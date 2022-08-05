@@ -1,469 +1,456 @@
-import { OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
+import { OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Mutex } from 'async-mutex';
+import { Player } from './utils/player';
+import { ConstValues } from './utils/const-values';
+import { Response } from './utils/response';
+import { Ball } from './utils/ball';
+import { GameRoom, ModifyAttributes } from './utils/game-room';
 import { HistoryService } from './history/history.service';
+import { ClientInfo } from './utils/client-info';
+import { competitionEnumerator, customizationEnumerator } from './utils/enumerators';
 
-const canvasWidth: number = 600;
-const canvasHeight: number = 450;
-const paddleWidth: number = 12;
-const paddleHeight: number = 30;
-const ballWidth: number = 10;
-const ballHeight: number = 10;
-const animationFrameRate = 30;
-const WinningPoint: number = 3;
-// var GameIsMoving: Map<number,boolean> = new Map<number,boolean>(); // GameIsMoving[room_number] = is_in_game
-
-class Response {
-  constructor (public type: string, public content?: any) {}
-
-  getJSON() {
-    if (this.content) {
-      return {type: this.type, content: this.content};
-    }
-    return {type: this.type};
-  }
-}
-
-class Player {
-  public height: number;
-  public point: number = 0;
-  constructor (public id: string, public socket: any, public carryBall: boolean) {
-    this.height = canvasHeight / 2 - paddleHeight / 2;
-    // this.point = 0;
-  }
-
-  init() {
-    this.height = canvasHeight / 2 - paddleHeight / 2;
-  }
-
-  getJSON() {
-    return {
-      type: "Player",
-      content: {
-        id: this.id,
-        height: this.height,
-        point: this.point
-      }
-    };
-  }
-}
-
-class Ball {
-  public x: number;
-  public y: number;
-  public vx: number;
-  public vy: number;
-  public isCarried: boolean;
-  public ballCarrierId: string;
-  constructor (public readonly player1Id: string) {
-    this.init(player1Id);
-  }
-
-  init(ballCarrierId: string) { // 1 or 2
-    this.ballCarrierId = ballCarrierId;
-    this.isCarried = true;
-    if (this.ballCarrierId == this.player1Id) {
-      this.x = paddleWidth;
-      this.y = canvasHeight / 2 - ballHeight / 2;
-      this.vx = 5;
-      this.vy = 5;
-    }
-    else {
-      this.x = canvasWidth - ballWidth - paddleWidth;
-      this.y = canvasHeight / 2 - ballHeight / 2;
-      this.vx = -5;
-      this.vy = -5;
-    }
-  }
-
-  destroy() {
-    this.isCarried = false;
-    this.x = canvasWidth;
-    this.y = canvasHeight;
-  }
-
-  getJSON() {
-    return {
-      type: "Ball",
-      content: {
-        id: this.player1Id,
-        x: this.x,
-        y: this.y
-      }
-    };
-  }
-}
-
-class GameRoom {
-  static readonly MoveDistance: number = 10;
-  public ball: Ball;
-  constructor (public player1: Player, public player2: Player) {
-    this.ball = new Ball(player1.id); // todo?
-  }
+function ChatChannel(userId: number) {
+  return 'Chat' + userId.toString();
 }
 
 @WebSocketGateway({cors: { origin: ['http://localhost:3000', 'http://localhost:4200'] }})
-export class GameGateway implements OnGatewayDisconnect {
+export class GameGateway implements OnGatewayConnection {
   @WebSocketServer() server;
 
-  waiting_clients = []
+  waiting_clients = [];
   mutex: Mutex;
   room_mutex: Mutex;
-  SocketOfClient: Map<string,any>;
-  rooms: number;
-  gameRooms: Map<number, GameRoom>;
+  UserIdToLogin: Map<number, string>;
+  UserIdToInfo: Map<number, ClientInfo>;
+  gameRooms: GameRoom[];
 
   constructor(public historyService: HistoryService) {
-    this.rooms = 0;
     this.room_mutex = new Mutex();
     this.mutex = new Mutex();
-    this.SocketOfClient = new Map<string, any>();
-    this.gameRooms = new Map<number, GameRoom>();
+    this.UserIdToLogin = new Map<number,string>();
+    this.UserIdToInfo = new Map<number,ClientInfo>();
+    this.gameRooms = [];
   }
 
-  handleDisconnect(client: any) {
-    // todo
+  handleConnection(client: any, ...args: any[]) {
   }
 
-  async setGameReady(player1_id, player2_id) {
-    let player1 = new Player(player1_id, this.SocketOfClient[player1_id], true),
-        player2 = new Player(player2_id, this.SocketOfClient[player2_id], false);
+  @SubscribeMessage('GameConnect')
+  async Connect(client, [userId, userLogin]) {
+    userId = parseInt(userId);
+    client.join(userId);
+    this.UserIdToLogin[userId] = userLogin;
+    if (!this.UserIdToInfo[userId]) {
+      this.UserIdToInfo[userId] = new ClientInfo(this.server, userId);
+    }
+    this.server.to(client.id).emit(ConstValues.ClientInfo, JSON.stringify(this.UserIdToInfo[userId].getJSON()));
+  }
+
+  @SubscribeMessage('ChatConnect')
+  async ChatConnect(client, userId) {
+    userId = parseInt(userId);
+    client.join(ChatChannel(userId));
+  }
+
+  @SubscribeMessage('GameDisconnect')
+  async Disconnect(client, userId) {
+    userId = parseInt(userId);
+    client.leave(userId);
+  }
+
+  @SubscribeMessage('ChatDisconnect')
+  async ChatDisconnect(client, userId) {
+    userId = parseInt(userId);
+    client.leave(ChatChannel(userId));
+  }
+
+  async setGameReady(player1_id: number, player2_id: number, hashes: number[]) { // ok
+    let player1 = new Player(player1_id, this.UserIdToLogin[player1_id], true),
+        player2 = new Player(player2_id, this.UserIdToLogin[player2_id], false);
+    
     const release = await this.room_mutex.acquire();
-    let room_number = this.rooms++;
-    // release();
-    player1.socket.join(room_number);
-    player2.socket.join(room_number);
-    let response = new Response('Room', 'Matched');
-    this.historyService.GameStart(player1_id, player2_id);
-    this.server.to(room_number).emit('RoomResponse',  JSON.stringify(response.getJSON()));
-    // let roomHash = Math.random().toString(36).substring(7);
-    // this.server.to(room_number).emit('RoomInfo', JSON.stringify((new Response('RoomHash',)).getJSON()));
-    this.server.to(room_number).emit('Player', JSON.stringify(player1.getJSON()));
-    this.server.to(room_number).emit('Player', JSON.stringify(player2.getJSON()));
-        response.type = 'Game';
-    response.content = {
-      status: 'Ready',
-      room: room_number.toString(),
-      ballCarrier: player1_id
-    };
+    let room_number = this.gameRooms.length;
+    let gameRoom = new GameRoom(room_number, this.server, player1, player2, hashes,this.UserIdToInfo);
+    this.gameRooms.push(gameRoom);
+    gameRoom.modifyPlayers(ModifyAttributes.Logins, [player1.login, player2.login]);
+    gameRoom.modifyPlayers(ModifyAttributes.hideItem, [[0,4],[true,false]]);
+    gameRoom.modifyPlayers(ModifyAttributes.Heights, [[0,1],[player1.height,player2.height]]);
+    gameRoom.modifyPlayers(ModifyAttributes.room,room_number);
+    gameRoom.modifyPlayers(ModifyAttributes.hashes, [[0,1],hashes]);
+    release();
 
-    this.gameRooms[room_number] = new GameRoom(player1, player2);
-    this.server.to(room_number).emit('Ball', JSON.stringify(this.gameRooms[room_number].ball.getJSON()));
-    this.server.to(room_number).emit('GameStatus',  JSON.stringify(response.getJSON()));
-    // todo, when game finish send Finish, deal with players, sockets, and games ?
-  }
+    gameRoom.modifyAll(ModifyAttributes.points, [[0,1],[player1.point, player2.point]]);
+    gameRoom.modifyAll(ModifyAttributes.ball, [[0,1],[gameRoom.ball.x, gameRoom.ball.y]]);
 
-  async moveBall(room_number: number) {
-    // let room: GameRoom = this.gameRooms[room_number];
-    // let ball: Ball = room.ball;
-    let balls: Ball[] = [this.gameRooms[room_number].ball];
-    let players: Player[] = [this.gameRooms[room_number].player1, this.gameRooms[room_number].player2];
-    // let player1: Player = room.player1, player2: Player = room.player2;
-    const minX = paddleWidth;
-    const maxX = canvasWidth - ballWidth - paddleWidth;
+    this.historyService.GameStart(gameRoom);
+}
+
+  async moveBall(room_number: number) { // ok
+    let gameRoom = this.gameRooms[room_number];
+    let ball = gameRoom.ball;
+    let player1 = gameRoom.player1;
+    let player2 = gameRoom.player2;
+    
+    const minX = ConstValues.paddleWidth;
+    const maxX = ConstValues.canvasWidth - ConstValues.ballWidth - ConstValues.paddleWidth;
     const minY = 0;
-    const maxY = canvasHeight - ballHeight;
+    const maxY = ConstValues.canvasHeight - ConstValues.ballHeight;
     const interval = setInterval(()=>{
-      // if (GameIsMoving[room_number] == false) {
-      //   clearInterval(interval);
-      //   return ;
-      // }
-      if (players[0].point < 0 || players[1].point < 0) {
+      if (player1.point < 0 || player2.point < 0) {
         clearInterval(interval);
         return ;
       }
-      balls[0].x += balls[0].vx;
-      balls[0].y += balls[0].vy;
-      if (balls[0].y < minY) {
-        balls[0].y = 2 * minY - balls[0].y;
-        balls[0].vy *= -1;
+      ball.x += ball.vx;
+      ball.y += ball.vy;
+      if (ball.y < minY) {
+        ball.y = 2 * minY - ball.y;
+        ball.vy *= -1;
       }
-      else if (balls[0].y > maxY) {
-        balls[0].y = 2 * maxY - balls[0].y;
-        balls[0].vy *= -1;
+      else if (ball.y > maxY) {
+        ball.y = 2 * maxY - ball.y;
+        ball.vy *= -1;
       }
-      if (balls[0].x < minX) {
-        if ((balls[0].y + ballHeight >= players[0].height) && (balls[0].y <= players[0].height + paddleHeight) ) {
-          balls[0].x = 2 * minX - balls[0].x;
-          balls[0].vx *= -1;
+      if (ball.x < minX) {
+        if ((ball.y + ConstValues.ballHeight >= player1.height) && (ball.y <= player1.height + ConstValues.paddleHeight) ) {
+          ball.x = 2 * minX - ball.x;
+          ball.vx *= -1;
         } 
         else {
-          ++(players[1].point);
-          this.server.to(room_number).emit('Player', JSON.stringify(players[1].getJSON()));
-          if (players[1].point >= WinningPoint) {
-            // this.gameRooms.delete(room_number);
-            balls[0].destroy();
-            this.server.to(room_number).emit('GameStatus', JSON.stringify((new Response('Game', {status: 'Finish'})).getJSON()));
-            // this.historyService.GameUpdate(room_number, players[0].id, players[1].id, players[0].point, players[1].point, 'Finish');
-            this.historyService.GameFinish(players[1].id, players[0].id);
+          ++(player2.point);
+          gameRoom.modifyAll(ModifyAttributes.points, [[1],[player2.point]]);
+          if (player2.point >= ConstValues.WinningPoint) {
+            ball.destroy();
+            gameRoom.modifyAll(ModifyAttributes.ball, [[0,1],[ConstValues.canvasWidth,ConstValues.canvasHeight]]);
+            gameRoom.modifyAll(ModifyAttributes.hideItem,[[1,3],[false,false]]);
+            this.historyService.GameFinish(gameRoom);
           }
           else {
-            players[0].init();
-            players[1].init();
-            balls[0].init(players[0].id);
-            players[0].carryBall = true;
-            this.server.to(room_number).emit('Player', JSON.stringify(players[0].getJSON()));
-            this.server.to(room_number).emit('Player', JSON.stringify(players[1].getJSON()));
-            this.server.to(room_number).emit('Ball', JSON.stringify(balls[0].getJSON()));
-            this.server.to(room_number).emit('GameStatus', JSON.stringify((new Response('Game',  {status: 'Ready', room: room_number.toString(), ballCarrier: players[0].id})).getJSON()));
-            // this.historyService.GameUpdate(room_number, players[0].id, players[1].id, players[0].point, players[1].point, 'In Game');
+            player1.init();
+            player2.init();
+            ball.init(player1.id);
+            player1.carryBall = true;
+            gameRoom.modifyAll(ModifyAttributes.Heights, [[0,1],[player1.height, player2.height]]);
+            gameRoom.modifyAll(ModifyAttributes.ball, [[0,1],[ball.x, ball.y]]);
           }
-          // console.log(interval);
-          // GameIsMoving[room_number] = false;
           clearInterval(interval);
           return ;
         }
       }
-      else if (balls[0].x > maxX) {
-        if ((balls[0].y + ballHeight >= players[1].height) && (balls[0].y <= players[1].height + paddleHeight) ) {
-          balls[0].x = 2 * maxX - balls[0].x;
-          balls[0].vx *= -1;
+      else if (ball.x > maxX) {
+        if ((ball.y + ConstValues.ballHeight >= player2.height) && (ball.y <= player2.height + ConstValues.paddleHeight) ) {
+          ball.x = 2 * maxX - ball.x;
+          ball.vx *= -1;
         }
         else {
-          ++(players[0].point);
-          // console.log(this.gameRooms[room_number].player1.point);
-          this.server.to(room_number).emit('Player', JSON.stringify(players[0].getJSON()));
-          if (players[0].point >= WinningPoint) {
-            // this.gameRooms.delete(room_number);
-            balls[0].destroy();
-            this.server.to(room_number).emit('GameStatus', JSON.stringify((new Response('Game', {status: 'Finish'})).getJSON()));
-            this.historyService.GameFinish(players[0].id, players[1].id);
-              // this.historyService.GameUpdate(room_number, players[0].id, players[1].id, players[0].point, players[1].point, 'In Game');
+          ++(player1.point);
+          gameRoom.modifyAll(ModifyAttributes.points, [[0],[player1.point]]);
+          if (player1.point >= ConstValues.WinningPoint) {
+            ball.destroy();
+            gameRoom.modifyAll(ModifyAttributes.ball, [[0,1],[ConstValues.canvasWidth,ConstValues.canvasHeight]]);
+            gameRoom.modifyAll(ModifyAttributes.hideItem, [[1,3],[false,false]]);
+            this.historyService.GameFinish(gameRoom);
           }
           else {
-            players[0].init();
-            players[1].init();
-            balls[0].init(players[1].id);
-            players[1].carryBall = true;
-            // console.log(players[0].height);
-            // console.log(this.gameRooms[room_number].player1.height);
-            this.server.to(room_number).emit('Player', JSON.stringify(players[0].getJSON()));
-            this.server.to(room_number).emit('Player', JSON.stringify(players[1].getJSON()));
-            this.server.to(room_number).emit('Ball', JSON.stringify(balls[0].getJSON()));
-            this.server.to(room_number).emit('GameStatus', JSON.stringify((new Response('Game',  {status: 'Ready', room: room_number.toString(), ballCarrier: players[1].id})).getJSON()));
-            // this.historyService.GameUpdate(room_number, players[0].id, players[1].id, players[0].point, players[1].point, 'In Game');
-
+            player1.init();
+            player2.init();
+            ball.init(player2.id);
+            player2.carryBall = true;
+            gameRoom.modifyAll(ModifyAttributes.Heights,[[0,1],[player1.height,player2.height]]);
+            gameRoom.modifyAll(ModifyAttributes.ball, [[0,1],[ball.x, ball.y]]);
           }
-          // GameIsMoving[room_number] = false;
           clearInterval(interval);
           return ;
         }
       }
-      this.server.to(room_number).emit('Ball', JSON.stringify(balls[0].getJSON()));
-    }, animationFrameRate);
+      gameRoom.modifyAll(ModifyAttributes.ball, [[0,1],[ball.x, ball.y]]);
+    }, ConstValues.animationFrameRate);
   }
 
   @SubscribeMessage('PlayerMove')
-  async movePlayer(client, [room_number, id, direction]) {
-    // if (this.gameRooms[room_number].player2.carryBall)
-      // console.log(this.gameRooms[room_number].player1.point);
-      // console.log(this.gameRooms[room_number].player1.height);
+  async movePlayer(client, [room_number, id, direction]) { // ok
+    room_number = parseInt(room_number);
+    id = parseInt(id);
+
+    let gameRoom = this.gameRooms[room_number];
+    let ball = gameRoom.ball;
+    let player1 = gameRoom.player1;
+    let player2 = gameRoom.player2;
+    
     if (direction == 'space') {
-      if ( this.gameRooms[room_number].ball.isCarried && id == this.gameRooms[room_number].ball.ballCarrierId ) {
-        this.server.to(parseInt(room_number)).emit('GameStatus', JSON.stringify((new Response('Game', {status: 'Start'}).getJSON())));
-        this.gameRooms[room_number].player1.carryBall = false;
-        this.gameRooms[room_number].player2.carryBall = false;
-        this.gameRooms[room_number].ball.isCarried = false;
-        // GameIsMoving[room_number] = true;
-        this.moveBall(parseInt(room_number));
+      if ( ball.isCarried && id == ball.ballCarrierId ) {
+        player1.carryBall = false;
+        player2.carryBall = false;
+        ball.isCarried = false;
+        this.moveBall(room_number);
       }
       return ;
     }
-    if (id == this.gameRooms[room_number].player1.id) {
-      switch (direction) {
-        case 'up':
-          this.gameRooms[room_number].player1.height -= GameRoom.MoveDistance;
-          if (this.gameRooms[room_number].player1.height < 0)
-            this.gameRooms[room_number].player1.height = 0;
-          break ;
-        case 'down':
-          this.gameRooms[room_number].player1.height += GameRoom.MoveDistance;
-          if (this.gameRooms[room_number].player1.height > canvasHeight - paddleHeight)
-            this.gameRooms[room_number].player1.height = canvasHeight - paddleHeight;
-          break ;
-        default:
-          console.log('ClientError: Invalid PlayerMove direction ' + direction);
+    if (direction == 'left') {
+      if ( (id == player1.id || id == player2.id ) && customizationEnumerator['speed'] == gameRoom.hashes[1] && !ball.isCarried) {
+        --ball.vx;
       }
-      if (this.gameRooms[room_number].player1.carryBall) {
-        this.gameRooms[room_number].ball.y = this.gameRooms[room_number].player1.height + paddleHeight / 2 - ballHeight / 2;
-        // this.server.to(parseInt(room_number)).emit('Ball', JSON.stringify(this.gameRooms[room_number].ball.getJSON()));
-      }
-      // console.log(this.gameRooms[room_number].player1.point);
-      this.server.to(parseInt(room_number)).emit('Player', JSON.stringify(this.gameRooms[room_number].player1.getJSON()));
+      return ;
     }
-    else if (id == this.gameRooms[room_number].player2.id) {
+    if (direction == 'right') {
+      if ( (id == player1.id || id == player2.id ) && customizationEnumerator['speed'] == gameRoom.hashes[1] && !ball.isCarried) {
+        ++ball.vx;
+      }
+      return ;
+    }
+
+    if (id == player1.id) {
       switch (direction) {
         case 'up':
-          this.gameRooms[room_number].player2.height -= GameRoom.MoveDistance;
-          if (this.gameRooms[room_number].player2.height < 0)
-            this.gameRooms[room_number].player2.height = 0;
+          player1.height -= GameRoom.MoveDistance;
+          if (player1.height < 0)
+            player1.height = 0;
           break ;
         case 'down':
-          this.gameRooms[room_number].player2.height += GameRoom.MoveDistance;
-          if (this.gameRooms[room_number].player2.height > canvasHeight - paddleHeight)
-            this.gameRooms[room_number].player2.height = canvasHeight - paddleHeight;
+          player1.height += GameRoom.MoveDistance;
+          if (player1.height > ConstValues.canvasHeight - ConstValues.paddleHeight)
+            player1.height = ConstValues.canvasHeight - ConstValues.paddleHeight;
           break ;
         default:
           console.log('ClientError: Invalid PlayerMove direction ' + direction);
       }
-      if (this.gameRooms[room_number].player2.carryBall) {
-        this.gameRooms[room_number].ball.y = this.gameRooms[room_number].player2.height + paddleHeight / 2 - ballHeight / 2;
-        // this.server.to(parseInt(room_number)).emit('Ball', JSON.stringify(this.gameRooms[room_number].ball.getJSON()));
+      if (player1.carryBall) {
+        ball.y = player1.height + ConstValues.paddleHeight / 2 - ConstValues.ballHeight / 2;
+        gameRoom.modifyAll(ModifyAttributes.ball, [[0,1],[ball.x, ball.y]]);
       }
-      this.server.to(parseInt(room_number)).emit('Player', JSON.stringify(this.gameRooms[room_number].player2.getJSON()));
+      gameRoom.modifyAll(ModifyAttributes.Heights,[[0],[player1.height]]);
+    }
+    else if (id == player2.id) {
+      switch (direction) {
+        case 'up':
+          player2.height -= GameRoom.MoveDistance;
+          if (player2.height < 0)
+            player2.height = 0;
+          break ;
+        case 'down':
+          player2.height += GameRoom.MoveDistance;
+          if (player2.height > ConstValues.canvasHeight - ConstValues.paddleHeight)
+            player2.height = ConstValues.canvasHeight - ConstValues.paddleHeight;
+          break ;
+        default:
+          console.log('ClientError: Invalid PlayerMove direction ' + direction);
+      }
+      if (player2.carryBall) {
+        ball.y = player2.height + ConstValues.paddleHeight / 2 - ConstValues.ballHeight / 2;
+        gameRoom.modifyAll(ModifyAttributes.ball, [[0,1],[ball.x, ball.y]]);
+      }
+      gameRoom.modifyAll(ModifyAttributes.Heights,[[1],[player2.height]]);
     }
   }
 
   @SubscribeMessage('Special')
-  async speicalEvent(client, [room_number, id, information]) {
-    // console.log(room_number);
+  async speicalEvent(client, [room_number, id, information]) { // ok
+    room_number = parseInt(room_number);
+    id = parseInt(id);
+    let gameRoom = this.gameRooms[room_number];
     if (information == 'Surrender') {
-      // clearInterval(interval);
-      // GameIsMoving[room_number] = false;
-      let player1: Player = this.gameRooms[room_number].player1, player2: Player = this.gameRooms[room_number].player2;
+      let player1: Player = gameRoom.player1, player2: Player = gameRoom.player2;
       if (player1.id == id) {
         player1.point = -42;
-        this.server.to(parseInt(room_number)).emit('Player', JSON.stringify(player1.getJSON()));
-        // this.historyService.GameUpdate(room_number, player1.id, player2.id, player1.point, player2.point, 'Finish');
-        this.historyService.GameFinish(player2.id, player1.id);
+        gameRoom.modifyAll(ModifyAttributes.points, [[0],[player1.point]]);
+        this.historyService.GameFinish(gameRoom);
       }
       else if (player2.id == id) {
         player2.point = -42;
-        this.server.to(parseInt(room_number)).emit('Player', JSON.stringify(player2.getJSON()));
-        this.historyService.GameFinish(player1.id, player2.id);
-        // this.historyService.GameUpdate(room_number, player1.id, player2.id, player1.point, player2.point, 'Finish');
+        gameRoom.modifyAll(ModifyAttributes.points, [[1],[player2.point]]);
+        this.historyService.GameFinish(gameRoom); 
       }
       else return ;
-      // this.gameRooms.delete(room_number);
-      this.gameRooms[room_number].ball.destroy();
-      this.server.to(parseInt(room_number)).emit('Ball', JSON.stringify(this.gameRooms[room_number].ball.getJSON()));
-      this.server.to(parseInt(room_number)).emit('GameStatus', JSON.stringify((new Response('Game', {status: 'Finish'})).getJSON()));
+      
+      gameRoom.ball.destroy();
+      gameRoom.modifyAll(ModifyAttributes.ball, [[0,1],[ConstValues.canvasWidth,ConstValues.canvasHeight]]);
+      gameRoom.modifyAll(ModifyAttributes.hideItem,[[1,3],[false,false]]);
     }
     else {
       console.log('Unknown special event');
     }
   }
 
-  @SubscribeMessage('RoomRequest')
-  async match(client, id) {
-    let response = new Response('Room');
-    this.SocketOfClient[id] = client;
-    // if (to == '') { // random request
-    const release = await this.mutex.acquire();
-    if (this.waiting_clients.indexOf(id) != -1) {
-      response.content = 'Duplicate';
+  possibleHash( compHash: number[], custHash: number[] ) {
+    let ret:number[] = [-1,-1];
+    if (compHash.length != 2 || custHash.length != 2) {
+      console.log('Error while hashing');
+      return ret;
+    }
+    if (compHash[0] == competitionEnumerator['any'] && compHash[1] == competitionEnumerator['any']) {
+      ret[0] = competitionEnumerator['normal'];
+    }
+    else if (compHash[0] == competitionEnumerator['any']) {
+      ret[0] = compHash[1];
+    }
+    else if (compHash[1] == competitionEnumerator['any']) {
+      ret[0] = compHash[0];
+    }
+    else if (compHash[0] == compHash[1]) {
+      ret[0] = compHash[0];
     }
     else {
-      let len = this.waiting_clients.length;
-      if (len > 0) {
-        let opponent = this.waiting_clients.pop();
+      return ret;
+    }
+
+    if (custHash[0] == customizationEnumerator['any'] && custHash[1] == customizationEnumerator['any'] ) {
+      ret[1] = customizationEnumerator['normal'];
+    }
+    else if (custHash[0] == customizationEnumerator['any']) {
+      ret[1] = custHash[1];
+    }
+    else if (custHash[1] == customizationEnumerator['any']) {
+      ret[1] = custHash[0];
+    }
+    else if (custHash[0] == custHash[1]) {
+      ret[1] = custHash[0];
+    }
+
+    return ret;
+  }
+
+  @SubscribeMessage('RoomRequest')
+  async match(client, [id, competitionHash, customizationHash]) { // ok
+    id = parseInt(id);
+    competitionHash = parseInt(competitionHash);
+    customizationHash = parseInt(customizationHash);
+    if ( competitionEnumerator[competitionHash] === undefined || customizationEnumerator[customizationHash] === undefined) {
+      console.log('ErrorInMatch');
+      console.log(competitionHash);
+      console.log(customizationHash);
+      return ;
+    }
+
+    
+    if (!this.UserIdToInfo[id])
+      this.UserIdToInfo[id] = new ClientInfo(this.server, id);
+    this.UserIdToInfo[id].modify_hideItem([2],[false]);
+
+    const release = await this.mutex.acquire();
+    let len = this.waiting_clients.length;
+    for (let i = 0 ; i  < len; ++i) {
+      if (this.waiting_clients[i][0] == id) {
+        console.log('ErrorInMatch');
+        console.log(this.waiting_clients);
+        console.log(id);
         release();
-        this.setGameReady( opponent, id );
         return ;
       }
-      else {
-        this.waiting_clients.push(id);
-        response.content = 'Waiting';
+    }
+
+    for (let i = 0 ; i < len ; ++i) {
+      let hashes = this.possibleHash([competitionHash, this.waiting_clients[i][1]], [customizationHash, this.waiting_clients[i][2]]);
+      if (hashes[0] == -1 || hashes[1] == -1)
+        continue ;
+      let opponent = this.waiting_clients[i];
+      this.waiting_clients.splice(i, 1);
+      release();
+      this.setGameReady( opponent[0], id , hashes);
+      return ;
+    }
+
+    this.waiting_clients.push([id, competitionHash, customizationHash]);
+    release();
+  }
+
+  @SubscribeMessage('GameInvitation')
+  async DealWithGameInvitation(client, [id0, id1, competitionHash, customizationHash]) { // ok
+    id0 = parseInt(id0);
+    id1 = parseInt(id1);
+    competitionHash = parseInt(competitionHash);
+    customizationHash = parseInt(customizationHash);
+    if ( competitionEnumerator[competitionHash] === undefined || customizationEnumerator[customizationHash] === undefined) {
+      console.log('ErrorInMatch');
+      console.log(competitionHash);
+      console.log(customizationHash);
+      this.server.to(ChatChannel(id0)).to(ChatChannel(id1)).emit(ConstValues.GameInvitationResponse, ConstValues.Refused);
+      return ;
+    }
+    if (competitionEnumerator[competitionHash] == 'any')
+      competitionHash = competitionEnumerator['normal'];
+    if (customizationEnumerator[customizationHash] == 'any')
+      customizationHash = customizationEnumerator['normal'];
+
+    const release = await this.mutex.acquire();
+    let len = this.waiting_clients.length;
+    for (let i = 0 ; i  < len; ++i) {
+      if (this.waiting_clients[i][0] == id0 || this.waiting_clients[i][0] == id1) {
+        release();
+        this.server.to(ChatChannel(id0)).to(ChatChannel(id1)).emit(ConstValues.GameInvitationResponse, ConstValues.Refused);
+        return ;
       }
     }
-    release();
 
-    this.server.to(client.id).emit('RoomResponse', JSON.stringify(response.getJSON()));
+    release();
+    this.server.to(ChatChannel(id0)).to(ChatChannel(id1)).emit(ConstValues.GameInvitationResponse, ConstValues.Accepted);
+    this.setGameReady( id0, id1, [competitionHash, customizationHash] );
   }
 
   @SubscribeMessage('WatchRequest')
-  async watch(client, [room_number_str, id]) {
-    let response = new Response('Watch');
-    this.SocketOfClient[id] = client;
-    // if (to == '') { // random request
-    let room_number: number = parseInt(room_number_str);
-    if (this.gameRooms[room_number] == undefined) {
-      response.content = { status: 'Refused' };
+  async watch(client, [room_number, id]) { // ok
+    id = parseInt(id);
+    room_number = parseInt(room_number);
+    if (!this.UserIdToInfo[id])
+      this.UserIdToInfo[id] = new ClientInfo(this.server, id);
+
+
+    if (room_number != NaN && room_number < this.gameRooms.length) {
+      let gameRoom = this.gameRooms[room_number];
+      let info: ClientInfo = this.UserIdToInfo[id];
+      info.modify_Logins([gameRoom.player1.login, gameRoom.player2.login]);
+      info.modify_hideItem([0,3,5],[true,true,false]);
+      info.modify_room(room_number);
+      info.modify_heights([0,1],[gameRoom.player1.height,gameRoom.player2.height]);
+      info.modify_ball([0,1],[gameRoom.ball.x, gameRoom.ball.y]);
+      info.modify_points([0,1],[gameRoom.player1.point,gameRoom.player2.point]);
+      info.modify_hashes([0,1],gameRoom.hashes);
+      gameRoom.WatcherIds.push(id);
     }
     else {
-      // console.log(this.gameRooms[room_number]);
-      if (this.gameRooms[room_number].ball.isCarried == false) {
-        response.content = { status: 'Accepted', id: this.gameRooms[room_number].player1.id, ballIsWith: 0};
-      }
-      else if (this.gameRooms[room_number].ball.ballCarrierId == this.gameRooms[room_number].player1.id) {
-        response.content = { status: 'Accepted', id: this.gameRooms[room_number].player1.id, ballIsWith: 1};
-      }
-      else {
-        response.content = { status: 'Accepted', id: this.gameRooms[room_number].player1.id, ballIsWith: 2};
-      }
-    
-      
-      this.server.to(client.id).emit('Player', JSON.stringify(this.gameRooms[room_number].player1.getJSON()));
-      this.server.to(client.id).emit('Player', JSON.stringify(this.gameRooms[room_number].player2.getJSON()));
-      this.server.to(client.id).emit('Ball', JSON.stringify(this.gameRooms[room_number].ball.getJSON()));  
-      client.join(room_number);
+      this.server.to(client.id).emit(ConstValues.WatchResponse, JSON.stringify(new Response('Watch', {status: 'Refused'}).getJSON()));
     }
-    this.server.to(client.id).emit('WatchResponse', JSON.stringify(response.getJSON()));
+  }
 
-    // const release = await this.mutex.acquire();
-    // if (this.waiting_clients.indexOf(id) != -1) {
-    //   response.content = 'Duplicate';
-    // }
-    // else {
-    //   let len = this.waiting_clients.length;
-    //   if (len > 0) {
-    //     let opponent = this.waiting_clients.pop();
-    //     release();
-    //     this.setGameReady( opponent, id );
-    //     return ;
-    //   }
-    //   else {
-    //     this.waiting_clients.push(id);
-    //     response.content = 'Waiting';
-    //   }
-    // }
-    // release();
-
-    // this.server.to(client.id).emit('RoomResponse', JSON.stringify(response.getJSON()));
+  @SubscribeMessage('LeaveGameRoom')
+  async LeaveGame(client, userId) {
+    userId = parseInt(userId);
+    if (!this.UserIdToInfo[userId])
+      this.UserIdToInfo[userId] = new ClientInfo(this.server, userId);
+    this.UserIdToInfo[userId].modify_hideItem([0,4,5,1,2],[false,true,true,true,true]);
+    this.UserIdToInfo[userId].modify_room(-1);
   }
 
   @SubscribeMessage('LeaveWatching')
-  async leaveWatching(client, [room_number_str, login]) {
-    let room_number: number = parseInt(room_number_str);
-    this.SocketOfClient[login].leave(room_number);
+  async leaveWatching(client, [room_number, id]) { // ok
+    room_number = parseInt(room_number);
+    id = parseInt(id);
+    if (room_number != NaN && room_number < this.gameRooms.length) {
+      let gameRoom = this.gameRooms[room_number];
+      let index = gameRoom.WatcherIds.indexOf(id);
+      if (index > -1) {
+        gameRoom.WatcherIds.splice(index, 1);
+      }
+    }
+
+    if (!this.UserIdToInfo[id])
+      this.UserIdToInfo[id] = new ClientInfo(this.server, id);
+    this.UserIdToInfo[id].modify_hideItem([3,0,4,5,1,2],[false,false,true,true,true,true]);
+    this.UserIdToInfo[id].modify_room(-1);
+
   }
 
   @SubscribeMessage('CancelRoom')
-  async cancelRoomRequest(client, id) {
+  async cancelRoomRequest(client, id) { // ok
+    id = parseInt(id);
     const release = await this.mutex.acquire();
-    let index = this.waiting_clients.indexOf(id);
-    if (index != -1) {
-      this.waiting_clients.splice(index, 1);
+    for (let i = 0 ; i < this.waiting_clients.length ; ++i) {
+      if (this.waiting_clients[i][0] == id) {
+        this.waiting_clients.splice(i, 1);
+      }
     }
     release();
+    if (!this.UserIdToInfo[id])
+      this.UserIdToInfo[id] = new ClientInfo(this.server, id);
+    this.UserIdToInfo[id].modify_hideItem([2],[true]);
   }
   
 }
-
-
-/*
-import { SubscribeMessage, WebSocketGateway, WebSocketServer, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
-
-@WebSocketGateway({cors: true})
-export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  @WebSocketServer() server;
-  users: number = 0;
-
-  async handleConnection() {
-    this.users++;
-    this.server.emit('users', this.users);
-  }
-
-  async handleDisconnect() {
-    this.users--;
-    this.server.emit('users', this.users);
-  }
-
-  @SubscribeMessage('chat')
-  async onChat(client, message) {
-
-    client.broadcast.emit('chat', message);
-  }
-
-}
-
-*/

@@ -1,48 +1,12 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { GameService } from '../../services/game/game.service';
 import { Subscription } from 'rxjs';
 import { HostListener } from '@angular/core';
 import { AuthService } from 'src/app/public/services/auth/auth.service';
-import { FormBuilder } from '@angular/forms';
+import { FormBuilder, FormControl } from '@angular/forms';
+import { Rectangle } from './rectangle';
+import { competitionEnumerator, customizationEnumerator } from '../../services/game/enumerators';
 
-export class Rectangle {
-	constructor(public ctx: CanvasRenderingContext2D, private width: number, private height: number, public xPos: number, public yPos: number) {}
-
-	draw(color: string) {
-		// if (this.xPos < 0 || this.yPos < 0)
-		// 	return ;
-		// console.log('draw: ' + this.yPos.toString() + ' ' + this.height.toString());
-    	this.ctx.fillStyle = color;
-		// console.log(this.xPos.toString() + ' ' + this.yPos.toString() + ' ' + this.width.toString() + ' ' + this.height.toString());
-    	this.ctx.fillRect(this.xPos, this.yPos, this.width, this.height);
-  	}
-
-	clean() {
-		// if (this.xPos < 0 || this.yPos < 0)
-		// 	return ;
-		// console.log('clean: ' + this.yPos.toString() + ' ' + this.height.toString());
-		this.ctx.clearRect(this.xPos, this.yPos, this.width, this.height);
-	}
-
-	clean2(x:number, y:number, w:number, h:number) {
-		this.ctx.clearRect(x, y, w, h);
-	}
-
-}
-
-var result: string = '';
-var sub: Subscription;
-var GameSub: Subscription;
-var PlayerSub: Subscription;
-var BallSub: Subscription;
-var WatchSub: Subscription;
-// var userSub: Subscription;
-var userLogin: string;
-var leftLogin: string[] = [''];
-var room: number[] = [-1];
-var paddles: Rectangle[] = [];
-var ball: Rectangle;
-var ballIsWith: number = 0;
 const canvasWidth: number = 600;
 const canvasHeight: number = 450;
 const paddleWidth: number = 12;
@@ -50,126 +14,181 @@ const paddleHeight: number = 30;
 const ballWidth: number = 10;
 const ballHeight: number = 10;
 const ballColor: string = 'black';
-// const RoomWaitingTime: number = 42;
+const paddle0Color: string = 'red';
+const paddle1Color: string = 'blue';
+
+// Subscription
+
+var WatchSub: Subscription;
+var InfoSub: Subscription;
+
+// Game Display
+
+//     Sync with class (send to server)
+var Logins: string[] = ['',''];
+var room: number[] = [-1];
+var paddles: Rectangle[] = []
 var points: number[] = [0,0];
 var hideItem: boolean[] = [false, true, true, false, true, true];
-var opponentLogin: [string] = [''];
-var leftHeight: number = canvasHeight / 2 - paddleHeight / 2;
-var rightHeight: number = canvasHeight / 2 - paddleHeight / 2;
-var GameStatus: string = '';
+var CompetitionType: string[] = [''];
+var GameCustomization: string[] = [''];
+
+//      Used directly (send to server)
+
+var ball: Rectangle;
+
+//      User Info
+
+var userLogin: string;
+var userId: number;
 
 @Component({
   selector: 'app-game',
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.css']
 })
-export class GameComponent implements OnInit {
+export class GameComponent implements OnInit, OnDestroy {
 
-  public userLogin: string = '';
-  public leftLogin: string[] = leftLogin;
-  public opponentLogin: string[] = opponentLogin;
-  public gamePlayed : number = 0;
+
+  public readonly canvasHeight: number = canvasHeight;
+  public readonly canvasWidth: number = canvasWidth;
+
+  public Logins: string[] = Logins;
   public hideItem: boolean[] = hideItem;
   public Points: number[] = points;
-  @ViewChild('myCanvas', {static: true})canvas!: ElementRef<HTMLCanvasElement>;
-  public canvasHeight: number = canvasHeight;
-  public canvasWidth: number = canvasWidth;
-  public ctx!: CanvasRenderingContext2D;
   public roomNumber: number[] = room;
+  public CompetitionType: string[] = CompetitionType;
+  public GameCustomization: string[] = GameCustomization;
+  @ViewChild('myCanvas', {static: true})canvas!: ElementRef<HTMLCanvasElement>;
+  
+  public ctx!: CanvasRenderingContext2D;
   public watchForm = this.formBuilder.group({
     number: ''
+  });
+  public gameForm = this.formBuilder.group({
+    competitionType: 'any',
+    gameCustomization: 'any'
   });
 
   constructor(
 		private game: GameService,
 		private authService: AuthService,
     private formBuilder: FormBuilder
-	) {
-    
-  }
+	) {}
 
-  ngOnInit(): void {
-    userLogin = this.authService.getLoggedInUser();
-    this.userLogin = userLogin;
+  ngOnInit(): void { // ok
+    userLogin = this.authService.getLoggedInUser().login;
+    userId = this.authService.getLoggedInUser().id;
+    
     let tmp: any = this.canvas.nativeElement.getContext('2d');
     if (typeof tmp != 'undefined') {
       this.ctx = tmp;
     }
+
     if (paddles.length == 0) {
-      paddles.push(new Rectangle(this.ctx, paddleWidth, paddleHeight, 0, leftHeight));
-      paddles.push(new Rectangle(this.ctx, paddleWidth, paddleHeight ,canvasWidth - paddleWidth, rightHeight));
-      ball = new Rectangle(this.ctx, ballWidth, ballHeight, -1, -1);
+      paddles.push(new Rectangle(this.ctx, paddleWidth, paddleHeight, 0, canvasHeight / 2 - paddleHeight / 2));
+      paddles.push(new Rectangle(this.ctx, paddleWidth, paddleHeight ,canvasWidth - paddleWidth, canvasHeight / 2 - paddleHeight / 2));
+      ball = new Rectangle(this.ctx, ballWidth, ballHeight, canvasWidth, canvasHeight);
     }
     else {
       paddles[0].ctx = this.ctx;
       paddles[1].ctx = this.ctx;
       ball.ctx = this.ctx;
-      setTimeout(()=>{
-        paddles[0].draw('red');
-        paddles[1].draw('blue');
-        ball.draw(ballColor);
-      },10);
-      
     }
+    
+    WatchSub = this.game.getWatchResponse().subscribe(this.DealWithWatchResponse);
+    InfoSub = this.game.getClientInfo().subscribe(this.DealWithClientInfo);
+
+    this.game.sendGameConnect(userId, userLogin);
   }
 
+  ngOnDestroy(): void { // ok
+    this.game.sendGameDisconnect(userId);
+    WatchSub.unsubscribe();
+    InfoSub.unsubscribe();
+  }
 
   @HostListener('document:keydown', ['$event'])
-  handleKeyboardEvent(event: KeyboardEvent) {
-    if (room[0] < 0 || userLogin == undefined || userLogin == '' )
+  handleKeyboardEvent(event: KeyboardEvent) { // ok
+    if (room[0] < 0 )
       return ;
     if (event.key == 'ArrowUp') {
-      this.game.sendPlayerMove(room[0], userLogin, 'up');
+      this.game.sendPlayerMove(room[0], userId, 'up');
     }
     if (event.key == 'ArrowDown') {
-      this.game.sendPlayerMove(room[0], userLogin, 'down');
+      this.game.sendPlayerMove(room[0], userId, 'down');
+    }
+    if (event.key == 'ArrowLeft') {
+      this.game.sendPlayerMove(room[0], userId, 'left');
+    }
+    if (event.key == 'ArrowRight') {
+      this.game.sendPlayerMove(room[0], userId, 'right');
     }
     if (event.key == ' ') {
-      this.game.sendPlayerMove(room[0], userLogin, 'space');
+      this.game.sendPlayerMove(room[0], userId, 'space');
     }
   }
 
-  DealWithRoomResponse(msg: any) {
+  DealWithClientInfo(msg: any) {
     try {
-      result = '';
+      paddles[0].clean();
+      paddles[1].clean();
+      ball.clean();
       if (typeof msg != 'string')
-        throw('ServerError: response is not a string');
+        throw('ServerError: ClientInfo is not a string');
       let data = JSON.parse(msg);
-      if (!data.type || data.type != 'Room'){
-        throw('ServerError: response type is not Room');
+
+      if (data.leftLogin === undefined)
+        throw('ServerError: leftLogin not found in ClientInfo');
+      Logins[0] = data.leftLogin;
+      if (data.rightLogin === undefined)
+        throw('ServerError: rightLogin not found in ClientInfo');
+      Logins[1] = data.rightLogin;
+
+      if ( data.hideItem === undefined || hideItem.length != data.hideItem.length)
+        throw('ServerError: hideItem error in ClientInfo');
+      
+      for (let i = 0 ; i < hideItem.length ; ++i)
+        hideItem[i] = data.hideItem[i];
+
+      if ( data.room === undefined )
+        throw('ServerError: room error in ClientInfo');
+
+      room[0] = data.room;
+
+      if ( data.Heights === undefined || data.Heights.length != 2 ) {
+        throw('ServerError: Heights error in ClientInfo');
       }
-      if (!data.content) {
-        throw('ServerError: No Content');
+      
+      paddles[0].yPos = data.Heights[0];
+      paddles[1].yPos = data.Heights[1];
+      paddles[0].draw(paddle0Color);
+      paddles[1].draw(paddle1Color);
+    
+      if ( data.points === undefined || data.points.length != 2) {
+        throw('ServerError: Points error in ClientInfo');
       }
-      if (typeof data.content != 'string') {
-        throw('ServerError: Content is not a string');
+
+      points[0] = data.points[0];
+      points[1] = data.points[1];
+
+      if (data.ball === undefined || data.ball.length != 2) {
+        throw('ServerError: Ball error in ClientInfo');
       }
-      switch(data.content) {
-        case 'Duplicate':
-          result = 'Waiting';
-          throw('You were already in line, please be patient');
-        case 'Waiting':
-          // console.log('Waiting');
-          result = 'Waiting';
-          // add a popout window
-          break ;
-        case 'Matched':
-          // console.log('Matched');
-          result = 'Matched';
-          break ;
-        default:
-          throw('ServerError: Unknown Content\n' + data.content);
+      ball.xPos = data.ball[0];
+      ball.yPos = data.ball[1];
+      ball.draw(ballColor);
+
+      if (data.hashes === undefined || data.hashes.length != 2) {
+        throw('ServerError: Hashes error in ClientInfo');
       }
+      CompetitionType[0] = competitionEnumerator[data.hashes[0]];
+      GameCustomization[0] = customizationEnumerator[data.hashes[1]];
     }
     catch(err: any) {
       alert(err);
     }
-    finally{
-      if (result == 'Matched') {
-        sub.unsubscribe();
-        hideItem[0] = true;
-        hideItem[4] = false;
-      }
+    finally {
     }
   }
 
@@ -183,17 +202,7 @@ export class GameComponent implements OnInit {
       if (!data.content)
         throw('ServerError: No Content');
       switch(data.content.status) {
-        case 'Accepted':
-          hideItem[0] = true;
-          hideItem[3] = true; //
-          hideItem[5] = false;
-          leftLogin[0] = data.content.id;
-          ballIsWith = data.content.ballIsWith;
-          break ;
         case 'Refused':
-          GameSub.unsubscribe();
-          PlayerSub.unsubscribe();
-          BallSub.unsubscribe();
           alert('Error: Room Number Not Found');
           break ;
         default:
@@ -201,266 +210,49 @@ export class GameComponent implements OnInit {
       }
     }
     catch(err: any) {
-      GameSub.unsubscribe();
-      PlayerSub.unsubscribe();
-      BallSub.unsubscribe();
       alert(err);
     }
     finally{
-      WatchSub.unsubscribe();
     }
   }
 
-  DealWithGameStatus(info: any) {
-    try {
-      GameStatus = '';
-      if (typeof info != 'string') {
-        throw('ServerError: Game Status is not a string');
-      }
-      let data = JSON.parse(info);
-
-      if (!data.type || data.type != 'Game') {
-        throw('ServerError: Game Status type is not \'Game\'');
-      }
-      if (!data.content) {
-        throw('ServerError: Game Status No Content');
-      }
-      switch(data.content.status ) {
-        case 'Ready':
-          GameStatus = 'Ready';
-          room[0] = data.content.room;
-          if (leftLogin[0] == data.content.ballCarrier)
-            ballIsWith = 1;
-          else
-            ballIsWith = 2;
-          break ;
-        case 'Start':
-          GameStatus = 'Start';
-          // ballIsWith = 0;
-          break ;
-        case 'Finish':
-          result = '';
-          GameStatus = 'Finish';
-          break ;
-        default:
-          result = '';
-          room[0] = -1;
-          GameStatus = '';
-          throw('ServerError: Game Status Unknown Content\n' + data.content);
-      }
-    }
-    catch(err: any) {
-      alert(err);
-    }
-    finally {
-      if (GameStatus == 'Ready') {
-        // other things dissapear
-        // todo
-        paddles[0].draw('red');
-        paddles[1].draw('blue');
-      }
-      if (GameStatus == 'Start') {
-        // console.log('Start');
-        ballIsWith = 0;
-        // todo: move ball
-      }
-      if (GameStatus == 'Finish') {
-        ball.clean();
-        ball.xPos = canvasWidth;
-        ball.yPos = canvasHeight;
-        GameSub.unsubscribe();
-        PlayerSub.unsubscribe();
-        BallSub.unsubscribe();
-        hideItem[1] = false;
-        hideItem[3] = false;
-        // hideItem[5] = true;
-      }
-    }
+  resetGameForm() {
+    // this.gameForm.value.competitionType = 'any';
+    // this.gameForm.value.gameCustomization = 'any'; 
+    this.gameForm = this.formBuilder.group({
+      competitionType: 'any',
+      gameCustomization: 'any'
+    });
   }
-
-  DealWithPlayerInformation(info: any) {
-    try {
-      paddles.forEach((paddle: Rectangle)=>{
-        paddle.clean();
-      });
-      if (typeof info != 'string') {
-        throw('ServerError: Player is not a string');
-      }
-      let data = JSON.parse(info);
-      if (!data.type || data.type != 'Player') {
-        throw('ServerError: Player type is not \'Player\'');
-      }
-      if (!data.content) {
-        throw('ServerError: Player No Content');
-      }
-      // if (this.userLogin == undefined || this.userLogin == '')
-      //   this.userLogin = userLogin;
-      if (data.content.id == leftLogin[0]) {
-        leftHeight = data.content.height;
-        points[0] = data.content.point;
-
-        if (rightHeight == undefined)
-          rightHeight = canvasHeight / 2 - paddleHeight / 2;
-        // if (!this.Points[1])
-        //   this.Points[1] = 0;
-      }
-      else {
-        opponentLogin[0] = data.content.id;
-        rightHeight = data.content.height;
-        points[1] = data.content.point;
-        if (leftHeight == undefined)
-          leftHeight = canvasHeight / 2 - paddleHeight / 2;
-        // if (!this.Points[0])
-        //   this.Points[0] = 0;
-      }
-    }
-    catch(err: any) {
-      alert(err);
-    }
-    finally {
-      if (ballIsWith == 1) {
-        ball.clean();
-        ball.yPos = paddles[0].yPos + paddleHeight / 2 - ballHeight / 2;
-        ball.xPos = paddleWidth;
-        ball.draw(ballColor);
-        // console.log(room[0].toString() + 'A');
-      }
-      if (ballIsWith == 2) {
-        ball.clean();
-        ball.xPos = canvasWidth - ballWidth - paddleWidth;
-        ball.yPos = paddles[1].yPos + paddleHeight / 2 - ballHeight / 2;
-        ball.draw(ballColor);
-        // console.log(room[0].toString() + 'B');
-      }
-      paddles[0].yPos = leftHeight;
-      paddles[1].yPos = rightHeight;
-      // console.log(toRealHeight(canvasHeight, leftHeight).toString() + ' ' + rightHeight.toString());
-      // console.log(paddles[0].xPos.toString() + " " + paddles[0].yPos.toString());
-      paddles[0].draw('red');
-      paddles[1].draw('blue');
-      // console.log('My Position(left): ' + leftHeight.toString() + ' Opponent Position(right): ' + rightHeight.toString() + '\
-                //  \nMy Point(left)   : ' + this.Points[0].toString() +    ' Opponent Point(right)   : ' + this.Points[1].toString()) ;
-    }
-  }
-
-  DealWithBallInformation(info: any) {
-    if (ballIsWith != 0)
-      return ;
-    try {
-      ball.clean();
-      if (typeof info != 'string') {
-        throw('ServerError: Ball is not a string');
-      }
-      let data = JSON.parse(info);
-      if (!data.type || data.type != 'Ball') {
-        throw('ServerError: Ball type is not \'Ball\'');
-      }
-      if (!data.content) {
-        throw('ServerError: Ball No Content');
-      }
-      // if (this.userLogin == undefined || this.userLogin == '')
-      //   this.userLogin = userLogin;
-      if (data.content.id == leftLogin[0]) { // player1
-        ball.xPos = data.content.x;
-        ball.yPos = data.content.y;
-      }
-      else { // player2
-        ball.xPos = canvasWidth - ballWidth - data.content.x;
-        ball.yPos = data.content.y;
-      }
-      // console.log(data.content.id);
-      // console.log(leftLogin[0]);
-      // console.log(info);
-    }
-    catch(err: any) {
-      alert(err);
-    }
-    finally {
-      ball.draw(ballColor);
-      // console.log(room[0].toString() + 'C');
-    }
-  }
-
 
   RandomGame(): void {
-    // console.log('A');
-    if (result == 'Waiting') {
-      alert('You\'re already in line, please be patient.');
-      return ;
-    }
-    if (result == 'Matched') {
-      alert('You\'re already in game');
-      return ;
-    }
-    leftLogin[0] = userLogin;
-    sub = this.game.getRoomResponse().subscribe(this.DealWithRoomResponse);
-    GameSub = this.game.getGameStatus().subscribe(this.DealWithGameStatus);
-    PlayerSub = this.game.getPlayerInformation().subscribe(this.DealWithPlayerInformation);
-    BallSub = this.game.getBallInformation().subscribe(this.DealWithBallInformation);
-    // if (result != 'Waiting')
-    this.game.sendRoomRequest(userLogin);
-
-    hideItem[2] = false;
+    this.game.sendRoomRequest(userId, this.gameForm.value.competitionType, this.gameForm.value.gameCustomization);
+    this.resetGameForm();
   }
 
-  // showCanvas() {
-
-  // }
-
-  // hideCanvas() {
-
-  // }
-
   Surrender(): void {
-    if (room[0] < 0 || userLogin == undefined || userLogin == '' )
+    if (room[0] < 0)
       return ;
-    this.game.sendSurrender(room[0], userLogin);
+    this.game.sendSurrender(room[0], userId);
   }
 
   BackToMatch(): void {
     ball.clean2(0,0,canvasWidth,canvasHeight);
-    hideItem[0] = false;
-    hideItem[4] = true;
-    hideItem[5] = true;
-    hideItem[1] = true;
-    hideItem[2] = true;
-    leftLogin[0] = userLogin;
-    room[0] = -1;
+    this.game.sendLeaveGameRoom(userId);
   }
 
   LeaveWatchingMode(): void {
     ball.clean2(0,0,canvasWidth,canvasHeight);
-    GameSub.unsubscribe();
-    PlayerSub.unsubscribe();
-    BallSub.unsubscribe();
-    hideItem[3] = false;
-    hideItem[0] = false;
-    hideItem[4] = true;
-    hideItem[5] = true;
-    hideItem[1] = true;
-    hideItem[2] = true;
-    leftLogin[0] = userLogin;
-    this.game.sendLeaveWatching(room[0].toString(), userLogin);
-    room[0] = -1;
+    this.game.sendLeaveWatching(room[0].toString(), userId);
   }
 
   Cancel(): void {
-    hideItem[2] = true;
-    result = '';
-    sub.unsubscribe();
-    GameSub.unsubscribe();
-    PlayerSub.unsubscribe();
-    BallSub.unsubscribe();
-    this.game.sendCancelRequest(userLogin);
+    this.game.sendCancelRequest(userId);
   }
 
-  onSubmit() {
-    WatchSub = this.game.getWatchResponse().subscribe(this.DealWithWatchResponse);
-    GameSub = this.game.getGameStatus().subscribe(this.DealWithGameStatus);
-    PlayerSub = this.game.getPlayerInformation().subscribe(this.DealWithPlayerInformation);
-    BallSub = this.game.getBallInformation().subscribe(this.DealWithBallInformation);
-    room[0] = parseInt(this.watchForm.value.number);
-    this.game.sendWatchRequest(this.watchForm.value.number, userLogin);
+  WatchRequest() {
+    this.game.sendWatchRequest(this.watchForm.value.number, userId);
     this.watchForm.reset();
   }
+
 }

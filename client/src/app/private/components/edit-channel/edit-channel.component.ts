@@ -108,7 +108,6 @@ export class EditChannelComponent implements OnInit {
 		return this.channel.mute && this.channel.mute.find(mute => mute.id === user.id);
 	}
 
-	// TODO not sure if nessasery
 	removeUser(user: UserI) {
 		this.unsetAdmin(user);
 		this.unmuteUser(user);

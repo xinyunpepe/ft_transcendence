@@ -1,16 +1,59 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, OneToMany, PrimaryColumn } from "typeorm";
+import { Match } from "./match.entity";
 
 @Entity()
 export class History {
-	@PrimaryGeneratedColumn()
-	login: string;
+	@PrimaryColumn()
+	userId: number;
 
 	@Column({default: 0})
-	total_wins: number;
+	totalWins: number;
 
 	@Column({default: 0})
-	total_losts: number;
+	totalLoses: number;
 
-	@Column({default: false})
-	isInGame: boolean;
+	@Column({default: -1})
+	inGameRoom: number;
+
+	@Column({default: 0})
+	ladderLevel: number;
+
+	@OneToMany(()=>Match, match=>match.winner, {eager: true})
+	winMatches: Match[];
+
+	@OneToMany(()=>Match, match=>match.loser, {eager: true})
+	loseMatches: Match[];
+
+	constructor(userId: number, inGameRoom?: number) {
+		this.userId = userId;
+		this.totalWins = 0;
+		this.totalLoses = 0;
+		this.inGameRoom = inGameRoom === undefined? -1:inGameRoom;
+		this.ladderLevel = 0;
+	}
+
+	win(match: Match) {
+		if (this.winMatches == null) {
+			this.winMatches = [];
+		}
+		this.winMatches.push(match);
+		this.totalWins += 1;
+		this.inGameRoom = -1;
+		if (match.isLadder ) {
+			this.ladderLevel += 1;
+		}
+	}
+
+	lose(match: Match) {
+		if (this.loseMatches == null) {
+			this.loseMatches = [];
+		}
+		this.loseMatches.push(match);
+		this.totalLoses += 1;
+		this.inGameRoom = -1;
+		if (match.isLadder ) {
+			this.ladderLevel -= 1;
+		}
+	}
+
 }

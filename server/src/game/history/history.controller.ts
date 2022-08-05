@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { ConsoleLogger, Controller, Get, Param } from '@nestjs/common';
 import { HistoryService } from './history.service';
 import { History } from '../entities/history.entity';
 
@@ -6,23 +6,10 @@ import { History } from '../entities/history.entity';
 export class HistoryController {
 	constructor ( private histroyService: HistoryService) {}
 
-	@Get(':login')
-	findHistoryByLogin(
-		@Param('login') login: string
+	@Get(':id')
+	async findHistoryById(
+		@Param('id') id: number
 	) {
-		let history = this.histroyService.findOne(login);
-		
-		return history;
+		return await this.histroyService.findOne(id);
 	}
-
-	/*
-	@Get(':login')
-	// findOne(@Param() param: { id: number } ) Return the param as an object
-	findUserByLogin(
-		@Param('login') login: string
-	) {
-		return this.userService.findUserByLogin(login);
-	}
-*/
-
 }
