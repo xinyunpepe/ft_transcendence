@@ -6,6 +6,8 @@ import { AuthService } from 'src/app/public/services/auth/auth.service';
 import { FormBuilder, FormControl } from '@angular/forms';
 import { Rectangle } from './rectangle';
 import { competitionEnumerator, customizationEnumerator } from '../../services/game/enumerators';
+import { UserService } from '../../services/user/user.service';
+import { UserI } from 'src/app/model/user.interface';
 
 const canvasWidth: number = 600;
 const canvasHeight: number = 450;
@@ -49,6 +51,7 @@ var userId: number;
 })
 export class GameComponent implements OnInit, OnDestroy {
 
+  private user: UserI = this.authService.getLoggedInUser();
 
   public readonly canvasHeight: number = canvasHeight;
   public readonly canvasWidth: number = canvasWidth;
@@ -72,14 +75,21 @@ export class GameComponent implements OnInit, OnDestroy {
 
   constructor(
 		private game: GameService,
+    private userService: UserService,
 		private authService: AuthService,
     private formBuilder: FormBuilder
 	) {}
 
   ngOnInit(): void { // ok
-    userLogin = this.authService.getLoggedInUser().username;
-    userId = this.authService.getLoggedInUser().id;
-    
+    this.userService.findById(this.user.id).subscribe(user => {
+			this.user = user;
+      userId = user.id;
+      userLogin = user.username;
+      this.game.sendGameConnect(userId, userLogin);
+		});
+    userId = this.user.id;
+    userLogin = this.user.username;
+
     let tmp: any = this.canvas.nativeElement.getContext('2d');
     if (typeof tmp != 'undefined') {
       this.ctx = tmp;
