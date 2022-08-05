@@ -72,4 +72,15 @@ export class HistoryService {
 		await this.create(player1_history);
 		await this.create(player2_history);
 	}
+
+	async isInGame(userId: number) {
+		let history = await this.findOne(userId);
+		if (history == null || history.inGameRoom === undefined) {
+			return false;
+		}
+		if (history.inGameRoom != -1) {
+			return true;
+		}
+		return false;
+	}
 }

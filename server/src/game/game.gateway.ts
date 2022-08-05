@@ -365,18 +365,26 @@ export class GameGateway implements OnGatewayConnection {
       this.server.to(ChatChannel(id0)).to(ChatChannel(id1)).emit(ConstValues.GameInvitationResponse, ConstValues.Refused);
       return ;
     }
+    if (await this.historyService.isInGame(id0) || await this.historyService.isInGame(id1)) {
+      this.server.to(ChatChannel(id0)).to(ChatChannel(id1)).emit(ConstValues.GameInvitationResponse, ConstValues.Refused);
+      return ;
+    }
+
     if (competitionEnumerator[competitionHash] == 'any')
       competitionHash = competitionEnumerator['normal'];
     if (customizationEnumerator[customizationHash] == 'any')
       customizationHash = customizationEnumerator['normal'];
+    
 
     const release = await this.mutex.acquire();
     let len = this.waiting_clients.length;
     for (let i = 0 ; i  < len; ++i) {
       if (this.waiting_clients[i][0] == id0 || this.waiting_clients[i][0] == id1) {
-        release();
-        this.server.to(ChatChannel(id0)).to(ChatChannel(id1)).emit(ConstValues.GameInvitationResponse, ConstValues.Refused);
-        return ;
+        if (!this.UserIdToInfo[this.waiting_clients[i][0]])
+          this.UserIdToInfo[this.waiting_clients[i][0]] = new ClientInfo(this.server, this.waiting_clients[i][0]);
+        this.UserIdToInfo[this.waiting_clients[i][0]].modify_hideItem([2],[true]);
+        this.waiting_clients.splice(i, 1);
+        break ;
       }
     }
 
