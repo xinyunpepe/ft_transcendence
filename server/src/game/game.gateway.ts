@@ -9,6 +9,10 @@ import { HistoryService } from './history/history.service';
 import { ClientInfo } from './utils/client-info';
 import { competitionEnumerator, customizationEnumerator } from './utils/enumerators';
 
+function ChatChannel(userId: number) {
+  return 'Chat' + userId.toString();
+}
+
 @WebSocketGateway({cors: { origin: ['http://localhost:3000', 'http://localhost:4200'] }})
 export class GameGateway implements OnGatewayConnection {
   @WebSocketServer() server;
@@ -42,10 +46,22 @@ export class GameGateway implements OnGatewayConnection {
     this.server.to(client.id).emit(ConstValues.ClientInfo, JSON.stringify(this.UserIdToInfo[userId].getJSON()));
   }
 
+  @SubscribeMessage('ChatConnect')
+  async ChatConnect(client, userId) {
+    userId = parseInt(userId);
+    client.join(ChatChannel(userId));
+  }
+
   @SubscribeMessage('GameDisconnect')
   async Disconnect(client, userId) {
     userId = parseInt(userId);
     client.leave(userId);
+  }
+
+  @SubscribeMessage('ChatDisconnect')
+  async ChatDisconnect(client, userId) {
+    userId = parseInt(userId);
+    client.leave(ChatChannel(userId));
   }
 
   async setGameReady(player1_id: number, player2_id: number, hashes: number[]) { // ok
@@ -334,6 +350,39 @@ export class GameGateway implements OnGatewayConnection {
 
     this.waiting_clients.push([id, competitionHash, customizationHash]);
     release();
+  }
+
+  @SubscribeMessage('GameInvitation')
+  async DealWithGameInvitation(client, [id0, id1, competitionHash, customizationHash]) { // ok
+    id0 = parseInt(id0);
+    id1 = parseInt(id1);
+    competitionHash = parseInt(competitionHash);
+    customizationHash = parseInt(customizationHash);
+    if ( competitionEnumerator[competitionHash] === undefined || customizationEnumerator[customizationHash] === undefined) {
+      console.log('ErrorInMatch');
+      console.log(competitionHash);
+      console.log(customizationHash);
+      this.server.to(ChatChannel(id0)).to(ChatChannel(id1)).emit(ConstValues.GameInvitationResponse, ConstValues.Refused);
+      return ;
+    }
+    if (competitionEnumerator[competitionHash] == 'any')
+      competitionHash = competitionEnumerator['normal'];
+    if (customizationEnumerator[customizationHash] == 'any')
+      customizationHash = customizationEnumerator['normal'];
+
+    const release = await this.mutex.acquire();
+    let len = this.waiting_clients.length;
+    for (let i = 0 ; i  < len; ++i) {
+      if (this.waiting_clients[i][0] == id0 || this.waiting_clients[i][0] == id1) {
+        release();
+        this.server.to(ChatChannel(id0)).to(ChatChannel(id1)).emit(ConstValues.GameInvitationResponse, ConstValues.Refused);
+        return ;
+      }
+    }
+
+    release();
+    this.server.to(ChatChannel(id0)).to(ChatChannel(id1)).emit(ConstValues.GameInvitationResponse, ConstValues.Accepted);
+    this.setGameReady( id0, id1, [competitionHash, customizationHash] );
   }
 
   @SubscribeMessage('WatchRequest')

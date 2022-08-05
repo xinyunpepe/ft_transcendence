@@ -9,4 +9,7 @@ export class ConstValues {
 	static readonly WinningPoint: number = 3;
 	static readonly WatchResponse: string = "WatchResponse";
 	static readonly ClientInfo: string = 'ClientInfo';
+	static readonly GameInvitationResponse: string = 'GameInvitationResponse';
+	static readonly Accepted  = 'Accepted';
+	static readonly Refused = 'Refused';
 }
