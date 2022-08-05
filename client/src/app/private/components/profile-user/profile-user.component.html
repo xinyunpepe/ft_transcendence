@@ -59,7 +59,8 @@
 				<div>
 					<div *ngIf="(matchHistory | async) as matchHistory; else nohistory" style="margin-top: 30px;">
 						<h2>Match Stats</h2>
-						<div *ngIf="matchHistory.inGameRoom !== -1">
+						<div *ngIf="matchHistory.inGameRoom !== -1" style="margin-bottom: 20px;">
+							<h3>In Game</h3>
 							<p>Current Game Room: {{ matchHistory.inGameRoom }}</p>
 						</div>
 						<p>Total Wins: {{ matchHistory.totalWins }}</p>

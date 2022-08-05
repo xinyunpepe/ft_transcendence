@@ -38,7 +38,7 @@
 				<app-chat-message [message]="message"></app-chat-message>
 			</div>
 			<ng-template #game>
-				<button class="game-button" (click)="joinGame(message.user.id)">{{ message.user.username }}
+				<button class="game-button" (click)="joinGame(message.id, message.user.id)">{{ message.user.username }}
 					<div>{{ message.text }}</div>
 				</button>
 			</ng-template>

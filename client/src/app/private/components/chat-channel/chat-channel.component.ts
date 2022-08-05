@@ -1,5 +1,6 @@
 import { AfterViewInit, Component, ElementRef, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewChild } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { combineLatest, map, Observable, startWith, Subscription, tap } from 'rxjs';
 import { ChannelI } from 'src/app/model/channel.interface';
@@ -75,10 +76,9 @@ export class ChatChannelComponent implements OnChanges, OnDestroy, AfterViewInit
 		private authService: AuthService,
 		private userService: UserService,
 		private router: Router,
-		private activatedRoute: ActivatedRoute
-	) {
-		// TODO start game?
-	}
+		private activatedRoute: ActivatedRoute,
+		private snackbar: MatSnackBar
+	) {}
 
 	handleGameInvitationResponse(response) {
 		// todo
@@ -89,7 +89,9 @@ export class ChatChannelComponent implements OnChanges, OnDestroy, AfterViewInit
 
 		}
 		else {
-			alert('Error from game invitation response');
+			this.snackbar.open(`Error from game invitation response`, 'Close', {
+				duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
+			});
 		}
 	}
 
@@ -117,13 +119,6 @@ export class ChatChannelComponent implements OnChanges, OnDestroy, AfterViewInit
 
 	sendMessage() {
 		if (this.chatMessage.valid) {
-			// if (this.chatChannel.mute.some((user) => {
-			// 	return user.id === this.user.id;
-			// })) {
-			// 	this.snackbar.open('You have been muted', 'Close', {
-			// 		duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
-			// 	});
-			// }
 			this.chatService.sendMessage({ text: this.chatMessage.value, channel: this.chatChannel, type: 0 });
 			this.chatMessage.reset();
 		}
@@ -134,8 +129,9 @@ export class ChatChannelComponent implements OnChanges, OnDestroy, AfterViewInit
 		this.chatMessage.reset();
 	}
 
-	joinGame(id: number) {
+	joinGame(messageId: number, id: number) {
 		this.chatService.sendGameInivitation(id, this.user.id, 0, 0);
+		this.chatService.deleteMessage(messageId).subscribe();
 	}
 
 	accessProfile(userId: number) {
@@ -143,7 +139,6 @@ export class ChatChannelComponent implements OnChanges, OnDestroy, AfterViewInit
 	}
 
 	leaveChannel() {
-		// this.chatService.leaveJoinedChannel(this.chatChannel);
 		this.chatService.leaveChannel(this.chatChannel);
 		window.location.reload();
 	}

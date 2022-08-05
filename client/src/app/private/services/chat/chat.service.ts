@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
-import { map, Observable, tap } from 'rxjs';
+import { catchError, map, Observable, tap, throwError } from 'rxjs';
 import { ChannelI, ChannelPaginateI } from 'src/app/model/channel.interface';
 import { MessageI, MessagePaginateI } from 'src/app/model/message.interface';
 import { UserI } from 'src/app/model/user.interface';
@@ -43,7 +43,6 @@ export class ChatService {
 	getGameInvitationResponse() {
 		return this.socket.fromEvent('GameInvitationResponse');
 	}
-
 
 	createChannel(channel: ChannelI) {
 		// check adding self
@@ -154,7 +153,7 @@ export class ChatService {
 	}
 
 	findDirectChannel(userIdA: number, userIdB: number): Observable<ChannelI> {
-		return this.http.get<ChannelI>(`api/channel/direct/${ userIdA }/${ userIdB }`)
+		return this.http.get<ChannelI>(`api/channel/direct/${ userIdA }/${ userIdB }`);
 	}
 
 	joinProtectedChannel(channelId: number, userId: number): Observable<number> {
@@ -171,6 +170,21 @@ export class ChatService {
 					});
 				}
 				this.router.navigate(['../../private/dashboard-channel']);
+			})
+		);
+	}
+
+	findMessage(messageId: number) {
+		return this.http.get(`api/channel/message/get/${ messageId }`);
+	}
+
+	deleteMessage(messageId: number) {
+		return this.http.delete(`api/channel/message/delete/${ messageId }`).pipe(
+			catchError(e => {
+				this.snackbar.open(`ERROR: something went wrong`, 'Close', {
+					duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
+				});
+				return throwError(e);
 			})
 		);
 	}

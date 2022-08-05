@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { ChannelI, ChannelType } from "../model/channel/channel.interface";
@@ -6,13 +6,16 @@ import { ChannelEntity } from "../model/channel/channel.entity";
 import { UserI } from "src/user/model/user/user.interface";
 import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
 import { Observable, of } from "rxjs";
+import { MessageEntity } from "../model/message/message.entity";
 // import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class ChannelService {
 	constructor(
 		@InjectRepository(ChannelEntity)
-		private readonly channelRepository: Repository<ChannelEntity>
+		private readonly channelRepository: Repository<ChannelEntity>,
+		@InjectRepository(MessageEntity)
+		private readonly messageRepository: Repository<MessageEntity>
 	) {}
 
 	async createChannel(channel: ChannelI, creator: UserI) {
@@ -124,6 +127,17 @@ export class ChannelService {
 		channel.users = channel.users.filter(user => user.id !== userId);
 		this.channelRepository.save(channel);
 		return channel;
+	}
+
+	async findMessage(messageId: number) {
+		return await this.messageRepository.findOne({ where: { id: messageId }});
+	}
+
+	async deleteMessage(messageId: number) {
+		const message = await this.messageRepository.findOne({ where: { id: messageId }});
+		if (message)
+			return this.messageRepository.delete(messageId);
+		throw new NotFoundException("User does not exist");
 	}
 
 	async getChannelsForUser(userId: number, options: IPaginationOptions) {

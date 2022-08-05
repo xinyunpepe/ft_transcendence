@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UseGuards } from "@nestjs/common";
+import { Controller, Delete, Get, Param, UseGuards } from "@nestjs/common";
 import { JwtAuthGuard } from "src/auth/guards/jwt.guard";
 import { UserService } from "src/user/user.service";
 import { ChannelService } from "./services/channel.service";
@@ -39,4 +39,19 @@ export class ChannelController {
 		return this.channelservice.isUserJoined(userId, channel);
 	}
 
+	@UseGuards(JwtAuthGuard)
+	@Get('message/get/:messageId')
+	findMessage(
+		@Param('messageId') messageId: number
+	) {
+		return this.channelservice.findMessage(messageId);
+	}
+
+	@UseGuards(JwtAuthGuard)
+	@Delete('message/delete/:messageId')
+	deleteMessage(
+		@Param('messageId') messageId: number
+	) {
+		return this.channelservice.deleteMessage(messageId);
+	}
 }
