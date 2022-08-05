@@ -1,6 +1,5 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { environment } from 'src/environments/environment';
 import { map, Observable } from 'rxjs';
 import { UserI } from 'src/app/model/user.interface';
 
@@ -9,7 +8,7 @@ import { UserI } from 'src/app/model/user.interface';
 })
 export class UserService {
 
-	constructor(private http: HttpClient) { }
+	constructor(private http: HttpClient) {}
 
 	findById(id: number): Observable<UserI> {
 		return this.http.get<UserI>(`api/users/id/${ id }`).pipe(

@@ -3,12 +3,11 @@ import { Injectable } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { map, Observable, tap } from 'rxjs';
-import { ChannelI, ChannelPaginateI, ChannelType } from 'src/app/model/channel.interface';
+import { ChannelI, ChannelPaginateI } from 'src/app/model/channel.interface';
 import { MessageI, MessagePaginateI } from 'src/app/model/message.interface';
 import { UserI } from 'src/app/model/user.interface';
 import { CustomSocket } from 'src/app/private/sockets/custom-sockets';
 import { AuthService } from 'src/app/public/services/auth/auth.service';
-import { environment } from 'src/environments/environment';
 
 @Injectable({
 	providedIn: 'root'

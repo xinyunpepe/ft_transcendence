@@ -3,10 +3,12 @@ import { ActivatedRoute, Params, Router } from '@angular/router';
 import { map, Observable, switchMap, tap } from 'rxjs';
 import { ChannelI, ChannelType } from 'src/app/model/channel.interface';
 import { FriendStatus } from 'src/app/model/friend-request.interface';
+import { HistoryI } from 'src/app/model/history.interface';
 import { UserI } from 'src/app/model/user.interface';
 import { AuthService } from 'src/app/public/services/auth/auth.service';
 import { ChatService } from '../../services/chat/chat.service';
 import { FriendService } from '../../services/friend/friend.service';
+import { MatchHistoryService } from '../../services/match-history/match-history.service';
 import { UserService } from '../../services/user/user.service';
 
 @Component({
@@ -22,6 +24,7 @@ export class ProfileUserComponent implements OnInit {
 	requestStatus: number;
 	requestId: number;
 	directChannel: ChannelI = {};
+	matchHistory: Observable<HistoryI>;
 
 	private currentUserId$: Observable<number> = this.activatedRoute.params.pipe(
 		map((params: Params) => parseInt(params['id']))
@@ -37,6 +40,7 @@ export class ProfileUserComponent implements OnInit {
 		private userService: UserService,
 		private friendService: FriendService,
 		private chatService: ChatService,
+		private matchHistoryService: MatchHistoryService,
 		private router: Router
 	) { }
 
@@ -55,8 +59,9 @@ export class ProfileUserComponent implements OnInit {
 						}
 						else {
 							this.currentUserId = currentUser.id;
+							this.matchHistory = this.matchHistoryService.findMatchHistory(this.currentUserId);
 							this.getRequestStatus();
-							this.getAvatar(this.currentUserId);
+							// this.getAvatar(this.currentUserId);
 						}
 					})
 				})

@@ -2,16 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { FriendRequestI } from 'src/app/model/friend-request.interface';
-import { environment } from 'src/environments/environment';
 
 @Injectable({
 	providedIn: 'root'
 })
 export class FriendService {
 
-	constructor(
-		private http: HttpClient
-	) {}
+	constructor(private http: HttpClient) {}
 
 	findRequestByUser(userId: number): Observable<FriendRequestI> {
 		return this.http.get<FriendRequestI>(`api/users/friend-request/status/${ userId }`);

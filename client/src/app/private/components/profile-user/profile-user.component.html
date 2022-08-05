@@ -3,18 +3,18 @@
 <div *ngIf="(currentUser$ | async) as currentUser" class="container">
 	<div *ngIf="requestStatus!=6">
 		<mat-card>
-			<div style="display: flex; flex-direction: row;">
-				<div class="profile">
-					<img *ngIf="avatar; else default" [src]="avatar" alt="avatar" style="width:90%">
+			<div>
+				<div class="profile" style="margin-bottom: 20px;">
+					<img *ngIf="avatar; else default" [src]="avatar" alt="avatar" style="width:200px">
 					<ng-template #default>
-						<img src="{{ currentUser.avatar }}" alt="default-avatar" style="width:90%">
+						<img src="{{ currentUser.avatar }}" alt="default-avatar" style="width:200px">
 					</ng-template>
 					<mat-card-title>{{ currentUser.username }}</mat-card-title>
 					<h2 *ngIf="requestStatus==3">{{ currentUser.status }}</h2>
 					<p>42 login: {{ currentUser.login }}</p>
-					<p>Total Wins: {{ currentUser.totalWins }}</p>
+					<!-- <p>Total Wins: {{ currentUser.totalWins }}</p>
 					<p>Total Loses: {{ currentUser.totalLoses }}</p>
-					<p>Tadder Level: {{ currentUser.ladderLevel }}</p>
+					<p>Tadder Level: {{ currentUser.ladderLevel }}</p> -->
 
 					<div style="display: flex; flex-direction: column;">
 						<!-- send message -->
@@ -54,8 +54,52 @@
 					</div>
 				</div>
 
-				<div class="match-history">
-					<h3>// TODO match history</h3>
+				<mat-divider></mat-divider>
+
+				<div>
+					<div *ngIf="(matchHistory | async) as matchHistory; else nohistory" style="margin-top: 30px;">
+						<h2>Match Stats</h2>
+						<div *ngIf="matchHistory.inGameRoom !== -1">
+							<p>Current Game Room: {{ matchHistory.inGameRoom }}</p>
+						</div>
+						<p>Total Wins: {{ matchHistory.totalWins }}</p>
+						<p>Total Loses: {{ matchHistory.totalLoses }}</p>
+						<p>Ladder Lever: {{ matchHistory.ladderLevel }}</p>
+						<div
+							style="display: flex; flex-direction: row; justify-content: space-evenly; margin-top: 30px;">
+							<div>
+								<h2>Wins</h2>
+								<div *ngFor="let winMatch of matchHistory.winMatches">
+									<br>
+									<p>Game Room: {{ winMatch.roomId }}</p>
+									<p>Winner: {{ winMatch.winnerLogin }} Points: {{ winMatch.winnerPoints }}</p>
+									<p>Loser: {{ winMatch.loserLogin }} Points: {{ winMatch.loserPoints }}</p>
+									<br>
+									<mat-divider></mat-divider>
+								</div>
+							</div>
+							<div>
+								<h2>Losts</h2>
+								<div *ngFor="let loseMatch of matchHistory.loseMatches">
+									<br>
+									<p>Game Room: {{ loseMatch.roomId }}</p>
+									<p>Winner: {{ loseMatch.winnerLogin }} Points: {{ loseMatch.winnerPoints }}</p>
+									<p>Loser: {{ loseMatch.loserLogin }} Points: {{ loseMatch.loserPoints }}</p>
+									<br>
+									<mat-divider></mat-divider>
+								</div>
+							</div>
+						</div>
+					</div>
+					<ng-template #nohistory>
+						<div style="margin-top: 30px; margin-bottom: 20px;">
+							<h2>Match Stats</h2>
+							<p>Total Wins: 0</p>
+							<p>Total Loses: 0</p>
+							<p>Ladder Level: 0</p>
+							<p>No Match History</p>
+						</div>
+					</ng-template>
 				</div>
 			</div>
 		</mat-card>
