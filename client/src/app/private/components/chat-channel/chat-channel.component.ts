@@ -11,6 +11,8 @@ import { ChatService } from '../../services/chat/chat.service';
 import { UserService } from '../../services/user/user.service';
 
 var GameInvitationResponseSubscription: Subscription;
+var routers: Router[] = [];
+var routes: ActivatedRoute[] = [];
 
 @Component({
   selector: 'app-chat-channel',
@@ -78,12 +80,24 @@ export class ChatChannelComponent implements OnChanges, OnDestroy, AfterViewInit
 		private router: Router,
 		private activatedRoute: ActivatedRoute,
 		private snackbar: MatSnackBar
-	) {}
+	) {
+		if (routers === []) {
+			routers.push(router);
+		}
+		else {
+			routers[0] = router;
+		}
+		if (routes === []) {
+			routes.push(activatedRoute);
+		}
+		else {
+			routes[0] = activatedRoute;
+		}
+	}
 
 	handleGameInvitationResponse(response) {
-		// todo
 		if (response == 'Accepted') {
-
+			routers[0].navigate(['../game'], { relativeTo: routes[0]});
 		}
 		else if (response == 'Refused') {
 
