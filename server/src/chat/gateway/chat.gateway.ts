@@ -168,12 +168,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 	async onLeaveChannel(socket: Socket, channel: ChannelI) {
 		// remove user from Channel
 		await this.channelService.deleteUser(socket.data.user.id, channel.id);
-
-		// TODO cannot always find users[1], and what if its the last one in the channel
-		// asign the first user left in the channel as new owner & admin
-		// await this.channelService.addAdmin(channel, channel.users[1]);
-		// channel.owner = channel.users[1];
-		// this.channelService.saveChannel(channel);
+		if (channel.users.length >= 1 && channel.owner.id === socket.data.user.id) {
+			await this.channelService.addAdmin(channel, channel.users[0]);
+			channel.owner = channel.users[0];
+			this.channelService.saveChannel(channel);
+		}
 	}
 
 	// add user

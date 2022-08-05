@@ -1,11 +1,12 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Like, Repository } from "typeorm";
+import { Repository } from "typeorm";
 import { ChannelI, ChannelType } from "../model/channel/channel.interface";
 import { ChannelEntity } from "../model/channel/channel.entity";
 import { UserI } from "src/user/model/user/user.interface";
-import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
+import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
 import { Observable, of } from "rxjs";
+// import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class ChannelService {
