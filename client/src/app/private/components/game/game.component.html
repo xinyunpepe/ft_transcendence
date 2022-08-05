@@ -1,83 +1,108 @@
 <app-navbar></app-navbar>
 
-<style type="text/css">
-	div {text-align: center;}
-	span.red { color: #FF0000;font-size:25;}
-	span.blue { color: #0000FF;font-size:25;} 
-</style>
+<!-- <style type="text/css">
+	div {
+		text-align: center;
+	}
+	span.red {
+		color: #FF0000;
+		font-size: 25;
+	}
+	span.blue {
+		color: #0000FF;
+		font-size: 25;
+	}
+</style> -->
 
-<div [hidden]="hideItem[0]">
-	<div [hidden]="!hideItem[2]">
-		<form [formGroup]="gameForm" (ngSubmit)="RandomGame()">
-		Competition: 
-		<input type="radio" value="any" formControlName="competitionType" >any
-		<input type="radio" value="ladder" formControlName="competitionType" >ladder
-		<input type="radio" value="normal" formControlName="competitionType" >normal
-		<br />
-		Customization: 
-		<input type="radio" value="any" formControlName="gameCustomization" >any
-		<input type="radio" value="speed" formControlName="gameCustomization" >speed
-		<input type="radio" value="normal" formControlName="gameCustomization" >normal
-		<br />
-		<button type="submit">find a random opponent</button>
-		</form>
-	</div>
-	<div [hidden]="hideItem[2]">
-		Waiting for opponent ...
-		<button (click)="Cancel()">
-			cancel
-		</button>
-	</div>
-	<div [hidden]="!hideItem[2]">
-		<form [formGroup]="watchForm" (ngSubmit)="WatchRequest()">
-			Watch game in room number:
-			<input type="text" formControlName="number" />
-			<button type="submit">submit</button>
-		</form>
+<div class="container">
+	<div [hidden]="hideItem[0]">
+		<mat-card>
+			<mat-card-title>Game Settings</mat-card-title>
+			<mat-card-content>
+				<div [hidden]="!hideItem[2]" style="margin-top: 30px; margin-bottom: 10px;">
+					<form [formGroup]="gameForm" (ngSubmit)="RandomGame()">
+						<h2>Competition:</h2>
+						<input type="radio" value="any" formControlName="competitionType" >any
+						<input type="radio" value="ladder" formControlName="competitionType" >ladder
+						<input type="radio" value="normal" formControlName="competitionType" >normal
+						<br />
+						<h2>Customization:</h2>
+						<input type="radio" value="any" formControlName="gameCustomization" >any
+						<input type="radio" value="speed" formControlName="gameCustomization" >speed
+						<input type="radio" value="normal" formControlName="gameCustomization" >normal
+						<br />
+						<br />
+						<button type="submit">Find a random opponent</button>
+					</form>
+				</div>
+
+				<div [hidden]="hideItem[2]">
+					<h2 style="margin-top: 30px;">Waiting for opponent ...</h2>
+					<button mat-button (click)="Cancel()">
+						Cancel
+					</button>
+				</div>
+
+				<div [hidden]="!hideItem[2]">
+					<mat-divider></mat-divider>
+					<form [formGroup]="watchForm" (ngSubmit)="WatchRequest()">
+						<h2 style="margin-top: 30px;">Watch game in room number:</h2>
+						<mat-form-field appearance="standard">
+							<input matInput type="text" formControlName="number" />
+						</mat-form-field>
+						<button mat-button type="submit">Submit</button>
+					</form>
+				</div>
+			</mat-card-content>
+		</mat-card>
 	</div>
 </div>
 
-<div [hidden]="!hideItem[0]">
+<div class="game">
+	<div [hidden]="!hideItem[0]">
 		<div>Room Number: {{roomNumber[0]}}</div>
 		<canvas #myCanvas width="{{canvasWidth}}" height="{{canvasHeight}}" style="border: 1px solid black;"></canvas>
-</div>
-
-<div [hidden]="(!hideItem[0]) || (!hideItem[1]) || (!hideItem[3])">
-	<button (click)="LeaveWatchingMode()">leave watching mode</button>
-</div>
-
-<div [hidden]="(!hideItem[0]) || (!hideItem[1]) || hideItem[3]">
-	<button (click)="Surrender()">surrender</button>
-</div>
-
-<div [hidden]="hideItem[1]">
-	Game Result
-</div>
-
-<div [hidden]="hideItem[4]">
-	<span class="red">(Red) {{Logins[0]}} {{Points[0]}}</span> : <span class="blue">{{Points[1]}} (Blue) {{Logins[1]}}</span>
-	<div>
-		<br />
-		Competition Type : {{CompetitionType[0]}}
-		<br />
-		Game Type : {{GameCustomization[0]}}
-		<br />
 	</div>
-</div>
 
-<div [hidden]="hideItem[5]">
-	<span class="red">(Red) {{Logins[0]}} {{Points[0]}}</span> : <span class="blue">{{Points[1]}} (Blue) {{Logins[1]}}</span>
-	<div>
-		<br />
-		Competition Type : {{CompetitionType[0]}}
-		<br />
-		Game Type : {{GameCustomization[0]}}
-		<br />
+	<div [hidden]="(!hideItem[0]) || (!hideItem[1]) || (!hideItem[3])">
+		<button (click)="LeaveWatchingMode()">leave watching mode</button>
 	</div>
-</div>
 
-<div [hidden]="hideItem[1]">
-	<button [hidden]="hideItem[1]" (click)="BackToMatch()">
-		next
-	</button>
+	<div [hidden]="(!hideItem[0]) || (!hideItem[1]) || hideItem[3]">
+		<button (click)="Surrender()">surrender</button>
+	</div>
+
+	<div [hidden]="hideItem[1]">
+		Game Result
+	</div>
+
+	<div [hidden]="hideItem[4]">
+		<span class="red">(Red) {{Logins[0]}} {{Points[0]}}</span> : <span class="blue">{{Points[1]}} (Blue)
+			{{Logins[1]}}</span>
+		<div>
+			<br />
+			Competition Type : {{CompetitionType[0]}}
+			<br />
+			Game Type : {{GameCustomization[0]}}
+			<br />
+		</div>
+	</div>
+
+	<div [hidden]="hideItem[5]">
+		<span class="red">(Red) {{Logins[0]}} {{Points[0]}}</span> : <span class="blue">{{Points[1]}} (Blue)
+			{{Logins[1]}}</span>
+		<div>
+			<br />
+			Competition Type : {{CompetitionType[0]}}
+			<br />
+			Game Type : {{GameCustomization[0]}}
+			<br />
+		</div>
+	</div>
+
+	<div [hidden]="hideItem[1]">
+		<button [hidden]="hideItem[1]" (click)="BackToMatch()">
+			next
+		</button>
+	</div>
 </div>
