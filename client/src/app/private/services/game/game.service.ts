@@ -12,28 +12,7 @@ import { competitionEnumerator, customizationEnumerator } from './enumerators';
 })
 export class GameService {
 
-  constructor(public socket: CustomSocket/*, private http: HttpClient*/) { }
-/*
-  getHitory(userId: number) {
-    return this.http.get<HistoryI>(`${ environment.baseUrl }/history/${ userId }`);
-  }
-
-  getWinMatches(userId: number) {
-    return this.http.get<MatchI[]>(`${ environment.baseUrl }/history/WinMatches/${ userId }`);
-  }
-
-  getLoseMatches(userId: number) {
-    return this.http.get<MatchI[]>(` ${ environment.baseUrl }/history/LoseMatches/${ userId }`);
-  }
-
-  getMatches() {
-    return this.http.get<MatchI[]>(` ${ environment.baseUrl }/history/matches/5`);
-  }
-
-  getHistories() {
-    return this.http.get<HistoryI[]>(` ${environment.baseUrl}/history/lol/5`);
-  }
-*/
+  constructor(public socket: CustomSocket) { }
 
   sendRoomRequest(userId: number, competitionType: string, gameCustomization: string) {
     this.socket.emit('RoomRequest', [userId,competitionEnumerator[competitionType],customizationEnumerator[gameCustomization]]);
