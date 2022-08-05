@@ -40,13 +40,13 @@ export class HistoryService {
 			player1_history = new History(player1.id, gameRoom.room_number);
 		}
 		else {
-			player1_history.roomId = gameRoom.room_number;
+			player1_history.inGameRoom = gameRoom.room_number;
 		}
 		if (player2_history == null) {
 			player2_history = new History(player2.id, gameRoom.room_number);
 		}
 		else {
-			player2_history.roomId = gameRoom.room_number;
+			player2_history.inGameRoom = gameRoom.room_number;
 		}
 		await this.create(player1_history);
 		await this.create(player2_history);
@@ -71,31 +71,5 @@ export class HistoryService {
 		await this.create_match(match);
 		await this.create(player1_history);
 		await this.create(player2_history);
-		// console.log((await this.findOne(player1.id)).totalWins);
 	}
-
-	/*async getWinMatches(userId: number) {
-		let history = await this.findOne(userId);
-		if (history == null)
-			return [];
-		return history.winMatches;
-	}
-
-	async getLoseMatches(userId: number) {
-		let history = await this.findOne(userId);
-		if (history == null) {
-			return [];
-		}
-		// console.log(history);
-		return history.loseMatches;
-	}
-
-	async getMatches() {
-		console.log('aaa');
-		return await this.MatchRepository.find();
-	}
-
-	async getAll() {
-		return await this.HistoryRepository.find();
-	}*/
 }
