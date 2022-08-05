@@ -8,12 +8,25 @@ Ref:
   https://nodejs.org/fr/docs/guides/nodejs-docker-webapp/
 
 Game Invitation Protocol:
-  this.socket.emit('GameInvitation', [id0, id1] );
 
-  this.socket.fromEvent('GameInvitationResponse');
-  'Accepted' / 'Refused'
-  A: Redirect to game component
-  R: Do nothing
+  When chat sockets are created, need to 
+  1. send to server ```this.socket.emit('ChatConnect', userId);```
+  2. subscribe from event ```this.socket.fromEvent('GameInvitationResponse');```
+  
+  When they're destroyed, need to 
+  1. send to server ```this.socket.emit('ChatDisconnect, userId');```
+  2. unsubscribe the previous subscription
+
+  When two people are matched ( the invitee accepts the invitation )
+  send to server ```this.socket.emit('GameInvitation', [id0, id1, competitionTypeHash, GameCustomizationHash] );```
+
+  The response from event ```'GameInvitationResponse'``` would be
+  
+  ```'Accepted'``` or ```'Refused'```
+  
+  ```'Accepted'```: Redirect to game component
+  
+  ```'Refused'```: Do nothing
   
 
 History Database Protocol:
