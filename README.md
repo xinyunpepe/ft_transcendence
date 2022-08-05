@@ -8,12 +8,14 @@ Ref:
   https://nodejs.org/fr/docs/guides/nodejs-docker-webapp/
 
 Game Invitation Protocol:
-  this.socket.emit('GameInvitation', [id0, id1] );
+  this.socket.emit('GameInvitation', [id0, id1, competitionTypeHash, gameCustomizationHash] );
 
   this.socket.fromEvent('GameInvitationResponse');
   'Accepted' / 'Refused'
-  A: Redirect to game component
-  R: Do nothing
+  
+  Accepted: Redirect to game component
+  
+  Refused: Do nothing
   
 
 History Database Protocol:
