@@ -3,12 +3,12 @@
 <div class="container">
 	<div>
 		<mat-card>
-			<mat-card-title>Channel {{ channel.name }}</mat-card-title>
+			<mat-card-title>Channel {{ channel.name }} [ {{ channel.type }} ]</mat-card-title>
 			<mat-card-content>
 
 				<!-- only open to owner -->
 				<div *ngIf="isOwner(user)">
-					<h3>Channel Settings</h3>
+					<h2>Channel Settings</h2>
 					<mat-divider></mat-divider>
 					<form [formGroup]="form" (ngSubmit)="modify()">
 						<mat-radio-group (change)="radioType($event)" class="radio">
@@ -31,20 +31,17 @@
 					</form>
 				</div>
 
-				<div *ngIf="(channel$ | async)?.users?.length > 0" class="friends-list">
-					<h3>Users Settings</h3>
+				<div *ngIf="(channel$ | async)?.users?.length > 0">
+					<h2>Users Settings</h2>
 					<mat-divider></mat-divider>
 					<mat-list>
 						<mat-list-item *ngFor="let channelUser of (channel$ | async)?.users">
-							{{ channelUser.username }}
-
-							<!-- <button mat-button class="firstbutton" (click)="removeUser(user)">
-								Remove user
-							</button> -->
+							<div class="names">{{ channelUser.username }}</div>
 
 							<!-- only open to owner -->
 							<div *ngIf="isOwner(user)">
-								<button mat-button *ngIf="!isAdmin(channelUser); else Unadmin" class="firstbutton" (click)="setAdmin(channelUser)">
+								<button mat-button *ngIf="!isAdmin(channelUser); else Unadmin" class="firstbutton"
+									(click)="setAdmin(channelUser)">
 									Set admin
 								</button>
 								<ng-template #Unadmin>
@@ -54,17 +51,22 @@
 								</ng-template>
 							</div>
 
-							<button mat-button *ngIf="!isMute(channelUser); else Unmute" class="firstbutton" (click)="muteUser(channelUser)">
+							<button mat-button *ngIf="!isMute(channelUser); else Unmute" class="firstbutton"
+								(click)="muteUser(channelUser)">
 								Mute user
 							</button>
 							<ng-template #Unmute>
-								<button mat-button class="firstbutton" (click)="unmuteUser(user)">
+								<button mat-button class="firstbutton" (click)="unmuteUser(channelUser)">
 									Unmute user
 								</button>
 							</ng-template>
+
+							<button mat-button (click)="removeUser(channelUser)">
+								Remove user
+							</button>
 						</mat-list-item>
 					</mat-list>
 				</div>
 			</mat-card-content>
-	</mat-card>
-</div>
+		</mat-card>
+	</div>

@@ -28,20 +28,6 @@ export class ProfileComponent implements OnInit {
 				})
 			))
 		).subscribe();
-
-		// this.user = this.authService.getLoggedInUser(); //subscribe???
-		// this.http.get(`${environment.baseUrl}/users/id/${this.user.id}`).subscribe({
-		// 	next: data => {
-		// 		if (!data) {
-		// 			return;
-		// 		}
-		// 		this.user = data;
-		// 		this.getAvatar(this.user.id);
-		// 	},
-		// 	error: error => {
-		// 		console.log(error);
-		// 	}
-		// });
 	}
 
 	createAvatar(image: Blob) {
@@ -58,6 +44,9 @@ export class ProfileComponent implements OnInit {
 		this.userService.getAvatar(userId).subscribe(
 			data => {
 				this.createAvatar(data);
+			},
+			err => {
+				console.log(err);
 			}
 		);
 	}

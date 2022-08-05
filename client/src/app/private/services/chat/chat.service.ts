@@ -58,6 +58,10 @@ export class ChatService {
 		this.socket.emit('createChannel', channel);
 	}
 
+	createDirectChannel(channel: ChannelI) {
+		this.socket.emit('createDirectChannel', channel);
+	}
+
 	emitPaginateChannel(limit: number, page: number) {
 		this.socket.emit('paginateChannels', { limit, page });
 	}
@@ -98,6 +102,10 @@ export class ChatService {
 		this.socket.emit('unmuteUser', { user, channel });
 	}
 
+	removeUser(channel: ChannelI, user: UserI) {
+		this.socket.emit('removeUser', { user, channel });
+	}
+
 	changeType(channel: ChannelI) {
 		this.socket.emit('changeType', { channel });
 	}
@@ -123,13 +131,17 @@ export class ChatService {
 	}
 
 	findChannelById(id: number): Observable<ChannelI> {
-		return this.http.get<ChannelI>(`${ environment.baseUrl }/channel/${ id }`).pipe(
+		return this.http.get<ChannelI>(`api/channel/${ id }`).pipe(
 			map((channel: ChannelI) => channel)
 		);
 	}
 
+	findDirectChannel(userIdA: number, userIdB: number): Observable<ChannelI> {
+		return this.http.get<ChannelI>(`api/channel/direct/${ userIdA }/${ userIdB }`)
+	}
+
 	joinProtectedChannel(channelId: number, userId: number): Observable<number> {
-		return this.http.get<number>(`${ environment.baseUrl }/channel/${ channelId }/${ userId }`).pipe(
+		return this.http.get<number>(`api/channel/${ channelId }/${ userId }`).pipe(
 			tap(res => {
 				if (res < 1) {
 					this.snackbar.open('Password failed, try again', 'Close', {

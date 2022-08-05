@@ -12,7 +12,7 @@ import { CallBackComponent } from './components/call-back/call-back.component';
 	declarations: [
 		PageNotFoundComponent,
 		TwoFactorAuthComponent,
-  CallBackComponent
+		CallBackComponent
 	],
 	imports: [
 		CommonModule,

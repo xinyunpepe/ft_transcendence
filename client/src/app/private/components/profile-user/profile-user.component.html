@@ -1,7 +1,7 @@
 <app-navbar></app-navbar>
 
-<div class="container">
-	<div *ngIf="isFriend()">
+<div *ngIf="(currentUser$ | async) as currentUser" class="container">
+	<div *ngIf="requestStatus!=6">
 		<mat-card>
 			<div style="display: flex; flex-direction: row;">
 				<div class="profile">
@@ -10,39 +10,46 @@
 						<img src="{{ currentUser.avatar }}" alt="default-avatar" style="width:90%">
 					</ng-template>
 					<mat-card-title>{{ currentUser.username }}</mat-card-title>
-					<h3 *ngIf="requestStatus==2">{{ currentUser.status }}</h3>
+					<h2 *ngIf="requestStatus==3">{{ currentUser.status }}</h2>
 					<p>42 login: {{ currentUser.login }}</p>
 					<p>Total Wins: {{ currentUser.totalWins }}</p>
 					<p>Total Loses: {{ currentUser.totalLoses }}</p>
 					<p>Tadder Level: {{ currentUser.ladderLevel }}</p>
 
 					<div style="display: flex; flex-direction: column;">
+						<!-- send message -->
+						<button mat-button (click)="createDirectChannel()">
+							Send Message
+						</button>
+
 						<!-- friend request -->
-						<button mat-button *ngIf="requestStatus==5;" (click)="addFriend()">
-							Send friend request
+						<button mat-button *ngIf="requestStatus==0" (click)="addFriend()">
+							Send Friend Request
 						</button>
-						<button mat-button *ngIf="requestStatus==0;" (click)="removeFriend()">
-							Cancel friend request
+						<button mat-button *ngIf="requestStatus==1;" (click)="removeFriend()">
+							Cancel Friend Request
 						</button>
-						<button mat-button *ngIf="requestStatus==1;" (click)="responseToRequest('accepted')">
-							Accept friend request
+						<div *ngIf="requestStatus==2">
+							<button mat-button (click)="responseToRequest('accepted')">
+								Accept Friend Request
+							</button>
+							<button mat-button (click)="responseToRequest('declined')">
+								Decline Friend Request
+							</button>
+						</div>
+						<button mat-button *ngIf="requestStatus==3;" (click)="removeFriend()">
+							Remove Friend
 						</button>
-						<button mat-button *ngIf="requestStatus==1;" (click)="responseToRequest('declined')">
-							Decline friend request
-						</button>
-						<button mat-button *ngIf="requestStatus==2;" (click)="removeFriend()">
-							Remove friend
-						</button>
-						<button mat-button *ngIf="requestStatus==3;">
-							Friend request declined
+						<button mat-button *ngIf="requestStatus==4;">
+							Friend Request Declined
 						</button>
 
 						<!-- block user -->
-						<button mat-button *ngIf="requestStatus!=4;" (click)="blockUser()">
-							Block user
+						<button mat-button *ngIf="requestStatus!=5 && requestStatus!=6;" (click)="blockUser()">
+							Block User
 						</button>
-						<button mat-button *ngIf="requestStatus==4;" (click)="unblockUser()">
-							Unblock user
+						<button mat-button *ngIf="requestStatus==5;" (click)="unblockUser()">
+							Unblock User
 						</button>
 					</div>
 				</div>
@@ -54,7 +61,7 @@
 		</mat-card>
 	</div>
 
-	<div *ngIf="!isFriend()">
-		<h1>Opps! User not found!</h1>
+	<div *ngIf="requestStatus==6;">
+		<h1>Oops! User not found!</h1>
 	</div>
 </div>

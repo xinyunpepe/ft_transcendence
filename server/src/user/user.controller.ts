@@ -120,28 +120,44 @@ export class UserController {
 	}
 
 	@UseGuards(JwtAuthGuard)
-	@Get('friend-request/status/:receiverId')
+	@Get('friend-request/status/:userId')
 	findRequestByUser(
 		@Param('userId') userId: number,
 		@Req() req
 	) {
-		return this.userService.findRequestByUser(req.user, userId);
+		return this.userService.findRequestByUser(req.user.id, userId);
 	}
 
 	@UseGuards(JwtAuthGuard)
-	@Get('friend-request/receiver/:receiverId')
+	@Get('friend-request/received/pending')
 	findRequestByReceiver(
-		@Param('receiverId') receiverId: number
+		@Req() req
 	) {
-		return this.userService.findRequestByReceiver(receiverId);
+		return this.userService.findRequestByReceiver(req.user.id);
 	}
 
 	@UseGuards(JwtAuthGuard)
-	@Get('friend-request/creator/:creatorId')
+	@Get('friend-request/created/pending')
 	findRequestsByCreator(
-		@Param('creatorId') creatorId: number
+		@Req() req
 	) {
-		return this.userService.findRequestsByCreator(creatorId);
+		return this.userService.findRequestsByCreator(req.user.id);
+	}
+
+	@UseGuards(JwtAuthGuard)
+	@Get('friend-request/received/accepted')
+	findAcceptedRequests(
+		@Req() req
+	) {
+		return this.userService.findAcceptedRequests(req.user.id);
+	}
+
+	@UseGuards(JwtAuthGuard)
+	@Get('friend-request/created/blocked')
+	findBlockedRequests(
+		@Req() req
+	) {
+		return this.userService.findBlockedRequests(req.user.id);
 	}
 
 	@UseGuards(JwtAuthGuard)

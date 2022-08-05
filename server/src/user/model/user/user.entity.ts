@@ -10,7 +10,7 @@ import { JoinedChannelEntity } from "src/chat/model/joined-channel/joined-channe
 @Entity('user')
 export class UserEntity {
 	@PrimaryGeneratedColumn()
-	id: number;
+	id: number; 
 
 	@Column({ unique: true })
 	login: string;
@@ -36,7 +36,7 @@ export class UserEntity {
 	@Column({ default: 0 })
 	totalLoses: number;
 
-	@Column({ default: 0 })
+	@Column({ default: 1 })
 	ladderLevel: number;
 
 	@OneToMany(() => FriendRequestEntity, friendRequest => friendRequest.creator)

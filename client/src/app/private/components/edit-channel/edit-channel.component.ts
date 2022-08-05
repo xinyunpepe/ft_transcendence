@@ -108,14 +108,26 @@ export class EditChannelComponent implements OnInit {
 		return this.channel.mute && this.channel.mute.find(mute => mute.id === user.id);
 	}
 
-	// TODO not sure if nessasery
 	removeUser(user: UserI) {
+		this.unsetAdmin(user);
+		this.unmuteUser(user);
+		if (user.id === this.channel.owner.id) {
+			this.snackbar.open('You can\'t remove the owner', 'Close', {
+				duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
+			});
+		}
+		else {
+			this.chatService.removeUser(this.channel, user);
+			this.snackbar.open(`You have removed ${ user.username } from the channel`, 'Close', {
+				duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
+			});
+		}
 	}
 
 	setAdmin(user: UserI) {
 		this.chatService.setAdmin(this.channel, user);
 		this.channel.admin.push(user);
-		this.snackbar.open(`You have set ${user.username} as admin`, 'Close', {
+		this.snackbar.open(`You have set ${ user.username } as admin`, 'Close', {
 			duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
 		});
 	}
@@ -129,7 +141,7 @@ export class EditChannelComponent implements OnInit {
 		else {
 			this.chatService.unsetAdmin(this.channel, user);
 			this.channel.admin = this.channel.admin.filter(admin => admin.id !== user.id);
-			this.snackbar.open(`You have unset ${user.username} as admin`, 'Close', {
+			this.snackbar.open(`You have unset ${ user.username } as admin`, 'Close', {
 				duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
 			});
 		}
@@ -144,7 +156,7 @@ export class EditChannelComponent implements OnInit {
 		else {
 			this.chatService.muteUser(this.channel, user);
 			this.channel.mute.push(user);
-			this.snackbar.open(`You have muted ${user.username}`, 'Close', {
+			this.snackbar.open(`You have muted ${ user.username }`, 'Close', {
 				duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
 			});
 		}
@@ -153,7 +165,7 @@ export class EditChannelComponent implements OnInit {
 	unmuteUser(user: UserI) {
 		this.chatService.unmuteUser(this.channel, user);
 		this.channel.mute = this.channel.mute.filter(mute => mute.id !== user.id);
-		this.snackbar.open(`You have unmuted ${user.username}`, 'Close', {
+		this.snackbar.open(`You have unmuted ${ user.username }`, 'Close', {
 			duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
 		});
 	}

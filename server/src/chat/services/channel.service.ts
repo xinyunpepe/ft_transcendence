@@ -1,25 +1,21 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { UserEntity } from "src/user/model/user/user.entity";
 import { Repository } from "typeorm";
 import { ChannelI, ChannelType } from "../model/channel/channel.interface";
 import { ChannelEntity } from "../model/channel/channel.entity";
 import { UserI } from "src/user/model/user/user.interface";
-import { IPaginationOptions, paginate, Pagination } from 'nestjs-typeorm-paginate';
+import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
 import { Observable, of } from "rxjs";
+// import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class ChannelService {
 	constructor(
-		@InjectRepository(UserEntity)
-		private readonly userRepository: Repository<UserEntity>,
 		@InjectRepository(ChannelEntity)
 		private readonly channelRepository: Repository<ChannelEntity>
 	) {}
 
 	async createChannel(channel: ChannelI, creator: UserI) {
-		console.log('Start creating channel');
-
 		if (channel.password) {
 			channel.type = ChannelType.PROTECTED;
 			// TODO fix bcrypt
@@ -30,6 +26,12 @@ export class ChannelService {
 		const newChannel = await this.addCreator(channel, creator);
 		const newChannelAdmin = await this.addAdmin(newChannel, creator);
 		return this.channelRepository.save(newChannelAdmin);
+	}
+
+	async createDirectChannel(channel: ChannelI, creator: UserI) {
+		channel.users.push(creator);
+		channel.owner = creator;
+		return this.channelRepository.save(channel);
 	}
 
 	async saveChannel(channel: ChannelI){
@@ -104,9 +106,18 @@ export class ChannelService {
 		});
 	}
 
+	async getDirectChannel(usernameA: string, usernameB: string) {
+		return this.channelRepository.findOne({
+			where: [
+				{ name: 'Direct Channel ' + usernameA + ' & ' + usernameB },
+				{ name: 'Direct Channel ' + usernameB + ' & ' + usernameA }
+			]
+		});
+	}
+
 	async deleteUser(userId: number, channelId: number) {
 		const channel = await this.getChannel(channelId);
-		if (channel.owner.id === userId) {
+		if (channel.owner && channel.owner.id === userId) {
 			channel.owner = null;
 		}
 		channel.admin = channel.admin.filter(user => user.id !== userId);
@@ -116,7 +127,6 @@ export class ChannelService {
 	}
 
 	async getChannelsForUser(userId: number, options: IPaginationOptions) {
-		// console.log('Getting channels for user');
 		const query = this.channelRepository
 			// assign alias 'channel' to channel table when creating a quiry builder
 			// equivalent to SELECT ... FROM channel channel
@@ -134,16 +144,11 @@ export class ChannelService {
 		return paginate(query, options);
 	}
 
-	async getAllChannelsForUser(options: IPaginationOptions) {
-		// console.log('Getting All channels for user');
+	async getAllChannelsForUser(userId: number, options: IPaginationOptions) {
+		// TODO could have better filter
 		const query = this.channelRepository
 			.createQueryBuilder('channel')
-			.where('channel.type = :public', { public: ChannelType.PUBLIC })
-			.orWhere('channel.type = :protected', { protected: ChannelType.PROTECTED })
-			.leftJoinAndSelect('channel.users', 'all_users')
-			.leftJoinAndSelect('channel.admin', 'all_admin')
-			.leftJoinAndSelect('channel.mute', 'all_mute')
-			.leftJoinAndSelect('channel.owner', 'owner')
+			.where('channel.type != :private', { private: ChannelType.PRIVATE })
 			.orderBy('channel.updatedAt', 'DESC')
 
 		return paginate(query, options);

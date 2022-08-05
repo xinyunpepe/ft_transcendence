@@ -1,9 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { map, Observable, switchMap, tap } from 'rxjs';
-import { FriendRequestI, FriendStatus } from 'src/app/model/friend-request.interface';
+import { ChannelI, ChannelType } from 'src/app/model/channel.interface';
+import { FriendStatus } from 'src/app/model/friend-request.interface';
 import { UserI } from 'src/app/model/user.interface';
 import { AuthService } from 'src/app/public/services/auth/auth.service';
+import { ChatService } from '../../services/chat/chat.service';
 import { FriendService } from '../../services/friend/friend.service';
 import { UserService } from '../../services/user/user.service';
 
@@ -14,32 +16,19 @@ import { UserService } from '../../services/user/user.service';
 })
 export class ProfileUserComponent implements OnInit {
 
-	user: UserI = this.authService.getLoggedInUser();
+	user: UserI = null;
+	currentUserId: number;
 	avatar: any;
-	currentUser: UserI = {};
-	friendRequest: FriendRequestI = {};
-
-	/*
-	** 0: pending
-	** 1: waiting-for-response
-	** 2: accepted
-	** 3: declined
-	** 4: blocked
-	** 5: not-sent
-	*/
 	requestStatus: number;
 	requestId: number;
+	directChannel: ChannelI = {};
 
-	private userId$: Observable<number> = this.activatedRoute.params.pipe(
+	private currentUserId$: Observable<number> = this.activatedRoute.params.pipe(
 		map((params: Params) => parseInt(params['id']))
 	)
 
-	currentUser$ = this.userId$.pipe(
+	currentUser$: Observable<UserI> = this.currentUserId$.pipe(
 		switchMap((userId: number) => this.userService.findById(userId))
-	)
-
-	friendRequest$ = this.userId$.pipe(
-		switchMap((userId: number) => this.friendService.findRequestByUser(userId))
 	)
 
 	constructor(
@@ -47,23 +36,15 @@ export class ProfileUserComponent implements OnInit {
 		private authService: AuthService,
 		private userService: UserService,
 		private friendService: FriendService,
+		private chatService: ChatService,
 		private router: Router
-	) {}
+	) { }
 
 	ngOnInit() {
-		// this.currentUser$.subscribe(currentUser => {
-		// 	this.currentUser = currentUser;
-		// 	if (!this.currentUser) {
-		// 		this.router.navigate(['../../page-not-found'], { relativeTo: this.activatedRoute });
-		// 	}
-		// 	else if (this.currentUser.id == this.user.id) {
-		// 		this.router.navigate(['../../profile'], { relativeTo: this.activatedRoute });
-		// 	}
-		// })
-
 		this.authService.getUserId().pipe(
 			switchMap((id: number) => this.userService.findById(id).pipe(
 				tap((user) => {
+					this.user = user;
 					this.currentUser$.subscribe(currentUser => {
 						//TODO || currentuser.ban?
 						if (!currentUser) {
@@ -73,104 +54,132 @@ export class ProfileUserComponent implements OnInit {
 							this.router.navigate(['../../profile'], { relativeTo: this.activatedRoute });
 						}
 						else {
-							this.currentUser = currentUser;
-							this.getAvatar(this.currentUser.id);
+							this.currentUserId = currentUser.id;
+							this.getRequestStatus();
+							this.getAvatar(this.currentUserId);
 						}
 					})
 				})
 			))
 		).subscribe();
-
-		this.friendRequest$.subscribe(friendRequest => {
-			this.friendRequest = friendRequest;
-		})
 	}
 
-	isCreator() {
-		return this.friendRequest.creator.id === this.user.id;
-	}
-
-	isFriend() {
-		if (this.friendRequest) {
-			this.requestId = this.friendRequest.id;
-			if (this.friendRequest.status === FriendStatus.PENDING) {
-				if (this.isCreator()) {
-					this.requestStatus = 0;
+	createDirectChannel() {
+		this.chatService.findDirectChannel(this.user.id, this.currentUserId).subscribe(
+			channel => {
+				if (channel) {
+					// TODO redirect to the channel if possible?
+					this.router.navigate(['../../dashboard-channel'], { relativeTo: this.activatedRoute });
 				}
 				else {
-					this.requestStatus = 1;
+					this.userService.findById(this.currentUserId).pipe(
+						tap((user: UserI) => {
+							this.directChannel.name = 'Direct Channel ' + user.username + ' & ' + this.user.username;
+							this.directChannel.users = [];
+							this.directChannel.users.push(user);
+							this.directChannel.type = ChannelType.PRIVATE;
+							this.chatService.createDirectChannel(this.directChannel);
+						})
+					).subscribe();
+					this.router.navigate(['../../dashboard-channel'], { relativeTo: this.activatedRoute });
 				}
 			}
-			else if (this.friendRequest.status === FriendStatus.ACCEPTED) {
-				this.requestStatus = 2;
-			}
-			else if (this.friendRequest.status === FriendStatus.DECLIEND) {
-				this.requestStatus = 3;
-			}
-			else if (this.friendRequest.status === FriendStatus.BLOCKED) {
-				if (this.isCreator()) {
-					this.requestStatus = 4;
-				}
-				else {
-					return false;
-				}
-			}
-			else {
-				this.requestStatus = 5;
-			}
-		}
-		return true;
+		)
 	}
 
-	// TODO better solution than window reload?
+	/*
+	** 0: not-sent
+	** 1: pending
+	** 2: waiting-for-response
+	** 3: accepted
+	** 4: declined
+	** 5: blocked
+	** 6: not-found
+	*/
+	getRequestStatus() {
+		this.requestStatus = 0;
+		this.friendService.findRequestByUser(this.currentUserId).pipe(
+			tap((request) => {
+				if (request) {
+					this.requestId = request.id;
+					if (request.status == FriendStatus.PENDING) {
+						if (request.creator.id === this.user.id) {
+							this.requestStatus = 1;
+						}
+						else {
+							this.requestStatus = 2;
+						}
+					}
+					else if (request.status == FriendStatus.ACCEPTED) {
+						this.requestStatus = 3;
+					}
+					else if (request.status === FriendStatus.DECLIEND) {
+						this.requestStatus = 4;
+					}
+					else if (request.status === FriendStatus.WAITING) {
+						this.requestStatus = 4;
+					}
+					else if (request.status === FriendStatus.BLOCKED) {
+						if (request.creator.id === this.user.id) {
+							this.requestStatus = 5;
+						}
+						else {
+							this.requestStatus = 6;
+						}
+					}
+				}
+			})
+		).subscribe();
+	}
+
 	addFriend() {
-		this.friendService.sendFriendRequest(this.currentUser.id).subscribe(
-			() => {
+		this.friendService.sendFriendRequest(this.currentUserId).subscribe(
+			(response) => {
 				this.requestStatus = 1;
 			}
 		)
-		window.location.reload();
+		// window.location.reload();
 	}
 
 	removeFriend() {
-		this.friendService.removeFriendRequest(this.currentUser.id).subscribe(
-			() => {
-				this.requestStatus = 5;
+		this.friendService.removeFriendRequest(this.currentUserId).subscribe(
+			(response) => {
+				this.requestStatus = 0;
 			}
 		)
-		window.location.reload();
+		// window.location.reload();
 	}
 
 	responseToRequest(response: string) {
 		this.friendService.responseToRequest(this.requestId, response).subscribe(
 			(response) => {
 				if (response.status == FriendStatus.ACCEPTED) {
-					this.requestStatus = 2;
+					this.requestStatus = 3;
 				}
 				if (response.status == FriendStatus.DECLIEND) {
-					this.requestStatus = 3;
+					this.requestStatus = 4;
 				}
 			}
 		)
-		window.location.reload();
+		// window.location.reload();
 	}
 
 	blockUser() {
-		this.friendService.blockUser(this.currentUser.id).subscribe(
-			() => {
-				this.requestStatus = 4;
-			}
-		)
-		window.location.reload();
-	}
-
-	unblockUser() {
-		this.friendService.unblockUser(this.currentUser.id).subscribe(
-			() => {
+		this.friendService.blockUser(this.currentUserId).subscribe(
+			(response) => {
 				this.requestStatus = 5;
 			}
 		)
-		window.location.reload();
+		// window.location.reload();
+	}
+
+	unblockUser() {
+		this.friendService.unblockUser(this.currentUserId).subscribe(
+			(response) => {
+				this.requestStatus = 5;
+			}
+		)
+		// window.location.reload();
 	}
 
 	createAvatar(image: Blob) {
@@ -187,6 +196,9 @@ export class ProfileUserComponent implements OnInit {
 		this.userService.getAvatar(userId).subscribe(
 			data => {
 				this.createAvatar(data);
+			},
+			err => {
+				console.log(err);
 			}
 		);
 	}

@@ -16,7 +16,7 @@ volumes:
 services:
   server:
     build:
-      context: ./server/
+      context: ./server
     depends_on:
       - postgres
     environment:
@@ -30,17 +30,17 @@ services:
       - backend:/usr/src/app
     command: sh -c "npm install && npm run start:dev"
 
-  client:
-    build:
-      context: ./client/
-    restart: always
-    ports:
-      - 4200:4200
-    volumes:
-      - frontend:/usr/src/app
-    command: sh -c "npm install && npm start --watch"
-    links:
-      - server
+  # client:
+  #   build:
+  #     context: ./client/
+  #   restart: always
+  #   ports:
+  #     - 4200:4200
+  #   volumes:
+  #     - frontend:/usr/src/app
+  #   command: sh -c "npm install && npm start --watch"
+  #   links:
+  #     - server
 
   postgres:
     image: postgres:latest

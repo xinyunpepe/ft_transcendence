@@ -1,0 +1,84 @@
+<app-navbar></app-navbar>
+
+<div *ngIf="(user | async) as user" class="container">
+	<mat-card>
+		<mat-card-title>Friends Settings</mat-card-title>
+		<mat-card-content>
+			<div class="search">
+				<mat-form-field>
+					<input matInput placeholder="Search by username" [matAutocomplete]="auto" [formControl]="searchUsername">
+					<mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn"
+						(optionSelected)="onSelectUser($event.option.value)">
+						<ng-container>
+							<mat-option *ngFor="let user of filteredUsers" [value]="user">
+								<span>{{ user.username }}</span>
+							</mat-option>
+						</ng-container>
+					</mat-autocomplete>
+				</mat-form-field>
+			</div>
+
+			<div class="flexbox">
+				<div class="flex-item">
+					<h2>Requests Received</h2>
+					<div *ngIf="(receivedRequests$ | async)?.length > 0; else no_sent_requests">
+						<mat-selection-list [multiple]="false" (selectionChange)="onSelectRequest($event)">
+							<mat-list-option *ngFor="let receivedRequests of (receivedRequests$ | async)" [value]="receivedRequests">
+								• {{ receivedRequests.creator.username }}
+							</mat-list-option>
+						</mat-selection-list>
+					</div>
+					<ng-template #no_received_requests>
+						<p>You did not receive any request</p>
+					</ng-template>
+				</div>
+
+				<div class="flex-item">
+					<h2>Requests Sent</h2>
+					<div *ngIf="(sentRequests$ | async)?.length > 0; else no_sent_requests">
+						<mat-selection-list [multiple]="false" (selectionChange)="onSelectRequest($event)">
+							<mat-list-option *ngFor="let sentRequests of (sentRequests$ | async)" [value]="sentRequests">
+								• {{ sentRequests.receiver.username }}
+							</mat-list-option>
+						</mat-selection-list>
+					</div>
+					<ng-template #no_sent_requests>
+						<p>You did not send any request</p>
+					</ng-template>
+				</div>
+			</div>
+
+			<mat-divider></mat-divider>
+
+			<div class="flexbox">
+				<div class="flex-item">
+					<h2>Friends</h2>
+					<div *ngIf="(friends$ | async)?.length > 0; else no_friends">
+						<mat-selection-list [multiple]="false" (selectionChange)="onSelectFriend($event)">
+							<mat-list-option *ngFor="let friends of friendsList" [value]="friends">
+								• {{ friends.username }} - {{ friends.status }}
+							</mat-list-option>
+						</mat-selection-list>
+					</div>
+					<ng-template #no_friends>
+						<p>You do not have any friend... yet</p>
+					</ng-template>
+				</div>
+
+				<div class="flex-item">
+					<h2>Blocked Users</h2>
+					<div *ngIf="(blocks$ | async)?.length > 0; else no_blocks">
+						<mat-selection-list [multiple]="false" (selectionChange)="onSelectRequest($event)">
+							<mat-list-option *ngFor="let blocks of (blocks$ | async)" [value]="blocks">
+								• {{ blocks.receiver.username }}
+							</mat-list-option>
+						</mat-selection-list>
+					</div>
+					<ng-template #no_blocks>
+						<p>You have not blocked anyone... yet</p>
+					</ng-template>
+				</div>
+			</div>
+		</mat-card-content>
+	</mat-card>
+</div>

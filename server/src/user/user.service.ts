@@ -104,31 +104,58 @@ export class UserService {
 		});
 	}
 
-	async findRequestByUser(currentUser: UserEntity, receiverId: number) {
+	async findRequestByUser(creatorId: number, receiverId: number) {
+		const creator = await this.findUserById(creatorId);
 		const receiver = await this.findUserById(receiverId);
 		return await this.friendRequestRepository.findOne({
 			where: [
-				{ creator: currentUser, receiver: receiver },
-				{ creator: receiver, receiver: currentUser }
+				{ creator: creator, receiver: receiver },
+				{ creator: receiver, receiver: creator }
 			],
 			relations: ['creator', 'receiver']
-		})
+		});
 	}
 
 	async findRequestByReceiver(receiverId: number) {
 		const receiver = await this.findUserById(receiverId);
-		return await this.friendRequestRepository.findOne({
-			where: [{ receiver: receiver }],
-			relations: ['creator', 'receiver']
+		return await this.friendRequestRepository.find({
+			where: [{ receiver: receiver, status: FriendStatus.PENDING }],
+			relations: ['receiver', 'creator']
 		});
 	}
 
 	async findRequestsByCreator(creatorId: number) {
 		const creator = await this.findUserById(creatorId);
 		return await this.friendRequestRepository.find({
-			where: [{ creator: creator }],
+			where: [{ creator: creator, status: FriendStatus.PENDING }],
 			relations: ['creator', 'receiver']
 		});
+	}
+
+	async findAcceptedRequests(userId: number) {
+		const query = this.friendRequestRepository
+			.createQueryBuilder('request')
+			.leftJoinAndSelect('request.creator', 'creator')
+			.leftJoinAndSelect('request.receiver', 'receiver')
+			.where("creator.id = :id AND request.status = 'accepted'")
+			.orWhere("receiver.id = :id AND request.status = 'accepted'")
+			.setParameters({ id: userId })
+			.getMany()
+
+		return query;
+	}
+
+	async findBlockedRequests(userId: number) {
+		const query = this.friendRequestRepository
+			.createQueryBuilder('request')
+			.leftJoinAndSelect('request.creator', 'creator')
+			.leftJoinAndSelect('request.receiver', 'receiver')
+			.where('creator.id = :id')
+			.andWhere("request.status = 'blocked'")
+			.setParameters({ id: userId })
+			.getMany()
+
+		return query;
 	}
 
 	/*

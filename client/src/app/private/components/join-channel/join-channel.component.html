@@ -5,6 +5,7 @@
 			<h2>
 				<mat-icon>group</mat-icon>
 				{{ joinChannel.name }}
+				{{ joinChannel.type }}
 			</h2>
 		</span>
 
@@ -15,20 +16,20 @@
 					<mat-form-field appearance="standard">
 						<input matInput placeholder="Password" [formControl]="password" type="password">
 					</mat-form-field>
-					<button mat-raised-button color="primary" [disabled]="!password.valid || isJoined" type="submit">Join Channel</button>
+					<button mat-button [disabled]="!password.valid || isJoined" type="submit">Join Channel</button>
 				</form>
 			</div>
 		</div>
 
 		<ng-template #alreadyJoined>
-			<div class="addUser">
-				<h3>You are already in this room</h3>
+			<div class="addUser" style="margin-top: 20px; margin-left: 10px">
+				<p>You are already in this room</p>
 			</div>
 		</ng-template>
 
 		<ng-template #join>
-			<div class="addUser">
-				<button mat-raised-button (click)="addUser()">Join Channel</button>
+			<div class="addUser" style="margin-top: 20px; margin-left: 10px">
+				<button mat-button (click)="addUser()">Join Channel</button>
 			</div>
 		</ng-template>
 

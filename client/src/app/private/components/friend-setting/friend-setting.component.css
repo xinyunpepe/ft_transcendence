@@ -1,9 +1,34 @@
-.message {
-	background-color: rgb(236, 236, 236);
-	height: 400px;
-	overflow-y: scroll;
-	scrollbar-color: lightgrey darkgrey;
-	scrollbar-width: thin;
+.container {
+	display: flex;
+	justify-content: center;
+	margin: 30px;
+}
+
+.container mat-card {
+	min-width: 600px;
+}
+
+.container mat-list-option {
+	font-weight: 500;
+}
+
+.search {
+	padding-top: 30px;
+	margin-left: 10px;
+}
+
+.flexbox {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-around;
+	padding-top: 30px;
+	padding-bottom: 20px;
+}
+
+.flex-item {
+	flex: 1;
+	padding-left: 10px;
+	padding-right: 10px;
 }
 
 ::-webkit-scrollbar-track {
