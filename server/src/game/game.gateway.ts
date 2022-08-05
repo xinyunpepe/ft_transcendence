@@ -398,6 +398,8 @@ export class GameGateway implements OnGatewayConnection {
     }
 
     release();
+    this.UserIdToInfo[id0].modify_hideItem([5,1,2],[true,true,true]);
+    this.UserIdToInfo[id1].modify_hideItem([5,1,2],[true,true,true]);
     this.server.to(ChatChannel(id0)).to(ChatChannel(id1)).emit(ConstValues.GameInvitationResponse, ConstValues.Accepted);
     this.setGameReady( id0, id1, [competitionHash, customizationHash] );
   }
