@@ -3,13 +3,13 @@ version: "3.8"
 volumes:
   frontend:
     driver_opts:
-      device: /home/leofu/Documents/42/ft_transcendence/client
+      device: /home/leofu/Documents/42/try/client
       o: bind
       type: none
 
   backend:
     driver_opts:
-      device: /home/leofu/Documents/42/ft_transcendence/server
+      device: /home/leofu/Documents/42/try/server
       o: bind
       type: none
 
