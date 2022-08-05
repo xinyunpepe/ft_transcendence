@@ -47,9 +47,13 @@ export class GameGateway implements OnGatewayConnection {
   }
 
   @SubscribeMessage('ChatConnect')
-  async ChatConnect(client, userId) {
+  async ChatConnect(client, [userId, userLogin]) {
     userId = parseInt(userId);
     client.join(ChatChannel(userId));
+    this.UserIdToLogin[userId] = userLogin;
+    if (!this.UserIdToInfo[userId]) {
+      this.UserIdToInfo[userId] = new ClientInfo(this.server, userId);
+    }
   }
 
   @SubscribeMessage('GameDisconnect')
@@ -365,7 +369,12 @@ export class GameGateway implements OnGatewayConnection {
       this.server.to(ChatChannel(id0)).to(ChatChannel(id1)).emit(ConstValues.GameInvitationResponse, ConstValues.Refused);
       return ;
     }
-    if (await this.historyService.isInGame(id0) || await this.historyService.isInGame(id1)) {
+    if (id0 == id1) {
+      this.server.to(ChatChannel(id0)).to(ChatChannel(id1)).emit(ConstValues.GameInvitationResponse, ConstValues.Refused);
+      return ;
+    }
+    let id0InGame: boolean = await this.historyService.isInGame(id0), id1InGame: boolean = await this.historyService.isInGame(id1);
+    if (id0InGame || id1InGame) {
       this.server.to(ChatChannel(id0)).to(ChatChannel(id1)).emit(ConstValues.GameInvitationResponse, ConstValues.Refused);
       return ;
     }

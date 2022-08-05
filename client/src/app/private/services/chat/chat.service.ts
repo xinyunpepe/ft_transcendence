@@ -8,6 +8,7 @@ import { MessageI, MessagePaginateI } from 'src/app/model/message.interface';
 import { UserI } from 'src/app/model/user.interface';
 import { CustomSocket } from 'src/app/private/sockets/custom-sockets';
 import { AuthService } from 'src/app/public/services/auth/auth.service';
+import { competitionEnumerator, customizationEnumerator } from '../game/enumerators';
 
 @Injectable({
 	providedIn: 'root'
@@ -26,6 +27,23 @@ export class ChatService {
 			this.socket = new CustomSocket();
 		}
 	}
+
+	sendChatConnect(userId: number, username: string) {
+		this.socket.emit('ChatConnect', [userId, username]);
+	}
+
+	sendChatDisconnect(userId: number) {
+		this.socket.emit('ChatDisconnect', userId);
+	}
+
+	sendGameInivitation(id0: number, id1: number, competition: number, customization: number) {
+		this.socket.emit('GameInvitation', [id0, id1, competition, customization] );
+	}
+
+	getGameInvitationResponse() {
+		return this.socket.fromEvent('GameInvitationResponse');
+	}
+
 
 	createChannel(channel: ChannelI) {
 		// check adding self

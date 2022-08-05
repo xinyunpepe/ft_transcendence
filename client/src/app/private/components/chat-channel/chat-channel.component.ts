@@ -1,7 +1,7 @@
-import { AfterViewInit, Component, ElementRef, Input, OnChanges, OnDestroy, SimpleChanges, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewChild } from '@angular/core';
 import { FormControl, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { combineLatest, map, Observable, startWith, tap } from 'rxjs';
+import { combineLatest, map, Observable, startWith, Subscription, tap } from 'rxjs';
 import { ChannelI } from 'src/app/model/channel.interface';
 import { MessagePaginateI } from 'src/app/model/message.interface';
 import { UserI, UserRole } from 'src/app/model/user.interface';
@@ -9,12 +9,14 @@ import { AuthService } from 'src/app/public/services/auth/auth.service';
 import { ChatService } from '../../services/chat/chat.service';
 import { UserService } from '../../services/user/user.service';
 
+var GameInvitationResponseSubscription: Subscription;
+
 @Component({
   selector: 'app-chat-channel',
   templateUrl: './chat-channel.component.html',
   styleUrls: ['./chat-channel.component.css']
 })
-export class ChatChannelComponent implements OnChanges, OnDestroy, AfterViewInit {
+export class ChatChannelComponent implements OnChanges, OnDestroy, AfterViewInit, OnInit {
 
 	@Input() chatChannel: ChannelI;
 	@ViewChild('messages') private messagesScroller: ElementRef;
@@ -78,6 +80,24 @@ export class ChatChannelComponent implements OnChanges, OnDestroy, AfterViewInit
 		// TODO start game?
 	}
 
+	handleGameInvitationResponse(response) {
+		// todo
+		if (response == 'Accepted') {
+
+		}
+		else if (response == 'Refused') {
+
+		}
+		else {
+			alert('Error from game invitation response');
+		}
+	}
+
+	ngOnInit() {
+		GameInvitationResponseSubscription = this.chatService.getGameInvitationResponse().subscribe(this.handleGameInvitationResponse);
+		this.chatService.sendChatConnect(this.user.id, this.user.username);
+	}
+
 	ngAfterViewInit(){
 		this.scrollToBottom();
 	}
@@ -90,7 +110,9 @@ export class ChatChannelComponent implements OnChanges, OnDestroy, AfterViewInit
 	}
 
 	ngOnDestroy() {
+		this.chatService.sendChatDisconnect(this.user.id);
 		this.chatService.leaveJoinedChannel(this.chatChannel);
+		GameInvitationResponseSubscription.unsubscribe();
 	}
 
 	sendMessage() {
@@ -113,7 +135,7 @@ export class ChatChannelComponent implements OnChanges, OnDestroy, AfterViewInit
 	}
 
 	joinGame(id: number) {
-		// TODO join game
+		this.chatService.sendGameInivitation(id, this.user.id, 0, 0);
 	}
 
 	accessProfile(userId: number) {

@@ -77,7 +77,7 @@ export class GameComponent implements OnInit, OnDestroy {
 	) {}
 
   ngOnInit(): void { // ok
-    userLogin = this.authService.getLoggedInUser().login;
+    userLogin = this.authService.getLoggedInUser().username;
     userId = this.authService.getLoggedInUser().id;
     
     let tmp: any = this.canvas.nativeElement.getContext('2d');
