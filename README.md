@@ -8,14 +8,21 @@ Ref:
   https://nodejs.org/fr/docs/guides/nodejs-docker-webapp/
 
 Game Invitation Protocol:
-  this.socket.emit('GameInvitation', [id0, id1, competitionTypeHash, gameCustomizationHash] );
-
+  When inviter sends an invitation
+  this.socket.emit('GameSendInvitation', [inviterId, competitionTypeHash, gameCustomizationHash] );
+  
+  When invitee accepts the invitation
+  this.socket.emit('GameAcceptInvitation', [inviteeId] );
+  
+  Both need to subscribe from response
   this.socket.fromEvent('GameInvitationResponse');
   'Accepted' / 'Refused'
   
   Accepted: Redirect to game component
   
   Refused: Do nothing
+  
+  problem: response will only send to original client sockets, could be a problem     after refreshing the page or changing component
   
 
 History Database Protocol:
