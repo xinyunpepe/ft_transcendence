@@ -48,7 +48,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 
 	async handleConnection(socket: Socket) {
 		try {
-			console.log('Start handling connection');
 			const decodedToken = await this.authService.verifyJwt(socket.handshake.headers.authorization);
 			const user: UserI = await this.userService.findUserById(decodedToken.user.id);
 			if (!user) {

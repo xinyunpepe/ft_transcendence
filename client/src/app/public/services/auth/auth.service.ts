@@ -106,7 +106,6 @@ export class AuthService {
 	authenticate(user: UserI, code: string) {
 		return this.http.post<any>(`api/auth/2fa/authenticate`, { user, code }).pipe(
 			tap(res => {
-				console.log(res);
 				localStorage.setItem('2fa_token', res.access_token)
 			}),
 			catchError(e => {

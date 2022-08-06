@@ -7,7 +7,7 @@ import { UserI } from "src/user/model/user/user.interface";
 import { IPaginationOptions, paginate } from 'nestjs-typeorm-paginate';
 import { Observable, of } from "rxjs";
 import { MessageEntity } from "../model/message/message.entity";
-// import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class ChannelService {
@@ -21,9 +21,8 @@ export class ChannelService {
 	async createChannel(channel: ChannelI, creator: UserI) {
 		if (channel.password) {
 			channel.type = ChannelType.PROTECTED;
-			// TODO bcrypt
-			// const hashedPassword = await bcrypt.hash(channel.password, 12);
-			channel.password = channel.password;
+			const hashedPassword = await bcrypt.hash(channel.password, 12);
+			channel.password = hashedPassword;
 		}
 		channel.owner = creator;
 		const newChannel = await this.addCreator(channel, creator);
@@ -96,9 +95,8 @@ export class ChannelService {
 	}
 
 	async changePassword(channel: ChannelI, password: string) {
-		// TODO bcrypt
-		// const hashedPassword = await bcrypt.hash(password, 12);
-		channel.password = password;
+		const hashedPassword = await bcrypt.hash(password, 12);
+		channel.password = hashedPassword;
 		return this.channelRepository.save(channel);
 	}
 
@@ -201,9 +199,7 @@ export class ChannelService {
 		return (query);
 	}
 
-	// TODO bcypt
 	private async validatePassword(password: string, hashedPassword: string) {
-		// return bcrypt.compare(password, hashedPassword);
-		return password === hashedPassword;
+		return bcrypt.compare(password, hashedPassword);
 	}
 }

@@ -1,22 +1,23 @@
 version: "3.8"
 
-volumes:
-  frontend:
-    driver_opts:
-      device: /home/leofu/Documents/42/try/client
-      o: bind
-      type: none
+# FOR TESTING
+# volumes:
+#   frontend:
+#     driver_opts:
+#       device: /PATH
+#       o: bind
+#       type: none
 
-  backend:
-    driver_opts:
-      device: /home/leofu/Documents/42/try/server
-      o: bind
-      type: none
+#   backend:
+#     driver_opts:
+#       device: /PATH
+#       o: bind
+#       type: none
 
 services:
   server:
     build:
-      context: ./server
+      context: ./server/
     depends_on:
       - postgres
     environment:
@@ -27,8 +28,10 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - backend:/usr/src/app
-    command: sh -c "npm install && npm run start:dev"
+      # - backend:/usr/src/app
+      - ./server/:/usr/src/app
+      - /usr/src/app/node_modules
+    command: sh -c "npm install bcrypt --save && npm run start:dev"
 
   # client:
   #   build:
@@ -38,7 +41,9 @@ services:
   #     - 4200:4200
   #   volumes:
   #     - frontend:/usr/src/app
-  #   command: sh -c "npm install && npm start --watch"
+  #     - ./client/:/usr/client/src/app
+  #     - /usr/client/src/app/node_modules
+  #   command: npm start --watch
   #   links:
   #     - server
 

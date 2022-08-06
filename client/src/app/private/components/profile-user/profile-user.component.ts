@@ -201,9 +201,6 @@ export class ProfileUserComponent implements OnInit {
 		this.userService.getAvatar(userId).subscribe(
 			data => {
 				this.createAvatar(data);
-			},
-			err => {
-				console.log(err);
 			}
 		);
 	}

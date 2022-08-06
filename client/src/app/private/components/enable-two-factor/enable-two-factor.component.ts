@@ -91,9 +91,7 @@ export class EnableTwoFactorComponent implements OnInit {
 					this.router.navigate(['../../private/profile-setting']);
 				}, 3000);
 			},
-			error => {
-				console.log(error);
-			}
+			error => {}
 		)
 	}
 }

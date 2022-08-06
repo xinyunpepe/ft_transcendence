@@ -1,7 +1,20 @@
-h1 {
-	margin: 100px 100px 10px 300px;
-  }
+.container {
+	display: flex;
+	justify-content: center;
+	margin: 30px;
+}
 
-button {
-	margin: 100px 300px 300px 300px;
-  }
+.container mat-card {
+	display: flex;
+	flex-direction: column;
+	text-align: center;
+	min-width: 600px;
+}
+
+.container mat-card-title {
+	margin: 150px;
+}
+
+.container button {
+	margin-bottom: 50px;
+}

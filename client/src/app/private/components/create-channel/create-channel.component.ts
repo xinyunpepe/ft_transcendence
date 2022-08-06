@@ -35,7 +35,6 @@ export class CreateChannelComponent {
 			if (this.form.get('type').value != 'protected' && this.form.get('type').value != 'private') {
 				this.form.get('type').setValue('public');
 			}
-			console.log(this.form.getRawValue());
 			this.chatService.createChannel(this.form.getRawValue());
 			this.router.navigate(['../dashboard-channel'], { relativeTo: this.activatedRoute });
 		}

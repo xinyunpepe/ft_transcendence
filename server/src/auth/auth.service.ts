@@ -16,30 +16,22 @@ export class AuthService {
 	) {}
 
 	async validateUser(userI: UserI) {
-		console.log('Start of validate user');
 		const user = await this.userService.findUserByLogin(userI.login);
 		if (user) {
-			console.log('User exists in the database');
-			// await this.userService.updateUserStatus(user.login, 'online');
-			// console.log(`${ user.login } is ${ user.status } now`);
 			return user;
 		}
-		console.log('New user');
 		const newUser = await this.userService.createUser(userI);
-		// await this.userService.updateUserStatus(newUser.login, 'online');
-		// console.log(`${ newUser.login } is ${ newUser.status } now`);
 		return newUser;
 	}
 
 	login(user: UserI) {
-		console.log('Start creating token');
+		// TODO +1?
 		return {
 			access_token: this.jwtService.sign({ user })
 		};
 	}
 
 	loginWithTwoFactorAuth(user: UserEntity, isSecondFactorAuthenticated = false) {
-		console.log('Start creating 2FA token');
 		const payload = { login: user.login, isSecondFactorAuthenticated };
 		return {
 			access_token: this.jwtService.sign(payload, {
@@ -68,7 +60,6 @@ export class AuthService {
 
 	// Verify user's code against the secret saved in the database
 	isTwoFactorAuthCodeValid(twoFactorAuthCode: string, user: UserEntity) {
-		console.log('Checking if 2fa code is valid');
 		return authenticator.verify({
 			token: twoFactorAuthCode,
 			secret: user.twoFactorAuthSecret

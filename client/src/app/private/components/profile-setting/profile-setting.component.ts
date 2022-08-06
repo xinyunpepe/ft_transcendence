@@ -60,7 +60,6 @@ export class ProfileSettingComponent implements OnInit {
 	}
 
 	updateUsername() {
-		console.log(this.settingForm.getRawValue());
 		this.userService.updateUsername(this.settingForm.getRawValue()).pipe(
 			tap(() => this.snackbar.open(`Username updated`, 'Close', {
 				duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'

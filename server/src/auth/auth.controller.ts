@@ -69,7 +69,6 @@ export class AuthController {
 	async authenticate(
 		@Req() req
 	){
-		console.log('Authenticating 2FA');
 		const user = await this.userService.findUserById(req.user.id);
 		const isValid = this.authService.isTwoFactorAuthCodeValid(req.body.code, req.body.user);
 		if (!isValid)
@@ -88,7 +87,6 @@ export class AuthController {
 	async generateTwoFactorAuthQrCode(
 		@Req() req
 	) {
-		console.log('Creating Qrcode');
 		const otpauthUrl = await this.authService.generateTwoFactorAuthSecret(req.user);
 		return this.authService.pipeQrCodeStream(otpauthUrl);
 	}
@@ -109,7 +107,6 @@ export class AuthController {
 	async turnOnTwoFactorAuth(
 		@Req() req,
 	){
-		console.log('Turning on 2FA');
 		const user = await this.userService.findUserById(req.user.id);
 		const isValid = this.authService.isTwoFactorAuthCodeValid(req.body.code, req.body.user);
 		if (!isValid)
@@ -127,7 +124,6 @@ export class AuthController {
 	async turnOffTwoFactorAuth(
 		@Req() req
 	) {
-		console.log('Turning off 2FA');
 		const user = await this.userService.findUserById(req.user.id);
 		const isValid = this.authService.isTwoFactorAuthCodeValid(req.body.code, req.body.user);
 		if (!isValid)
@@ -146,7 +142,7 @@ export class AuthController {
 	async logout(
 		@Body() user: UserI
 	) {
-		console.log('Start logging out');
+		// TODO -1?
 		await this.userService.offlineStatus(user.id, UserStatus.OFF);
 	}
 }

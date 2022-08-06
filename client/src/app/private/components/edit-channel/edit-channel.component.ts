@@ -69,6 +69,9 @@ export class EditChannelComponent implements OnInit {
 	modify() {
 		if (this.form.valid) {
 			this.chatService.changeType(this.form.getRawValue());
+			this.snackbar.open(`You have motified the channel successfully`, 'Close', {
+				duration: 5000, horizontalPosition: 'right', verticalPosition: 'top'
+			});
 			this.router.navigate(['../../dashboard-channel'], { relativeTo: this.activatedRoute });
 		}
 	}

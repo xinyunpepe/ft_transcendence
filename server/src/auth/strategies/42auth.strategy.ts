@@ -16,13 +16,11 @@ export class FtAuthStrategy extends PassportStrategy(Strategy) {
 	}
 
 	async validate(accessToken: string, refreshToken: string, profile: Profile) {
-		console.log('Start of 42 auth strategy');
 		const { username, photos } = profile;
 		const user = {
 			login: username,
 			username: username,
 			avatar: photos[0].value,
-			// status: 'offline'
 		}
 		return this.authService.validateUser(user);
 	}
