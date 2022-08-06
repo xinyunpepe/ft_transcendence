@@ -61,7 +61,7 @@ export class ProfileUserComponent implements OnInit {
 							this.currentUserId = currentUser.id;
 							this.matchHistory = this.matchHistoryService.findMatchHistory(this.currentUserId);
 							this.getRequestStatus();
-							// this.getAvatar(this.currentUserId);
+							this.getAvatar(this.currentUserId);
 						}
 					})
 				})

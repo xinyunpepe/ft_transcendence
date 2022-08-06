@@ -138,7 +138,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
 		// add page +1 to match angular material paginator
 		page.page = page.page + 1;
 
-		const channels = await this.channelService.getAllChannelsForUser(socket.data.user.id, page);
+		const channels = await this.channelService.getAllChannelsForUser(page);
 
 		// substract page -1 to match the angular material paginator
 		channels.meta.currentPage = channels.meta.currentPage - 1;

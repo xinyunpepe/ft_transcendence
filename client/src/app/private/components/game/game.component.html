@@ -22,17 +22,23 @@
 				<div [hidden]="!hideItem[2]" style="margin-top: 30px; margin-bottom: 10px;">
 					<form [formGroup]="gameForm" (ngSubmit)="RandomGame()">
 						<h2>Competition:</h2>
-						<input type="radio" value="any" formControlName="competitionType" >any
-						<input type="radio" value="ladder" formControlName="competitionType" >ladder
-						<input type="radio" value="normal" formControlName="competitionType" >normal
+						<div
+							style="display: flex; flex-direction: row; align-items: right; justify-content: space-evenly;">
+							<input type="radio" value="any" formControlName="competitionType">any
+							<input type="radio" value="ladder" formControlName="competitionType">ladder
+							<input type="radio" value="normal" formControlName="competitionType">normal
+						</div>
 						<br />
 						<h2>Customization:</h2>
-						<input type="radio" value="any" formControlName="gameCustomization" >any
-						<input type="radio" value="speed" formControlName="gameCustomization" >speed
-						<input type="radio" value="normal" formControlName="gameCustomization" >normal
+						<div
+							style="display: flex; flex-direction: row; align-items: right; justify-content: space-evenly;">
+							<input type="radio" value="any" formControlName="gameCustomization">any
+							<input type="radio" value="speed" formControlName="gameCustomization">speed
+							<input type="radio" value="normal" formControlName="gameCustomization">normal
+						</div>
 						<br />
 						<br />
-						<button type="submit">Find a random opponent</button>
+						<button mat-button type="submit">Find a random opponent</button>
 					</form>
 				</div>
 

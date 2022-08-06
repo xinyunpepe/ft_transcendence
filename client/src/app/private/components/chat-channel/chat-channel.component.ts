@@ -38,7 +38,7 @@ export class ChatChannelComponent implements OnChanges, OnDestroy, AfterViewInit
 
 			this.userService.findById(this.user.id).subscribe(user => {
 				this.user = user;
-				console.log(this.chatChannel);
+				// console.log(this.chatChannel);
 
 				// check if the current user is the channel owner
 				if (this.chatChannel.owner && this.chatChannel.owner.id === this.user.id) {
@@ -100,7 +100,7 @@ export class ChatChannelComponent implements OnChanges, OnDestroy, AfterViewInit
 			routers[0].navigate(['../game'], { relativeTo: routes[0]});
 		}
 		else if (response == 'Refused') {
-
+			window.location.reload();
 		}
 		else {
 			this.snackbar.open(`Error from game invitation response`, 'Close', {
@@ -114,8 +114,10 @@ export class ChatChannelComponent implements OnChanges, OnDestroy, AfterViewInit
 		this.chatService.sendChatConnect(this.user.id, this.user.username);
 	}
 
-	ngAfterViewInit(){
-		this.scrollToBottom();
+	ngAfterViewInit() {
+		if (this.messagesScroller) {
+			this.scrollToBottom();
+		}
 	}
 
 	ngOnChanges(changes: SimpleChanges) {

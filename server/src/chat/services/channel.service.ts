@@ -21,7 +21,7 @@ export class ChannelService {
 	async createChannel(channel: ChannelI, creator: UserI) {
 		if (channel.password) {
 			channel.type = ChannelType.PROTECTED;
-			// TODO fix bcrypt
+			// TODO bcrypt
 			// const hashedPassword = await bcrypt.hash(channel.password, 12);
 			channel.password = channel.password;
 		}
@@ -95,8 +95,9 @@ export class ChannelService {
 		return this.channelRepository.save(channel);
 	}
 
-	// TODO hash password
 	async changePassword(channel: ChannelI, password: string) {
+		// TODO bcrypt
+		// const hashedPassword = await bcrypt.hash(password, 12);
 		channel.password = password;
 		return this.channelRepository.save(channel);
 	}
@@ -158,8 +159,7 @@ export class ChannelService {
 		return paginate(query, options);
 	}
 
-	async getAllChannelsForUser(userId: number, options: IPaginationOptions) {
-		// TODO could have better filter
+	async getAllChannelsForUser(options: IPaginationOptions) {
 		const query = this.channelRepository
 			.createQueryBuilder('channel')
 			.where('channel.type != :private', { private: ChannelType.PRIVATE })
