@@ -4,7 +4,6 @@ import { of } from 'rxjs';
 import { UserI, UserStatus } from 'src/user/model/user/user.interface';
 import { UserService } from 'src/user/user.service';
 import { AuthService } from './auth.service';
-import { TwoFactorGuard } from './guards/2fa.guard';
 import { FtAuthGuard } from './guards/42auth.guard';
 import { JwtAuthGuard } from './guards/jwt.guard';
 
