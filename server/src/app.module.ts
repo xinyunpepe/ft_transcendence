@@ -8,7 +8,6 @@ import { AuthModule } from './auth/auth.module';
 import { ChatModule } from './chat/chat.module';
 import { UserModule } from './user/user.module';
 import { GameModule } from './game/game.module';
-import { GameGateway } from './game/game.gateway';
 
 @Module({
   imports: [

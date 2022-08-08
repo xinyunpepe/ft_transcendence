@@ -6,7 +6,7 @@
 			<div class="profile" style="margin-bottom: 20px;">
 				<img *ngIf="avatar; else default" [src]="avatar" alt="avatar" style="width:200px">
 				<ng-template #default>
-					<img src="{{ user.avatar }}" alt="default-avatar" style="width:200px">
+					<img src="{{'https://cdn.intra.42.fr/users/' + user.login+ '.jpg'}}" alt="default-avatar" style="width:200px">
 				</ng-template>
 				<mat-card-title>{{ user.username }}</mat-card-title>
 				<h3>{{ user.status }}</h3>

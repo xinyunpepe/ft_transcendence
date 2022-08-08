@@ -7,6 +7,7 @@ import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import { of } from 'rxjs';
 import { join } from 'path';
+const fs = require("fs");
 
 export const storage = {
 	storage: diskStorage({
@@ -62,7 +63,10 @@ export class UserController {
 		@Res() res
 	) {
 		const user = await this.userService.findUserById(id);
-		return of(res.sendFile(join(process.cwd(), 'src/uploads/avatar/' + user.avatar)));
+		const avatar = join(process.cwd(), 'src/uploads/avatar/' + user.avatar);
+		if (fs.existsSync(avatar)) {
+			return of(res.sendFile(avatar));
+		}
 	}
 
 	@Post()
