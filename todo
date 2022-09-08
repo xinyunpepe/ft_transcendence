@@ -1,5 +1,0 @@
-save every status if restart server ? (all info in db instead of class ?)
-
-after open two pages for same user, if one log out, the other crash
-
-problem: how to refresh username
